@@ -2,7 +2,6 @@ name: Run Tests
 
 on:
   push:
-    branches: [ main, exercice-1-test-unitaire, exercice-2-test-integration ]
   pull_request:
     branches: [ main ]
 
