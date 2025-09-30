@@ -25,6 +25,8 @@ uv run pytest -v
 uv run uvicorn app:app --reload
 ```
 
+**Note**: No API key needed! All tests use mocks. See [`.env.example`](.env.example) if you want to test manually with real API calls.
+
 ## 📚 Workshop Structure
 
 ### Part 1: Calculator Demo (30 min)
