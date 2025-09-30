@@ -1,125 +1,125 @@
-# Workshop 1: Weather API - TDD Fundamentals & CI/CD
+# Workshop 1 : API Météo - Fondamentaux TDD & CI/CD
 
-**Duration**: 3 hours
-**Goal**: Learn Test-Driven Development by building a Weather API
+**Durée** : 3 heures
+**Objectif** : Apprendre le développement piloté par les tests (TDD) en construisant une API météo
 
-## 🎯 What You'll Build
+## 🎯 Ce que vous allez construire
 
-A REST API that wraps the Open-Meteo weather API with:
-- ✅ Current weather endpoint
-- ✅ Weather comparison between cities
-- ✅ Error handling
-- ✅ Caching (optional)
-- ✅ Automated testing with GitHub Actions
+Une API REST qui encapsule l'API météo Open-Meteo avec :
+- ✅ Endpoint météo actuelle
+- ✅ Comparaison météo entre deux villes
+- ✅ Gestion d'erreurs
+- ✅ Cache (optionnel)
+- ✅ Tests automatisés avec GitHub Actions
 
-## 🚀 Quick Start
+## 🚀 Démarrage rapide
 
 ```bash
-# Install dependencies
+# Installer les dépendances
 uv sync
 
-# Run tests (they will fail - your job is to make them pass!)
+# Lancer les tests (ils vont échouer - votre mission est de les faire passer !)
 uv run pytest -v
 
-# Run the API (once implemented)
+# Lancer l'API (une fois implémentée)
 uv run uvicorn app:app --reload
 ```
 
-**Note**: No API key needed! Uses Open-Meteo (free, no signup). All tests use mocks anyway.
+**Note** : Pas besoin de clé API ! Utilise Open-Meteo (gratuit, sans inscription). Tous les tests utilisent des mocks de toute façon.
 
-## 📚 Workshop Structure
+## 📚 Structure du workshop
 
-### Part 1: Calculator Demo (30 min)
-Quick introduction to TDD with a simple calculator example.
+### Partie 1 : Démo calculatrice (30 min)
+Introduction rapide au TDD avec un exemple de calculatrice simple.
 
-**Check out the examples:**
+**Consulter les exemples :**
 ```bash
 git checkout examples
 uv sync
 uv run pytest calculator/test_calculator.py -v
-git checkout workshop-1  # Come back when done
+git checkout workshop-1  # Revenir quand c'est fait
 ```
 
-### Part 2: Weather API Exercises (120 min)
+### Partie 2 : Exercices API Météo (120 min)
 
-#### Exercise 2A: Basic Weather Endpoint (30 min)
-**Goal**: Implement `GET /weather/{city}`
+#### Exercice 2A : Endpoint météo basique (30 min)
+**Objectif** : Implémenter `GET /weather/{city}`
 
-**Test to pass**: `test_get_weather_success`
+**Test à faire passer** : `test_get_weather_success`
 
-**What to do**:
-1. Read the test in `test_weather_api.py`
-2. Run `uv run pytest test_weather_api.py::test_get_weather_success -v` (see it fail)
-3. Implement the endpoint in `app.py`
-4. Make the test pass ✅
+**Étapes** :
+1. Lire le test dans `test_weather_api.py`
+2. Exécuter `uv run pytest test_weather_api.py::test_get_weather_success -v` (voir l'échec)
+3. Implémenter l'endpoint dans `app.py`
+4. Faire passer le test ✅
 
-#### Exercise 2B: Error Handling (25 min)
-**Goal**: Handle API failures gracefully
+#### Exercice 2B : Gestion d'erreurs (25 min)
+**Objectif** : Gérer les échecs d'API gracieusement
 
-**Tests to pass**:
-- `test_get_weather_city_not_found` - Return 404 for invalid cities
-- `test_get_weather_api_timeout` - Return 503 when API times out
-- `test_get_weather_connection_error` - Handle connection errors
+**Tests à faire passer** :
+- `test_get_weather_city_not_found` - Retourner 404 pour les villes invalides
+- `test_get_weather_api_timeout` - Retourner 503 quand l'API timeout
+- `test_get_weather_connection_error` - Gérer les erreurs de connexion
 
-#### Exercise 2C: Weather Comparison (30 min)
-**Goal**: Implement `GET /weather/compare?city1=X&city2=Y`
+#### Exercice 2C : Comparaison météo (30 min)
+**Objectif** : Implémenter `GET /weather/compare?city1=X&city2=Y`
 
-**Test to pass**: `test_compare_weather`
+**Test à faire passer** : `test_compare_weather`
 
-Compare weather between two cities and calculate the temperature difference.
+Comparer la météo entre deux villes et calculer la différence de température.
 
-#### Exercise 2D: Caching (Optional - 25 min)
-**Goal**: Cache results to reduce API calls
+#### Exercice 2D : Cache (Optionnel - 25 min)
+**Objectif** : Mettre en cache les résultats pour réduire les appels API
 
-**Test to pass**: `test_weather_caching`
+**Test à faire passer** : `test_weather_caching`
 
-Implement simple in-memory caching with a 10-minute TTL.
+Implémenter un cache en mémoire simple avec un TTL de 10 minutes.
 
-### Part 3: GitHub Actions CI/CD (30 min)
+### Partie 3 : GitHub Actions CI/CD (30 min)
 
-**Goal**: Automate testing with GitHub Actions
+**Objectif** : Automatiser les tests avec GitHub Actions
 
-**Guide**: Follow [GITHUB_ACTIONS_GUIDE.md](GITHUB_ACTIONS_GUIDE.md) for step-by-step instructions
+**Guide** : Suivre [GITHUB_ACTIONS_GUIDE.md](GITHUB_ACTIONS_GUIDE.md) pour les instructions détaillées
 
-**Tasks**:
-1. Create `.github/workflows/test.yml`
-2. Add workflow configuration (see guide for template)
-3. Commit and push to GitHub
-4. Verify CI runs and passes on GitHub Actions tab
+**Tâches** :
+1. Créer `.github/workflows/test.yml`
+2. Ajouter la configuration du workflow (voir le guide pour le template)
+3. Commit et push sur GitHub
+4. Vérifier que la CI s'exécute et passe dans l'onglet GitHub Actions
 
-## 📖 Detailed Instructions
+## 📖 Instructions détaillées
 
-See [docs/TP1-weather-api.md](docs/TP1-weather-api.md) for:
-- Step-by-step instructions
-- Code examples
-- Tips and hints
-- Troubleshooting
+Voir [docs/TP1-weather-api.md](docs/TP1-weather-api.md) pour :
+- Instructions pas-à-pas
+- Exemples de code
+- Conseils et astuces
+- Dépannage
 
-## 🧪 Running Tests
+## 🧪 Exécuter les tests
 
 ```bash
-# Run all tests
+# Lancer tous les tests
 uv run pytest -v
 
-# Run specific test
+# Lancer un test spécifique
 uv run pytest test_weather_api.py::test_get_weather_success -v
 
-# Run with coverage
+# Lancer avec couverture de code
 uv run pytest --cov=app -v
 
-# Show print statements
+# Afficher les print statements
 uv run pytest -s
 ```
 
-## 🏃 Running the API
+## 🏃 Lancer l'API
 
-### Terminal 1: Start the Server
+### Terminal 1 : Démarrer le serveur
 
 ```bash
 uv run uvicorn app:app --reload
 ```
 
-You should see:
+Vous devriez voir :
 ```
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 INFO:     Started reloader process
@@ -128,98 +128,98 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 ```
 
-**Keep this terminal open!** The server will auto-reload when you change code.
+**Gardez ce terminal ouvert !** Le serveur se rechargera automatiquement quand vous modifiez le code.
 
 ---
 
-### Open in Browser
+### Ouvrir dans le navigateur
 
-Now open these URLs:
+Ouvrez maintenant ces URLs :
 
-- 🏠 **Main API**: http://localhost:8000/
-- 📚 **Interactive Docs (Swagger UI)**: http://localhost:8000/docs
-- 📖 **Alternative Docs (ReDoc)**: http://localhost:8000/redoc
+- 🏠 **API principale** : http://localhost:8000/
+- 📚 **Documentation interactive (Swagger UI)** : http://localhost:8000/docs
+- 📖 **Documentation alternative (ReDoc)** : http://localhost:8000/redoc
 
-**The Swagger UI (`/docs`) is the best way to test your API!**
+**Le Swagger UI (`/docs`) est le meilleur moyen de tester votre API !**
 
 ---
 
-### Terminal 2: Test with curl (Optional)
+### Terminal 2 : Tester avec curl (Optionnel)
 
-Open a **second terminal** and test:
+Ouvrez un **second terminal** et testez :
 
 ```bash
-# List available cities (works immediately)
+# Lister les villes disponibles (fonctionne immédiatement)
 curl http://localhost:8000/cities
 
-# Test weather endpoint (404 until you implement it)
+# Tester l'endpoint météo (404 jusqu'à implémentation)
 curl http://localhost:8000/weather/Brussels
 
-# Test comparison (404 until you implement it)
+# Tester la comparaison (404 jusqu'à implémentation)
 curl "http://localhost:8000/weather/compare?city1=Brussels&city2=Paris"
 ```
 
 ---
 
-### Using Swagger UI (Recommended!)
+### Utiliser Swagger UI (Recommandé !)
 
-1. Go to http://localhost:8000/docs
-2. See all endpoints listed
-3. Click `GET /cities` → "Try it out" → "Execute"
-4. See the response with available cities ✅
-5. Try `GET /weather/{city}` (will show 404 until implemented)
-6. As you implement endpoints, refresh and test them!
+1. Aller sur http://localhost:8000/docs
+2. Voir tous les endpoints listés
+3. Cliquer sur `GET /cities` → "Try it out" → "Execute"
+4. Voir la réponse avec les villes disponibles ✅
+5. Essayer `GET /weather/{city}` (affichera 404 jusqu'à implémentation)
+6. Au fur et à mesure que vous implémentez les endpoints, rafraîchissez et testez-les !
 
-## 📝 Files in This Branch
+## 📝 Fichiers dans cette branche
 
-- `app.py` - Your FastAPI application (⚠️ incomplete - you'll implement this)
-- `test_weather_api.py` - Test suite (✅ complete - guides your implementation)
-- `pyproject.toml` - Dependencies
-- `GITHUB_ACTIONS_GUIDE.md` - Step-by-step CI/CD setup guide
-- `.env.example` - Environment variables template
-- `README.md` - This file
-- `docs/` - Detailed guides and references
+- `app.py` - Votre application FastAPI (⚠️ incomplète - à implémenter)
+- `test_weather_api.py` - Suite de tests (✅ complète - guide votre implémentation)
+- `pyproject.toml` - Dépendances
+- `GITHUB_ACTIONS_GUIDE.md` - Guide CI/CD pas-à-pas
+- `.env.example` - Template variables d'environnement
+- `README.md` - Ce fichier
+- `docs/` - Guides et références détaillés
 
-## 🎓 Learning Objectives
+## 🎓 Objectifs pédagogiques
 
-By the end of this workshop, you will:
-- ✅ Understand the TDD cycle (Red → Green → Refactor)
-- ✅ Write unit tests with pytest
-- ✅ Mock external dependencies
-- ✅ Build REST APIs with FastAPI
-- ✅ Handle errors properly
-- ✅ Set up CI/CD with GitHub Actions
+À la fin de ce workshop, vous saurez :
+- ✅ Comprendre le cycle TDD (Rouge → Vert → Refactoriser)
+- ✅ Écrire des tests unitaires avec pytest
+- ✅ Mocker des dépendances externes
+- ✅ Construire des API REST avec FastAPI
+- ✅ Gérer les erreurs correctement
+- ✅ Configurer la CI/CD avec GitHub Actions
 
-## 💡 Tips
+## 💡 Conseils
 
-- **Read the tests first** - They tell you what to build
-- **Make one test pass at a time** - Don't try to do everything at once
-- **Run tests frequently** - See your progress
-- **Ask for help** - Instructors are here to guide you
-- **Reference the examples** - `git checkout examples` to see working code
+- **Lisez les tests en premier** - Ils vous disent quoi construire
+- **Faites passer un test à la fois** - N'essayez pas de tout faire d'un coup
+- **Lancez les tests fréquemment** - Voyez votre progression
+- **Demandez de l'aide** - Les instructeurs sont là pour vous guider
+- **Référez-vous aux exemples** - `git checkout examples` pour voir du code fonctionnel
 
-## 🆘 Need Help?
+## 🆘 Besoin d'aide ?
 
-- **Test failing?** Run with `-vv` for more details: `uv run pytest -vv`
-- **Import error?** Make sure you ran `uv sync`
-- **Mock not working?** Check the patch path matches your import
-- **Stuck?** See [docs/troubleshooting.md](docs/troubleshooting.md)
+- **Test qui échoue ?** Lancez avec `-vv` pour plus de détails : `uv run pytest -vv`
+- **Erreur d'import ?** Assurez-vous d'avoir lancé `uv sync`
+- **Mock qui ne fonctionne pas ?** Vérifiez que le chemin du patch correspond à votre import
+- **Bloqué ?** Voir [docs/troubleshooting.md](docs/troubleshooting.md)
 
-## 📚 Resources
+## 📚 Ressources
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [pytest Documentation](https://docs.pytest.org/)
-- [unittest.mock Guide](https://docs.python.org/3/library/unittest.mock.html)
-- [Open-Meteo API](https://open-meteo.com/)
+- [Documentation FastAPI](https://fastapi.tiangolo.com/)
+- [Documentation pytest](https://docs.pytest.org/)
+- [Guide unittest.mock](https://docs.python.org/3/library/unittest.mock.html)
+- [API Open-Meteo](https://open-meteo.com/)
 
 ---
 
-**Ready to start?**
+**Prêt à commencer ?**
 
 ```bash
 uv sync
 uv run pytest -v
-# See the failing tests → time to code!
+# Voir les tests qui échouent → c'est parti pour coder !
 ```
 
-**Good luck! 🚀**
+**Bonne chance ! 🚀**
