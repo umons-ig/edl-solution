@@ -14,17 +14,17 @@ This example shows:
 ## Running the Example
 
 ```bash
-# Install dependencies
+# Install dependencies (from root directory)
 uv sync
 
 # Run all tests
-uv run pytest -v
+uv run pytest calculator/test_calculator.py -v
 
 # Run specific test
-uv run pytest test_calculator.py::TestDivision::test_divide_by_zero -v
+uv run pytest calculator/test_calculator.py::TestDivision::test_divide_by_zero -v
 
 # Run the demo
-uv run python calculator.py
+uv run python calculator/calculator.py
 ```
 
 ## What to Learn
@@ -54,9 +54,9 @@ def test_factorial(n, expected):
 
 ## Files
 
-- `calculator.py` - Implementation (all functions working)
-- `test_calculator.py` - Complete test suite
-- `pyproject.toml` - Dependencies
+- `calculator/calculator.py` - Implementation (all functions working)
+- `calculator/test_calculator.py` - Complete test suite
+- `pyproject.toml` - Dependencies (at root level)
 
 ## Next Steps
 

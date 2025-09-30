@@ -15,10 +15,10 @@ A complete TDD example showing:
 - ✅ Clear documentation
 
 ```bash
-cd calculator/
+# From root directory
 uv sync
-uv run pytest -v
-uv run python calculator.py
+uv run pytest calculator/test_calculator.py -v
+uv run python calculator/calculator.py
 ```
 
 **What to learn**:
@@ -49,17 +49,14 @@ cd edl-tp-1
 # Checkout examples branch
 git checkout examples
 
-# Navigate to an example
-cd calculator/
-
-# Install dependencies
+# Install dependencies (from root)
 uv sync
 
-# Run tests
-uv run pytest -v
+# Run calculator tests
+uv run pytest calculator/test_calculator.py -v
 
-# Run the code
-uv run python calculator.py
+# Run calculator demo
+uv run python calculator/calculator.py
 ```
 
 ## 📖 Workshop Flow
@@ -102,9 +99,9 @@ git checkout examples
 
 # Create new example directory
 mkdir new-example/
-cd new-example/
 
-# Add README, code, tests, pyproject.toml
+# Add code, tests to new-example/
+# Update pyproject.toml at root if needed
 # Commit changes
 ```
 
