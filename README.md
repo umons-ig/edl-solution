@@ -113,14 +113,62 @@ uv run pytest -s
 
 ## 🏃 Running the API
 
-```bash
-# Start the development server
-uv run uvicorn app:app --reload
+### Terminal 1: Start the Server
 
-# Test manually (in another terminal)
+```bash
+uv run uvicorn app:app --reload
+```
+
+You should see:
+```
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process
+INFO:     Started server process
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+```
+
+**Keep this terminal open!** The server will auto-reload when you change code.
+
+---
+
+### Open in Browser
+
+Now open these URLs:
+
+- 🏠 **Main API**: http://localhost:8000/
+- 📚 **Interactive Docs (Swagger UI)**: http://localhost:8000/docs
+- 📖 **Alternative Docs (ReDoc)**: http://localhost:8000/redoc
+
+**The Swagger UI (`/docs`) is the best way to test your API!**
+
+---
+
+### Terminal 2: Test with curl (Optional)
+
+Open a **second terminal** and test:
+
+```bash
+# List available cities (works immediately)
+curl http://localhost:8000/cities
+
+# Test weather endpoint (404 until you implement it)
 curl http://localhost:8000/weather/Brussels
+
+# Test comparison (404 until you implement it)
 curl "http://localhost:8000/weather/compare?city1=Brussels&city2=Paris"
 ```
+
+---
+
+### Using Swagger UI (Recommended!)
+
+1. Go to http://localhost:8000/docs
+2. See all endpoints listed
+3. Click `GET /cities` → "Try it out" → "Execute"
+4. See the response with available cities ✅
+5. Try `GET /weather/{city}` (will show 404 until implemented)
+6. As you implement endpoints, refresh and test them!
 
 ## 📝 Files in This Branch
 

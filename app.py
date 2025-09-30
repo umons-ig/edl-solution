@@ -1,24 +1,9 @@
-"""
-Weather API - FastAPI Application
-
-Your task: Implement the endpoints to make the tests pass!
-
-This is a TDD exercise - read the tests in test_weather_api.py to understand
-what each endpoint should do, then implement the functionality here.
-"""
-
-from fastapi import FastAPI, HTTPException
-import requests
-import os
+from fastapi import FastAPI
 
 app = FastAPI(title="Weather API", version="1.0.0")
 
-# Open-Meteo API configuration (No API key needed!)
-# Open-Meteo is a free, open-source weather API
-# Docs: https://open-meteo.com/
 WEATHER_API_BASE_URL = 'https://api.open-meteo.com/v1/forecast'
 
-# City coordinates (simplified - in real app, use geocoding)
 CITY_COORDINATES = {
     'Brussels': {'latitude': 50.8503, 'longitude': 4.3517},
     'Paris': {'latitude': 48.8566, 'longitude': 2.3522},
@@ -26,17 +11,45 @@ CITY_COORDINATES = {
     'Berlin': {'latitude': 52.52, 'longitude': 13.41},
 }
 
-
 @app.get("/")
 def root():
-    """Root endpoint - already implemented as an example"""
+    """
+    Root endpoint - already implemented as an example
+
+    Returns API information and available endpoints.
+
+    To see interactive API documentation, visit:
+    - Swagger UI: http://localhost:8000/docs
+    - ReDoc: http://localhost:8000/redoc
+    """
     return {
-        "message": "Weather API",
+        "message": "Weather API Workshop",
         "version": "1.0.0",
-        "endpoints": [
-            "GET /weather/{city}",
-            "GET /weather/compare?city1=X&city2=Y"
-        ]
+        "description": "Learn TDD by building a weather API",
+        "documentation": {
+            "swagger": "/docs",
+            "redoc": "/redoc"
+        },
+        "endpoints": {
+            "GET /": "This endpoint (API info)",
+            "GET /weather/{city}": "Get weather for a city (TODO: implement)",
+            "GET /weather/compare": "Compare weather between two cities (TODO: implement)",
+            "GET /cities": "List available cities"
+        },
+        "available_cities": list(CITY_COORDINATES.keys())
+    }
+
+
+@app.get("/cities")
+def list_cities():
+    """
+    List all available cities
+
+    This endpoint is already implemented to help students test their code.
+    """
+    return {
+        "cities": list(CITY_COORDINATES.keys()),
+        "count": len(CITY_COORDINATES)
     }
 
 
@@ -84,19 +97,4 @@ def root():
 #     # 1. Get weather for both cities (reuse code or create helper function)
 #     # 2. Calculate temperature difference
 #     # 3. Determine which city is warmer
-#     pass
-
-
-# TODO: Exercise 2D (Optional) - Add caching
-# You may want to create a simple cache using a dictionary
-# Example:
-# cache = {}  # Store: {city: (data, timestamp)}
-# CACHE_TTL = 600  # 10 minutes
-#
-# def get_cached_weather(city):
-#     # Check if data exists and is not expired
-#     pass
-#
-# def cache_weather(city, data):
-#     # Store weather data with timestamp
 #     pass
