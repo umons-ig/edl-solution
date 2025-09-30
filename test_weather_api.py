@@ -39,13 +39,17 @@ class TestWeatherEndpoint:
         Hint: Mock the external API call to avoid real network requests
         """
         with patch('app.requests.get') as mock_get:
-            # Setup mock response
+            # Setup mock response (Open-Meteo format)
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.json.return_value = {
-                'main': {'temp': 20},
-                'weather': [{'description': 'clear sky'}],
-                'name': 'Brussels'
+                'current': {
+                    'temperature_2m': 20,
+                    'time': '2025-09-30T10:00'
+                },
+                'current_units': {
+                    'temperature_2m': '°C'
+                }
             }
             mock_get.return_value = mock_response
 
@@ -58,11 +62,9 @@ class TestWeatherEndpoint:
             data = response.json()
             assert 'city' in data, "Response should include 'city'"
             assert 'temperature' in data, "Response should include 'temperature'"
-            assert 'description' in data, "Response should include 'description'"
 
             assert data['city'] == 'Brussels'
             assert data['temperature'] == 20
-            assert data['description'] == 'clear sky'
 
 
 class TestErrorHandling:
@@ -72,18 +74,14 @@ class TestErrorHandling:
         """
         Test 404 error when city doesn't exist
 
-        Your task: Handle 404 responses from OpenWeatherMap API
-        Hint: Check response.status_code and raise HTTPException(status_code=404)
+        Your task: Check if city exists in CITY_COORDINATES
+        Hint: If city not found, raise HTTPException(status_code=404, detail="City not found")
         """
-        with patch('app.requests.get') as mock_get:
-            mock_response = Mock()
-            mock_response.status_code = 404
-            mock_get.return_value = mock_response
+        # No mock needed - city won't be in CITY_COORDINATES
+        response = client.get('/weather/InvalidCityName')
 
-            response = client.get('/weather/InvalidCityName')
-
-            assert response.status_code == 404, "Should return 404 for invalid city"
-            assert 'detail' in response.json()
+        assert response.status_code == 404, "Should return 404 for invalid city"
+        assert 'detail' in response.json()
 
     def test_get_weather_api_timeout(self):
         """
@@ -126,22 +124,26 @@ class TestWeatherComparison:
         Hint: Mock should return different data based on city parameter
         """
         with patch('app.requests.get') as mock_get:
-            def mock_api_response(url, params, timeout):
-                """Return different data based on city"""
+            def mock_api_response(url, params=None, timeout=None):
+                """Return different data based on coordinates (Open-Meteo format)"""
                 mock_response = Mock()
                 mock_response.status_code = 200
 
-                if params['q'] == 'Brussels':
+                # Brussels coordinates: 50.8503, 4.3517
+                if params and params.get('latitude') == 50.8503:
                     mock_response.json.return_value = {
-                        'name': 'Brussels',
-                        'main': {'temp': 15},
-                        'weather': [{'description': 'rainy'}]
+                        'current': {
+                            'temperature_2m': 15,
+                            'time': '2025-09-30T10:00'
+                        }
                     }
-                elif params['q'] == 'Paris':
+                # Paris coordinates: 48.8566, 2.3522
+                elif params and params.get('latitude') == 48.8566:
                     mock_response.json.return_value = {
-                        'name': 'Paris',
-                        'main': {'temp': 20},
-                        'weather': [{'description': 'sunny'}]
+                        'current': {
+                            'temperature_2m': 20,
+                            'time': '2025-09-30T10:00'
+                        }
                     }
 
                 return mock_response
@@ -186,9 +188,10 @@ class TestCaching:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.json.return_value = {
-                'main': {'temp': 20},
-                'weather': [{'description': 'sunny'}],
-                'name': 'Brussels'
+                'current': {
+                    'temperature_2m': 20,
+                    'time': '2025-09-30T10:00'
+                }
             }
             mock_get.return_value = mock_response
 

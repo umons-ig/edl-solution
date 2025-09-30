@@ -5,7 +5,7 @@
 
 ## 🎯 What You'll Build
 
-A REST API that wraps the OpenWeatherMap API with:
+A REST API that wraps the Open-Meteo weather API with:
 - ✅ Current weather endpoint
 - ✅ Weather comparison between cities
 - ✅ Error handling
@@ -25,7 +25,7 @@ uv run pytest -v
 uv run uvicorn app:app --reload
 ```
 
-**Note**: No API key needed! All tests use mocks. See [`.env.example`](.env.example) if you want to test manually with real API calls.
+**Note**: No API key needed! Uses Open-Meteo (free, no signup). All tests use mocks anyway.
 
 ## 📚 Workshop Structure
 
@@ -162,7 +162,7 @@ By the end of this workshop, you will:
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [pytest Documentation](https://docs.pytest.org/)
 - [unittest.mock Guide](https://docs.python.org/3/library/unittest.mock.html)
-- [OpenWeatherMap API](https://openweathermap.org/api)
+- [Open-Meteo API](https://open-meteo.com/)
 
 ---
 

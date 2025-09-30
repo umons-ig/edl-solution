@@ -13,9 +13,18 @@ import os
 
 app = FastAPI(title="Weather API", version="1.0.0")
 
-# OpenWeatherMap API configuration
-OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY', 'demo_key')
-OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5/weather'
+# Open-Meteo API configuration (No API key needed!)
+# Open-Meteo is a free, open-source weather API
+# Docs: https://open-meteo.com/
+WEATHER_API_BASE_URL = 'https://api.open-meteo.com/v1/forecast'
+
+# City coordinates (simplified - in real app, use geocoding)
+CITY_COORDINATES = {
+    'Brussels': {'latitude': 50.8503, 'longitude': 4.3517},
+    'Paris': {'latitude': 48.8566, 'longitude': 2.3522},
+    'London': {'latitude': 51.5074, 'longitude': -0.1278},
+    'Berlin': {'latitude': 52.52, 'longitude': 13.41},
+}
 
 
 @app.get("/")
@@ -48,10 +57,12 @@ def root():
 #     """
 #     # TODO: Implement this endpoint
 #     # Hints:
-#     # 1. Call OpenWeatherMap API with requests.get()
-#     # 2. Handle errors (404, timeouts, connection errors)
-#     # 3. Parse response and return formatted data
-#     # 4. Use try/except to catch requests exceptions
+#     # 1. Get coordinates from CITY_COORDINATES (or raise 404 if not found)
+#     # 2. Call Open-Meteo API: requests.get(WEATHER_API_BASE_URL, params={...})
+#     #    params: latitude, longitude, current='temperature_2m,weather_code'
+#     # 3. Handle errors (404 for unknown city, 503 for timeouts/connection errors)
+#     # 4. Parse response and return: {city, temperature, description}
+#     # 5. Use try/except to catch requests exceptions
 #     pass
 
 
