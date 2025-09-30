@@ -77,10 +77,13 @@ Implement simple in-memory caching with a 10-minute TTL.
 
 **Goal**: Automate testing with GitHub Actions
 
+**Guide**: Follow [GITHUB_ACTIONS_GUIDE.md](GITHUB_ACTIONS_GUIDE.md) for step-by-step instructions
+
 **Tasks**:
 1. Create `.github/workflows/test.yml`
-2. Configure workflow to run tests on push
-3. Push to GitHub and verify CI passes
+2. Add workflow configuration (see guide for template)
+3. Commit and push to GitHub
+4. Verify CI runs and passes on GitHub Actions tab
 
 ## 📖 Detailed Instructions
 
@@ -122,6 +125,8 @@ curl "http://localhost:8000/weather/compare?city1=Brussels&city2=Paris"
 - `app.py` - Your FastAPI application (⚠️ incomplete - you'll implement this)
 - `test_weather_api.py` - Test suite (✅ complete - guides your implementation)
 - `pyproject.toml` - Dependencies
+- `GITHUB_ACTIONS_GUIDE.md` - Step-by-step CI/CD setup guide
+- `.env.example` - Environment variables template
 - `README.md` - This file
 - `docs/` - Detailed guides and references
 
