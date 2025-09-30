@@ -1,176 +1,170 @@
-# Python Testing Workshops
+# Workshop 1: Weather API - TDD Fundamentals & CI/CD
 
-A hands-on workshop series teaching Test-Driven Development (TDD), unit testing with pytest, and CI/CD with GitHub Actions.
+**Duration**: 3 hours
+**Goal**: Learn Test-Driven Development by building a Weather API
 
-## 🎯 Workshop Goals
+## 🎯 What You'll Build
 
-By completing this workshop series, you will:
-- Master modern Python dependency management with **uv**
-- Write effective unit tests with **pytest**
-- Apply Test-Driven Development principles
-- Mock external dependencies in tests
-- Set up Continuous Integration with **GitHub Actions**
-- Build and test real-world applications
+A REST API that wraps the OpenWeatherMap API with:
+- ✅ Current weather endpoint
+- ✅ Weather comparison between cities
+- ✅ Error handling
+- ✅ Caching (optional)
+- ✅ Automated testing with GitHub Actions
 
-## 📚 Workshop Series
+## 🚀 Quick Start
 
-### Workshop 1: TDD Fundamentals & CI/CD (3 hours)
-**Project**: Weather API Wrapper
+```bash
+# Install dependencies
+uv sync
 
-Learn the basics of test-driven development by building a weather API that wraps OpenWeatherMap.
+# Run tests (they will fail - your job is to make them pass!)
+uv run pytest -v
 
-**Topics covered**:
-- Introduction to TDD (Red-Green-Refactor cycle)
-- Writing unit tests with pytest
-- Mocking external API calls
-- Error handling and edge cases
-- Setting up GitHub Actions CI/CD
-
-**Branch**: `workshop-1`
-
----
-
-### Workshop 2: Database Testing & Integration (3 hours)
-**Project**: URL Shortener
-
-Build a URL shortener service with database persistence and learn integration testing strategies.
-
-**Topics covered**:
-- Database testing with SQLite/Postgres
-- Integration vs unit testing
-- Test fixtures and setup/teardown
-- Testing CRUD operations
-- Advanced pytest features
-
-**Branch**: `workshop-2`
-
----
-
-### Workshop 3: Advanced Testing Patterns (3 hours)
-**Project**: TBD
-
-Advanced testing techniques for production applications.
-
-**Topics covered**:
-- Property-based testing
-- Performance testing
-- Code coverage analysis
-- Testing async code
-- Best practices and patterns
-
-**Branch**: `workshop-3`
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Python 3.11+**
-- **Git**
-- **uv** (modern Python package manager)
-- **GitHub account**
-- **Text editor** (VS Code recommended)
-
-### Installation
-
-1. **Install uv**
-   ```bash
-   # macOS/Linux
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-
-   # Windows
-   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-
-   # Verify installation
-   uv --version
-   ```
-
-2. **Clone this repository**
-   ```bash
-   git clone https://github.com/umons-ig/edl-tp-1.git
-   cd edl-tp-1
-   ```
-
-3. **(Optional) Explore examples**
-   ```bash
-   git checkout examples
-   # Browse complete examples (calculator demo, mocking examples)
-   ```
-
-4. **Start Workshop 1**
-   ```bash
-   git checkout workshop-1
-   uv sync
-   uv run pytest
-   # Follow the README.md in that branch
-   ```
-
-## 📖 Branch Structure
-
-- **`main`** - This overview page and documentation
-- **`examples`** - Complete reference implementations (calculator demo, mocking examples)
-- **`workshop-1`** - Weather API exercises (incomplete starter code)
-- **`workshop-2`** - URL Shortener exercises (incomplete starter code)
-- **`workshop-3`** - Advanced testing exercises (incomplete starter code)
-
-## 💡 How to Use This Repository
-
-Each workshop is on its own branch with:
-- Incomplete starter code (with TODOs)
-- Test files that guide your implementation
-- README with detailed instructions
-- GitHub Actions workflow for CI/CD
-
-**Workflow**:
-1. Checkout the workshop branch
-2. Read the README
-3. Run tests to see what's failing
-4. Implement code to make tests pass
-5. Push and see CI/CD in action
-
-## 📝 Learning Path
-
-```
-examples branch (optional)
-    ↓
-workshop-1: TDD basics + mocking
-    ↓
-workshop-2: Database + integration tests
-    ↓
-workshop-3: Advanced patterns
+# Run the API (once implemented)
+uv run uvicorn app:app --reload
 ```
 
-## 🛠️ Tools & Technologies
+## 📚 Workshop Structure
 
-- **uv** - Fast Python package manager
-- **pytest** - Testing framework
-- **FastAPI** - Modern web framework
-- **GitHub Actions** - CI/CD platform
-- **SQLite/Postgres** - Database (workshop 2+)
+### Part 1: Calculator Demo (30 min)
+Quick introduction to TDD with a simple calculator example.
 
-## 📚 Additional Resources
+**Check out the examples:**
+```bash
+git checkout examples
+uv sync
+uv run pytest calculator/test_calculator.py -v
+git checkout workshop-1  # Come back when done
+```
 
-See the [`docs/`](docs/) folder for:
-- [Setup Guide](docs/setup-guide.md) - Detailed installation instructions
-- [pytest Cheatsheet](docs/pytest-cheatsheet.md) - Quick reference
-- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
+### Part 2: Weather API Exercises (120 min)
 
-## 🤝 Contributing
+#### Exercise 2A: Basic Weather Endpoint (30 min)
+**Goal**: Implement `GET /weather/{city}`
 
-Found an issue or have a suggestion? Please open an issue or submit a pull request!
+**Test to pass**: `test_get_weather_success`
 
-## 📄 License
+**What to do**:
+1. Read the test in `test_weather_api.py`
+2. Run `uv run pytest test_weather_api.py::test_get_weather_success -v` (see it fail)
+3. Implement the endpoint in `app.py`
+4. Make the test pass ✅
 
-This workshop material is for educational purposes.
+#### Exercise 2B: Error Handling (25 min)
+**Goal**: Handle API failures gracefully
 
-## 👨‍🏫 Instructors
+**Tests to pass**:
+- `test_get_weather_city_not_found` - Return 404 for invalid cities
+- `test_get_weather_api_timeout` - Return 503 when API times out
+- `test_get_weather_connection_error` - Handle connection errors
 
-Created for UMONS software engineering courses.
+#### Exercise 2C: Weather Comparison (30 min)
+**Goal**: Implement `GET /weather/compare?city1=X&city2=Y`
+
+**Test to pass**: `test_compare_weather`
+
+Compare weather between two cities and calculate the temperature difference.
+
+#### Exercise 2D: Caching (Optional - 25 min)
+**Goal**: Cache results to reduce API calls
+
+**Test to pass**: `test_weather_caching`
+
+Implement simple in-memory caching with a 10-minute TTL.
+
+### Part 3: GitHub Actions CI/CD (30 min)
+
+**Goal**: Automate testing with GitHub Actions
+
+**Tasks**:
+1. Create `.github/workflows/test.yml`
+2. Configure workflow to run tests on push
+3. Push to GitHub and verify CI passes
+
+## 📖 Detailed Instructions
+
+See [docs/TP1-weather-api.md](docs/TP1-weather-api.md) for:
+- Step-by-step instructions
+- Code examples
+- Tips and hints
+- Troubleshooting
+
+## 🧪 Running Tests
+
+```bash
+# Run all tests
+uv run pytest -v
+
+# Run specific test
+uv run pytest test_weather_api.py::test_get_weather_success -v
+
+# Run with coverage
+uv run pytest --cov=app -v
+
+# Show print statements
+uv run pytest -s
+```
+
+## 🏃 Running the API
+
+```bash
+# Start the development server
+uv run uvicorn app:app --reload
+
+# Test manually (in another terminal)
+curl http://localhost:8000/weather/Brussels
+curl "http://localhost:8000/weather/compare?city1=Brussels&city2=Paris"
+```
+
+## 📝 Files in This Branch
+
+- `app.py` - Your FastAPI application (⚠️ incomplete - you'll implement this)
+- `test_weather_api.py` - Test suite (✅ complete - guides your implementation)
+- `pyproject.toml` - Dependencies
+- `README.md` - This file
+- `docs/` - Detailed guides and references
+
+## 🎓 Learning Objectives
+
+By the end of this workshop, you will:
+- ✅ Understand the TDD cycle (Red → Green → Refactor)
+- ✅ Write unit tests with pytest
+- ✅ Mock external dependencies
+- ✅ Build REST APIs with FastAPI
+- ✅ Handle errors properly
+- ✅ Set up CI/CD with GitHub Actions
+
+## 💡 Tips
+
+- **Read the tests first** - They tell you what to build
+- **Make one test pass at a time** - Don't try to do everything at once
+- **Run tests frequently** - See your progress
+- **Ask for help** - Instructors are here to guide you
+- **Reference the examples** - `git checkout examples` to see working code
+
+## 🆘 Need Help?
+
+- **Test failing?** Run with `-vv` for more details: `uv run pytest -vv`
+- **Import error?** Make sure you ran `uv sync`
+- **Mock not working?** Check the patch path matches your import
+- **Stuck?** See [docs/troubleshooting.md](docs/troubleshooting.md)
+
+## 📚 Resources
+
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [pytest Documentation](https://docs.pytest.org/)
+- [unittest.mock Guide](https://docs.python.org/3/library/unittest.mock.html)
+- [OpenWeatherMap API](https://openweathermap.org/api)
 
 ---
 
 **Ready to start?**
+
 ```bash
-git checkout workshop-1
+uv sync
+uv run pytest -v
+# See the failing tests → time to code!
 ```
+
+**Good luck! 🚀**

@@ -1,12 +1,19 @@
 [project]
-name = "edl-tp-1"
+name = "workshop-1-weather-api"
 version = "0.1.0"
-description = "Add your description here"
+description = "Workshop 1: Weather API with TDD and CI/CD"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "pytest>=8.4.2",
-    "pytest-asyncio>=1.2.0",
-    "pytest-cov>=7.0.0",
-    "requests>=2.32.5",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "requests>=2.32.0",
+    "pytest>=8.4.0",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest-cov>=4.1.0",
+    "ruff>=0.7.0",
 ]
