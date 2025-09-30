@@ -172,26 +172,13 @@ Ce workshop met l'accent sur les **pratiques DevOps modernes** :
 
 ```mermaid
 graph TD
-    A[💻 Développement Local] --> B[🔴 Étape 1: Écrire un test]
-    B --> C[▶️ Lancer pytest]
-    C --> D{Test passe ?}
-    D -->|❌ Non| E[🟢 Étape 2: Écrire le code]
-    E --> C
-    D -->|✅ Oui| F[🔵 Étape 3: Refactoriser]
-    F --> G[📤 Étape 4: git push]
-    G --> H[🤖 GitHub Actions démarre]
-    H --> I[🧪 Tests automatiques]
-    I --> J{Tous les tests passent ?}
-    J -->|✅ Oui| K[🎉 Merge autorisé]
-    J -->|❌ Non| L[⚠️ Corriger le code]
-    L --> B
-
-    style B fill:#ff6b6b
-    style E fill:#51cf66
-    style F fill:#339af0
-    style H fill:#ffd43b
-    style K fill:#51cf66
-    style L fill:#ff6b6b
+    A[🔴 Écrire un test] --> B[▶️ pytest]
+    B -->|❌ Échoue| C[🟢 Écrire le code]
+    C --> B
+    B -->|✅ Passe| D[📤 git push]
+    D --> E[🤖 GitHub Actions]
+    E -->|✅| F[🎉 Merge]
+    E -->|❌| A
 ```
 
 ### Développement piloté par les tests (TDD)
