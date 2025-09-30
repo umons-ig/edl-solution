@@ -1,80 +1,86 @@
-# Python Testing Workshops
+# Workshops Tests Python & CI/CD
 
-A hands-on workshop series teaching Test-Driven Development (TDD), unit testing with pytest, and CI/CD with GitHub Actions.
+Série de workshops pratiques pour apprendre les tests unitaires, le développement piloté par les tests (TDD) et l'intégration continue (CI/CD) avec Python.
 
-## 🎯 Workshop Goals
+## 🎯 Objectifs pédagogiques
 
-By completing this workshop series, you will:
-- Master modern Python dependency management with **uv**
-- Write effective unit tests with **pytest**
-- Apply Test-Driven Development principles
-- Mock external dependencies in tests
-- Set up Continuous Integration with **GitHub Actions**
-- Build and test real-world applications
+L'objectif principal de ces workshops est d'apprendre les **méthodes CI/CD** et les bonnes pratiques de développement moderne.
 
-## 📚 Workshop Series
+À la fin de cette série, vous maîtriserez :
+- 🧪 **Tests unitaires** avec pytest
+- 🔄 **TDD (Test-Driven Development)** - Développement piloté par les tests
+- 🤖 **GitHub Actions** - Configuration de workflows CI/CD automatisés
+- 📦 **uv** - Gestion moderne des dépendances Python
+- 🚀 **FastAPI** - Construction d'APIs REST testables
+- 🎭 **Mocking** - Simulation de dépendances externes
 
-### Workshop 1: TDD Fundamentals & CI/CD (3 hours)
-**Project**: Weather API Wrapper
+## 📚 Série de workshops
 
-Learn the basics of test-driven development by building a weather API that wraps OpenWeatherMap.
+### Workshop 1 : Fondamentaux TDD & CI/CD (3 heures)
+**Projet** : API Météo
 
-**Topics covered**:
-- Introduction to TDD (Red-Green-Refactor cycle)
-- Writing unit tests with pytest
-- Mocking external API calls
-- Error handling and edge cases
-- Setting up GitHub Actions CI/CD
+Apprenez les bases du TDD en construisant une API météo.
 
-**Branch**: `workshop-1`
+**Compétences acquises** :
+- Cycle TDD (Rouge → Vert → Refactoriser)
+- Écriture de tests unitaires avec pytest
+- Mocking d'appels API externes
+- Gestion d'erreurs et cas limites
+- Configuration de GitHub Actions pour CI/CD
 
----
-
-### Workshop 2: Database Testing & Integration (3 hours)
-**Project**: URL Shortener
-
-Build a URL shortener service with database persistence and learn integration testing strategies.
-
-**Topics covered**:
-- Database testing with SQLite/Postgres
-- Integration vs unit testing
-- Test fixtures and setup/teardown
-- Testing CRUD operations
-- Advanced pytest features
-
-**Branch**: `workshop-2`
+**Branche** : `workshop-1`
 
 ---
 
-### Workshop 3: Advanced Testing Patterns (3 hours)
-**Project**: TBD
+### Workshop 2 : Tests de base de données & intégration (3 heures)
+**Projet** : Raccourcisseur d'URL
 
-Advanced testing techniques for production applications.
+Construisez un service de raccourcissement d'URL avec persistance en base de données.
 
-**Topics covered**:
+**Compétences acquises** :
+- Tests de base de données (SQLite/Postgres)
+- Tests d'intégration vs tests unitaires
+- Fixtures et setup/teardown
+- Tests d'opérations CRUD
+- Fonctionnalités avancées de pytest
+
+**Branche** : `workshop-2`
+
+---
+
+### Workshop 3 : Patterns de tests avancés (3 heures)
+**Projet** : À déterminer
+
+Techniques de tests avancées pour applications en production.
+
+**Compétences acquises** :
 - Property-based testing
-- Performance testing
-- Code coverage analysis
-- Testing async code
-- Best practices and patterns
+- Tests de performance
+- Analyse de couverture de code
+- Tests de code asynchrone
+- Bonnes pratiques et patterns
 
-**Branch**: `workshop-3`
+**Branche** : `workshop-3`
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Démarrage
 
-### Prerequisites
+### Prérequis
 
 - **Python 3.11+**
 - **Git**
-- **uv** (modern Python package manager)
-- **GitHub account**
-- **Text editor** (VS Code recommended)
+- **uv** (gestionnaire de paquets Python moderne)
+- **Compte GitHub**
+- **Éditeur de texte** (VS Code recommandé)
 
 ### Installation
 
-1. **Install uv**
+**📖 Guide complet** : Consultez le [Guide d'installation](docs/setup-guide.md) pour des instructions détaillées.
+
+**Installation rapide** :
+
+1. **Installer uv**
    ```bash
    # macOS/Linux
    curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -82,95 +88,123 @@ Advanced testing techniques for production applications.
    # Windows
    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
-   # Verify installation
+   # Vérifier l'installation
    uv --version
    ```
 
-2. **Clone this repository**
+2. **Cloner ce dépôt**
    ```bash
    git clone https://github.com/umons-ig/edl-tp-1.git
    cd edl-tp-1
    ```
 
-3. **(Optional) Explore examples**
+3. **(Optionnel) Explorer les exemples**
    ```bash
    git checkout examples
-   # Browse complete examples (calculator demo, mocking examples)
+   # Parcourir les exemples complets (démo calculatrice, exemples de mocking)
    ```
 
-4. **Start Workshop 1**
+4. **Démarrer le Workshop 1**
    ```bash
    git checkout workshop-1
    uv sync
    uv run pytest
-   # Follow the README.md in that branch
+   # Suivre le README.md dans cette branche
    ```
 
-## 📖 Branch Structure
+## 📖 Structure des branches
 
-- **`main`** - This overview page and documentation
-- **`examples`** - Complete reference implementations (calculator demo, mocking examples)
-- **`workshop-1`** - Weather API exercises (incomplete starter code)
-- **`workshop-2`** - URL Shortener exercises (incomplete starter code)
-- **`workshop-3`** - Advanced testing exercises (incomplete starter code)
+- **`main`** - Cette page d'aperçu et documentation
+- **`examples`** - Implémentations de référence complètes (démo calculatrice)
+- **`workshop-1`** - Exercices API Météo (code de départ incomplet)
+- **`workshop-2`** - Exercices Raccourcisseur d'URL (code de départ incomplet)
+- **`workshop-3`** - Exercices de tests avancés (code de départ incomplet)
 
-## 💡 How to Use This Repository
+## 💡 Comment utiliser ce dépôt
 
-Each workshop is on its own branch with:
-- Incomplete starter code (with TODOs)
-- Test files that guide your implementation
-- README with detailed instructions
-- GitHub Actions workflow for CI/CD
+Chaque workshop est sur sa propre branche avec :
+- Code de départ incomplet (avec TODOs)
+- Fichiers de tests qui guident votre implémentation
+- README avec instructions détaillées
+- Workflow GitHub Actions pour CI/CD
 
-**Workflow**:
-1. Checkout the workshop branch
-2. Read the README
-3. Run tests to see what's failing
-4. Implement code to make tests pass
-5. Push and see CI/CD in action
+**Flux de travail** :
+1. Checkout la branche du workshop
+2. Lire le README
+3. Lancer les tests pour voir ce qui échoue
+4. Implémenter le code pour faire passer les tests
+5. Push et voir la CI/CD en action
 
-## 📝 Learning Path
+## 📝 Parcours d'apprentissage
 
 ```
-examples branch (optional)
+branche examples (optionnel)
     ↓
-workshop-1: TDD basics + mocking
+workshop-1: Bases TDD + mocking
     ↓
-workshop-2: Database + integration tests
+workshop-2: Base de données + tests d'intégration
     ↓
-workshop-3: Advanced patterns
+workshop-3: Patterns avancés
 ```
 
-## 🛠️ Tools & Technologies
+## 🛠️ Outils & technologies
 
-- **uv** - Fast Python package manager
-- **pytest** - Testing framework
-- **FastAPI** - Modern web framework
-- **GitHub Actions** - CI/CD platform
-- **SQLite/Postgres** - Database (workshop 2+)
+- **uv** - Gestionnaire de paquets Python rapide
+- **pytest** - Framework de tests
+- **FastAPI** - Framework web moderne
+- **GitHub Actions** - Plateforme CI/CD
+- **Open-Meteo API** - API météo gratuite (pas de clé requise)
+- **SQLite/Postgres** - Base de données (workshop 2+)
 
-## 📚 Additional Resources
+## 📚 Ressources supplémentaires
 
-See the [`docs/`](docs/) folder for:
-- [Setup Guide](docs/setup-guide.md) - Detailed installation instructions
-- [pytest Cheatsheet](docs/pytest-cheatsheet.md) - Quick reference
-- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
+Consultez le dossier [`docs/`](docs/) pour :
+- [Guide d'installation](docs/setup-guide.md) - Instructions détaillées d'installation
+- [Aide-mémoire pytest](docs/pytest-cheatsheet.md) - Référence rapide
+- [Dépannage](docs/troubleshooting.md) - Problèmes courants et solutions
+- [Guide GitHub Actions](GITHUB_ACTIONS_GUIDE.md) - Configuration CI/CD pas-à-pas
 
-## 🤝 Contributing
+## 🎓 Méthodologie CI/CD enseignée
 
-Found an issue or have a suggestion? Please open an issue or submit a pull request!
+Ce workshop met l'accent sur les **pratiques DevOps modernes** :
 
-## 📄 License
+### Développement piloté par les tests (TDD)
+1. **🔴 Rouge** : Écrire un test qui échoue
+2. **🟢 Vert** : Écrire le code minimal pour le faire passer
+3. **🔵 Refactor** : Améliorer le code tout en gardant les tests verts
 
-This workshop material is for educational purposes.
+### Intégration Continue (CI)
+- Tests automatiques à chaque push
+- Vérification de la qualité du code
+- Détection précoce des bugs
+- Workflow GitHub Actions configuré
 
-## 👨‍🏫 Instructors
+### Livraison Continue (CD)
+- Déploiement automatisé (workshops avancés)
+- Environnements de test
+- Pipeline de release
 
-Created for UMONS software engineering courses.
+## 🤝 Contribution
+
+Vous avez trouvé un problème ou avez une suggestion ? N'hésitez pas à ouvrir une issue ou soumettre une pull request !
+
+## 📄 Licence
+
+Ce matériel de workshop est destiné à des fins éducatives.
+
+## 👨‍🏫 Instructeurs
+
+Créé pour les cours de génie logiciel de l'UMONS.
 
 ---
 
-**Ready to start?**
+**Prêt à commencer ?**
 ```bash
 git checkout workshop-1
+```
+
+**Besoin d'aide pour l'installation ?**
+```bash
+# Consulter le guide détaillé
+cat docs/setup-guide.md
 ```
