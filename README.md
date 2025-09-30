@@ -172,24 +172,26 @@ Ce workshop met l'accent sur les **pratiques DevOps modernes** :
 
 ```mermaid
 graph TD
-    A[💻 Développement Local] --> B[🔴 Écrire Test qui échoue]
-    B --> C[🟢 Écrire Code minimal]
-    C --> D[✅ Test passe ?]
-    D -->|Oui| E[🔵 Refactoriser]
-    D -->|Non| C
-    E --> F[📤 git push]
-    F --> G[🤖 GitHub Actions]
-    G --> H[🧪 Tests automatiques]
-    H -->|✅ Succès| I[🎉 Prêt à merger]
-    H -->|❌ Échec| J[🔙 Corriger le code]
-    J --> B
+    A[💻 Développement Local] --> B[🔴 Étape 1: Écrire un test]
+    B --> C[▶️ Lancer pytest]
+    C --> D{Test passe ?}
+    D -->|❌ Non| E[🟢 Étape 2: Écrire le code]
+    E --> C
+    D -->|✅ Oui| F[🔵 Étape 3: Refactoriser]
+    F --> G[📤 Étape 4: git push]
+    G --> H[🤖 GitHub Actions démarre]
+    H --> I[🧪 Tests automatiques]
+    I --> J{Tous les tests passent ?}
+    J -->|✅ Oui| K[🎉 Merge autorisé]
+    J -->|❌ Non| L[⚠️ Corriger le code]
+    L --> B
 
     style B fill:#ff6b6b
-    style C fill:#51cf66
-    style E fill:#339af0
-    style G fill:#ffd43b
-    style I fill:#51cf66
-    style J fill:#ff6b6b
+    style E fill:#51cf66
+    style F fill:#339af0
+    style H fill:#ffd43b
+    style K fill:#51cf66
+    style L fill:#ff6b6b
 ```
 
 ### Développement piloté par les tests (TDD)
@@ -208,28 +210,22 @@ graph TD
 - Environnements de test
 - Pipeline de release
 
-### 🔄 Pipeline CI/CD en action
+### 🔄 Étapes détaillées du workflow
 
-```mermaid
-graph TD
-    Start[👨‍💻 Développeur] --> Local[💻 Travail Local]
-    Local --> Test[🧪 Tests locaux passent]
-    Test --> Push[📤 git push]
-    Push --> GH[📦 GitHub reçoit le code]
-    GH --> Action[🤖 GitHub Actions démarre]
-    Action --> Install[📦 Installation dépendances]
-    Install --> Run[🧪 Exécution tests]
-    Run --> Check{Résultat ?}
-    Check -->|✅ Succès| Success[🎉 Merge autorisé]
-    Check -->|❌ Échec| Fail[⚠️ Notification développeur]
-    Fail --> Fix[🔧 Correction code]
-    Fix --> Local
+**En local (sur votre ordinateur)** :
+1. 🔴 Écrire un test
+2. ▶️ `uv run pytest` → ❌ Test échoue (normal !)
+3. 🟢 Écrire le code
+4. ▶️ `uv run pytest` → ✅ Test passe
+5. 🔵 Améliorer le code (refactor)
+6. 📤 `git push`
 
-    style Test fill:#51cf66
-    style Action fill:#ffd43b
-    style Success fill:#51cf66
-    style Fail fill:#ff6b6b
-```
+**Sur GitHub (automatique)** :
+1. 🤖 GitHub Actions se lance automatiquement
+2. 📦 Installation des dépendances (`uv sync`)
+3. 🧪 Exécution de tous les tests (`uv run pytest`)
+4. **Si ✅ tous les tests passent** → 🎉 Vous pouvez merger !
+5. **Si ❌ un test échoue** → ⚠️ Retour à l'étape 1 pour corriger
 
 ## 🤝 Contribution
 
