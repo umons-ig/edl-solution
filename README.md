@@ -1,176 +1,123 @@
-# Python Testing Workshops
+# Examples Branch - Complete Reference Implementations
 
-A hands-on workshop series teaching Test-Driven Development (TDD), unit testing with pytest, and CI/CD with GitHub Actions.
+This branch contains **complete, working examples** demonstrating Test-Driven Development and testing best practices.
 
-## 🎯 Workshop Goals
+## 📚 Available Examples
 
-By completing this workshop series, you will:
-- Master modern Python dependency management with **uv**
-- Write effective unit tests with **pytest**
-- Apply Test-Driven Development principles
-- Mock external dependencies in tests
-- Set up Continuous Integration with **GitHub Actions**
-- Build and test real-world applications
+### 1. Calculator
+**Location**: `calculator/`
 
-## 📚 Workshop Series
+A complete TDD example showing:
+- ✅ All tests passing
+- ✅ Exception handling
+- ✅ Parameterized tests
+- ✅ Test organization with classes
+- ✅ Clear documentation
 
-### Workshop 1: TDD Fundamentals & CI/CD (3 hours)
-**Project**: Weather API Wrapper
-
-Learn the basics of test-driven development by building a weather API that wraps OpenWeatherMap.
-
-**Topics covered**:
-- Introduction to TDD (Red-Green-Refactor cycle)
-- Writing unit tests with pytest
-- Mocking external API calls
-- Error handling and edge cases
-- Setting up GitHub Actions CI/CD
-
-**Branch**: `workshop-1`
-
----
-
-### Workshop 2: Database Testing & Integration (3 hours)
-**Project**: URL Shortener
-
-Build a URL shortener service with database persistence and learn integration testing strategies.
-
-**Topics covered**:
-- Database testing with SQLite/Postgres
-- Integration vs unit testing
-- Test fixtures and setup/teardown
-- Testing CRUD operations
-- Advanced pytest features
-
-**Branch**: `workshop-2`
-
----
-
-### Workshop 3: Advanced Testing Patterns (3 hours)
-**Project**: TBD
-
-Advanced testing techniques for production applications.
-
-**Topics covered**:
-- Property-based testing
-- Performance testing
-- Code coverage analysis
-- Testing async code
-- Best practices and patterns
-
-**Branch**: `workshop-3`
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Python 3.11+**
-- **Git**
-- **uv** (modern Python package manager)
-- **GitHub account**
-- **Text editor** (VS Code recommended)
-
-### Installation
-
-1. **Install uv**
-   ```bash
-   # macOS/Linux
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-
-   # Windows
-   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-
-   # Verify installation
-   uv --version
-   ```
-
-2. **Clone this repository**
-   ```bash
-   git clone https://github.com/umons-ig/edl-tp-1.git
-   cd edl-tp-1
-   ```
-
-3. **(Optional) Explore examples**
-   ```bash
-   git checkout examples
-   # Browse complete examples (calculator demo, mocking examples)
-   ```
-
-4. **Start Workshop 1**
-   ```bash
-   git checkout workshop-1
-   uv sync
-   uv run pytest
-   # Follow the README.md in that branch
-   ```
-
-## 📖 Branch Structure
-
-- **`main`** - This overview page and documentation
-- **`examples`** - Complete reference implementations (calculator demo, mocking examples)
-- **`workshop-1`** - Weather API exercises (incomplete starter code)
-- **`workshop-2`** - URL Shortener exercises (incomplete starter code)
-- **`workshop-3`** - Advanced testing exercises (incomplete starter code)
-
-## 💡 How to Use This Repository
-
-Each workshop is on its own branch with:
-- Incomplete starter code (with TODOs)
-- Test files that guide your implementation
-- README with detailed instructions
-- GitHub Actions workflow for CI/CD
-
-**Workflow**:
-1. Checkout the workshop branch
-2. Read the README
-3. Run tests to see what's failing
-4. Implement code to make tests pass
-5. Push and see CI/CD in action
-
-## 📝 Learning Path
-
-```
-examples branch (optional)
-    ↓
-workshop-1: TDD basics + mocking
-    ↓
-workshop-2: Database + integration tests
-    ↓
-workshop-3: Advanced patterns
+```bash
+cd calculator/
+uv sync
+uv run pytest -v
+uv run python calculator.py
 ```
 
-## 🛠️ Tools & Technologies
+**What to learn**:
+- Basic pytest syntax
+- Testing exceptions with `pytest.raises`
+- Using `@pytest.mark.parametrize`
+- Error handling patterns
 
-- **uv** - Fast Python package manager
-- **pytest** - Testing framework
-- **FastAPI** - Modern web framework
-- **GitHub Actions** - CI/CD platform
-- **SQLite/Postgres** - Database (workshop 2+)
-
-## 📚 Additional Resources
-
-See the [`docs/`](docs/) folder for:
-- [Setup Guide](docs/setup-guide.md) - Detailed installation instructions
-- [pytest Cheatsheet](docs/pytest-cheatsheet.md) - Quick reference
-- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
-
-## 🤝 Contributing
-
-Found an issue or have a suggestion? Please open an issue or submit a pull request!
-
-## 📄 License
-
-This workshop material is for educational purposes.
-
-## 👨‍🏫 Instructors
-
-Created for UMONS software engineering courses.
+📖 See [calculator/README.md](calculator/README.md) for details
 
 ---
 
-**Ready to start?**
+## 🎯 How to Use These Examples
+
+These examples are **reference material** for the workshops. They show the complete, working code so you can:
+
+1. **Understand the patterns** before implementing them yourself
+2. **Reference when stuck** during workshop exercises
+3. **See best practices** in action
+
+## 🚀 Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/umons-ig/edl-tp-1.git
+cd edl-tp-1
+
+# Checkout examples branch
+git checkout examples
+
+# Navigate to an example
+cd calculator/
+
+# Install dependencies
+uv sync
+
+# Run tests
+uv run pytest -v
+
+# Run the code
+uv run python calculator.py
+```
+
+## 📖 Workshop Flow
+
+1. **Instructor demos** using code from this branch
+2. **Students explore** these examples to understand patterns
+3. **Students switch to workshop branch** to implement from scratch
+4. **Students can reference back** to these examples when needed
+
+## 🔄 Switching to Workshops
+
+After exploring examples, start the actual workshops:
+
+```bash
+# Workshop 1: Weather API
+git checkout workshop-1
+uv sync
+uv run pytest
+# Follow the README in that branch
+
+# Workshop 2: URL Shortener
+git checkout workshop-2
+uv sync
+# Coming soon...
+```
+
+## 📝 Note
+
+**These examples are COMPLETE**.
+The workshop branches have **incomplete starter code** that you'll implement yourself.
+
+---
+
+## 🤝 Adding More Examples
+
+To add more examples to this branch:
+
+```bash
+git checkout examples
+
+# Create new example directory
+mkdir new-example/
+cd new-example/
+
+# Add README, code, tests, pyproject.toml
+# Commit changes
+```
+
+## 📚 Resources
+
+- [Main README](../main/README.md) - Workshop overview
+- [Setup Guide](../main/docs/setup-guide.md) - Installation instructions
+- [pytest Cheatsheet](../main/docs/pytest-cheatsheet.md) - Testing reference
+
+---
+
+**Ready to start the workshops?**
+
 ```bash
 git checkout workshop-1
 ```
