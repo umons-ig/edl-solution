@@ -168,6 +168,30 @@ Consultez le dossier [`docs/`](docs/) pour :
 
 Ce workshop met l'accent sur les **pratiques DevOps modernes** :
 
+### 📊 Workflow TDD + CI/CD
+
+```mermaid
+graph LR
+    A[💻 Code Local] --> B[🔴 Écrire Test]
+    B --> C[Test Échoue ❌]
+    C --> D[🟢 Écrire Code]
+    D --> E[Test Passe ✅]
+    E --> F[🔵 Refactor]
+    F --> G[📤 git push]
+    G --> H[🤖 GitHub Actions]
+    H --> I[🧪 Lancer Tests]
+    I -->|✅ Succès| J[✨ Merge possible]
+    I -->|❌ Échec| K[🔙 Corriger]
+    K --> D
+
+    style B fill:#ff6b6b
+    style D fill:#51cf66
+    style F fill:#339af0
+    style H fill:#ffd43b
+    style J fill:#51cf66
+    style K fill:#ff6b6b
+```
+
 ### Développement piloté par les tests (TDD)
 1. **🔴 Rouge** : Écrire un test qui échoue
 2. **🟢 Vert** : Écrire le code minimal pour le faire passer
@@ -183,6 +207,37 @@ Ce workshop met l'accent sur les **pratiques DevOps modernes** :
 - Déploiement automatisé (workshops avancés)
 - Environnements de test
 - Pipeline de release
+
+### 🔄 Workflow Complet avec Git
+
+```mermaid
+sequenceDiagram
+    participant Dev as 👨‍💻 Développeur
+    participant Local as 💻 Local
+    participant Git as 📦 GitHub
+    participant CI as 🤖 CI/CD
+
+    Dev->>Local: Écrire test (Rouge 🔴)
+    Dev->>Local: Lancer pytest
+    Local-->>Dev: ❌ Test échoue
+    Dev->>Local: Écrire code (Vert 🟢)
+    Dev->>Local: Lancer pytest
+    Local-->>Dev: ✅ Test passe
+    Dev->>Local: Refactor (Bleu 🔵)
+    Dev->>Git: git push
+    Git->>CI: Déclencher workflow
+    CI->>CI: Installation dépendances
+    CI->>CI: Lancer tous les tests
+    alt Tests réussis
+        CI-->>Git: ✅ Statut: Success
+        Git-->>Dev: 🎉 Prêt à merger
+    else Tests échoués
+        CI-->>Git: ❌ Statut: Failed
+        Git-->>Dev: 🔙 Corrections nécessaires
+        Dev->>Local: Corriger le code
+        Dev->>Git: git push (nouveau cycle)
+    end
+```
 
 ## 🤝 Contribution
 
