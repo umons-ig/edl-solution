@@ -1,119 +1,74 @@
-# TP1: Weather API - TDD Fundamentals & CI/CD
+# TP1: API Météo - TDD & CI/CD
 
-**Duration**: 3 hours
-**Branch**: `workshop-1`
+**Durée**: 3 heures  
+**Branche**: `workshop-1`
 
-## Learning Objectives
+## Objectifs
 
-By the end of this workshop, you will be able to:
-- Apply Test-Driven Development (TDD) principles
-- Write unit tests with pytest
-- Mock external API dependencies
-- Build a REST API with FastAPI
-- Set up GitHub Actions for continuous integration
-- Handle errors and edge cases in tests
+À la fin de ce TP, vous serez capable de:
+- Appliquer les principes du développement piloté par les tests (TDD)
+- Écrire des tests unitaires avec pytest
+- Simuler des dépendances externes avec mock
+- Construire une API REST avec FastAPI
+- Configurer GitHub Actions pour l'intégration continue
+- Gérer les erreurs et cas limites dans les tests
 
-## Prerequisites
+## Prérequis
 
-- Python 3.11+ installed
-- uv installed ([see setup guide](setup-guide.md))
-- Git basics
-- Repository cloned locally
+- Python 3.11+ installé
+- uv installé ([voir guide d'installation](setup-guide.md))
+- Bases de Git
+- Dépôt cloné localement
 
-## Getting Started
+## Démarrage
 
 ```bash
-# Switch to workshop-1 branch
+# Passer sur la branche workshop-1
 git checkout workshop-1
 
-# Install dependencies
+# Installer les dépendances
 uv sync
 
-# Run tests (they will fail initially)
+# Lancer les tests (ils échoueront au début)
 uv run pytest -v
 ```
 
 ---
 
-## Part 1: Introduction & Calculator Demo (30 minutes)
+## Partie 1: Projet API Météo (150 minutes)
 
-### Setup (5 min)
+### Aperçu
 
-Ensure your environment is ready:
-```bash
-uv --version
-python --version
-git status
-```
+Vous allez construire une API REST qui encapsule l'API OpenWeatherMap, fournissant:
+- Météo actuelle pour n'importe quelle ville
+- Comparaison météo entre villes
+- Gestion d'erreurs appropriée
+- Cache (optionnel)
 
-### Calculator Demo (25 min)
-
-See the calculator example to understand TDD basics:
-
-```bash
-# Checkout examples branch
-git checkout examples
-cd calculator/
-
-# Install and run tests
-uv sync
-uv run pytest -v
-```
-
-**Instructor will demonstrate**:
-1. Running a failing test (Red)
-2. Writing code to pass the test (Green)
-3. The TDD cycle
-
-**Your task**: Explore the code and understand:
-- How tests are structured
-- How `pytest.raises` works
-- How to run specific tests
-
-📖 **Reference**: [Starting Example Guide](starting-example.md)
-
----
-
-## Part 2: Weather API Project (120 minutes)
-
-**Switch back to workshop branch:**
-```bash
-git checkout workshop-1
-uv sync
-```
-
-### Overview
-
-You will build a REST API that wraps the OpenWeatherMap API, providing:
-- Current weather for any city
-- Weather comparison between cities
-- Proper error handling
-- Caching (optional)
-
-### Project Structure
+### Structure du projet
 
 ```
 workshop-1/
-├── app.py                    # Your FastAPI application (incomplete)
-├── test_weather_api.py       # Tests (will guide you)
-├── pyproject.toml            # Dependencies
-└── .github/workflows/        # CI configuration (to be created)
+├── app.py                    # Application FastAPI (incomplet)
+├── test_weather_api.py       # Tests (vous guideront)
+├── pyproject.toml            # Dépendances
+└── .github/workflows/        # Configuration CI (à créer)
 ```
 
 ---
 
-### Exercise 2A: Basic Weather Endpoint (30 minutes)
+### Exercice 1A: Endpoint Météo de Base (30 minutes)
 
-**Goal**: Create an endpoint that fetches weather from OpenWeatherMap
+**Objectif**: Créer un endpoint qui récupère la météo depuis OpenWeatherMap
 
-#### Step 1: Understand the Test (5 min)
+#### Étape 1: Comprendre le Test (5 min)
 
-Read the test in `test_weather_api.py`:
+Lisez le test dans `test_weather_api.py`:
 
 ```python
 def test_get_weather_success():
     with patch('app.requests.get') as mock_get:
-        # Mock setup
+        # Configuration du mock
         mock_response = Mock()
         mock_response.json.return_value = {
             'main': {'temp': 20},
@@ -134,84 +89,84 @@ def test_get_weather_success():
         assert data['description'] == 'clear sky'
 ```
 
-**Key concepts**:
-- `patch()` - Replaces `requests.get` with a mock
-- `Mock()` - Fake response object
-- Why? We don't want to call the real API in tests
+**Concepts clés**:
+- `patch()` - Remplace `requests.get` par un mock
+- `Mock()` - Objet de réponse factice
+- Pourquoi? On ne veut pas appeler la vraie API dans les tests
 
-#### Step 2: Run the Test (Red) (2 min)
+#### Étape 2: Lancer le Test (Red) (2 min)
 
 ```bash
 uv run pytest test_weather_api.py::test_get_weather_success -v
 ```
 
-**Expected**: Test fails ❌ (endpoint doesn't exist)
+**Attendu**: Le test échoue ❌ (l'endpoint n'existe pas)
 
-#### Step 3: Implement the Endpoint (Green) (20 min)
+#### Étape 3: Implémenter l'Endpoint (Green) (20 min)
 
-Open `app.py` and implement the `/weather/{city}` endpoint:
+Ouvrez `app.py` et implémentez l'endpoint `/weather/{city}`:
 
-**Hints**:
-- Use FastAPI's `@app.get()` decorator
-- Call OpenWeatherMap API with `requests.get()`
-- Parse the JSON response
-- Return formatted data
+**Indices**:
+- Utilisez le décorateur `@app.get()` de FastAPI
+- Appelez l'API OpenWeatherMap avec `requests.get()`
+- Parsez la réponse JSON
+- Retournez les données formatées
 
-**API Details**:
+**Détails de l'API**:
 - URL: `https://api.openweathermap.org/data/2.5/weather`
-- Parameters: `q` (city), `appid` (API key), `units` (metric)
-- You can use a demo key for testing (real calls will be mocked in tests)
+- Paramètres: `q` (ville), `appid` (clé API), `units` (metric)
+- Vous pouvez utiliser une clé de démo pour les tests (les vrais appels seront mockés)
 
-#### Step 4: Verify Test Passes (3 min)
+#### Étape 4: Vérifier que le Test Passe (3 min)
 
 ```bash
 uv run pytest test_weather_api.py::test_get_weather_success -v
 ```
 
-**Expected**: Test passes ✅
+**Attendu**: Le test passe ✅
 
 ---
 
-### ☕ Break (10 minutes)
+### ☕ Pause (10 minutes)
 
 ---
 
-### Exercise 2B: Error Handling (25 minutes)
+### Exercice 1B: Gestion d'Erreurs (25 minutes)
 
-**Goal**: Handle cases when the external API fails
+**Objectif**: Gérer les cas où l'API externe échoue
 
-#### Tests to Pass
+#### Tests à Passer
 
 ```python
 def test_get_weather_city_not_found():
-    # Should return 404 when city doesn't exist
+    # Doit retourner 404 quand la ville n'existe pas
     ...
 
 def test_get_weather_api_timeout():
-    # Should return 503 when API times out
+    # Doit retourner 503 quand l'API expire
     ...
 
 def test_get_weather_connection_error():
-    # Should return 503 when connection fails
+    # Doit retourner 503 quand la connexion échoue
     ...
 ```
 
-#### Your Tasks
+#### Vos Tâches
 
-1. **Read the tests** - Understand what they expect
-2. **Run the tests** - See them fail
-3. **Add error handling**:
-   - Catch `requests.Timeout`
-   - Catch `requests.ConnectionError`
-   - Handle 404 responses from API
-   - Return appropriate HTTP status codes
-4. **Verify tests pass**
+1. **Lire les tests** - Comprendre ce qu'ils attendent
+2. **Lancer les tests** - Les voir échouer
+3. **Ajouter la gestion d'erreurs**:
+   - Capturer `requests.Timeout`
+   - Capturer `requests.ConnectionError`
+   - Gérer les réponses 404 de l'API
+   - Retourner les codes HTTP appropriés
+4. **Vérifier que les tests passent**
 
-**Hints**:
-- Use `try/except` blocks
-- Use `response.raise_for_status()`
-- Raise `HTTPException` from FastAPI
-- Add `timeout` parameter to `requests.get()`
+**Indices**:
+- Utilisez des blocs `try/except`
+- Utilisez `response.raise_for_status()`
+- Levez `HTTPException` de FastAPI
+- Ajoutez le paramètre `timeout` à `requests.get()`
 
 ```bash
 uv run pytest test_weather_api.py::test_get_weather_city_not_found -v
@@ -220,17 +175,17 @@ uv run pytest test_weather_api.py::test_get_weather_api_timeout -v
 
 ---
 
-### Exercise 2C: Weather Comparison (30 minutes)
+### Exercice 1C: Comparaison Météo (30 minutes)
 
-**Goal**: Compare weather between two cities
+**Objectif**: Comparer la météo entre deux villes
 
-#### API Design
+#### Design de l'API
 
 ```
 GET /weather/compare?city1=Brussels&city2=Paris
 ```
 
-**Expected Response**:
+**Réponse attendue**:
 ```json
 {
   "city1": {
@@ -248,18 +203,18 @@ GET /weather/compare?city1=Brussels&city2=Paris
 }
 ```
 
-#### Your Tasks
+#### Vos Tâches
 
-1. **Read the test** in `test_weather_api.py::test_compare_weather`
-2. **Understand the mock setup** - It returns different data for each city
-3. **Implement the endpoint**:
-   - Accept two query parameters
-   - Fetch weather for both cities
-   - Calculate temperature difference
-   - Determine warmer city
-4. **Run test and verify it passes**
+1. **Lire le test** dans `test_weather_api.py::test_compare_weather`
+2. **Comprendre la configuration du mock** - Il retourne des données différentes pour chaque ville
+3. **Implémenter l'endpoint**:
+   - Accepter deux paramètres de requête
+   - Récupérer la météo pour les deux villes
+   - Calculer la différence de température
+   - Déterminer la ville la plus chaude
+4. **Lancer le test et vérifier qu'il passe**
 
-**Bonus**: Refactor common code into a helper function
+**Bonus**: Refactoriser le code commun dans une fonction helper
 
 ```bash
 uv run pytest test_weather_api.py::test_compare_weather -v
@@ -267,27 +222,27 @@ uv run pytest test_weather_api.py::test_compare_weather -v
 
 ---
 
-### Exercise 2D: Caching (Optional - 25 minutes)
+### Exercice 1D: Cache (Optionnel - 25 minutes)
 
-**Goal**: Cache weather data to reduce API calls
+**Objectif**: Mettre en cache les données météo pour réduire les appels API
 
-#### Why Cache?
+#### Pourquoi un Cache?
 
-- External APIs have rate limits
-- Reduce latency
-- Save costs
-- Weather doesn't change every second
+- Les API externes ont des limites de taux
+- Réduire la latence
+- Économiser des coûts
+- La météo ne change pas toutes les secondes
 
-#### Your Tasks
+#### Vos Tâches
 
-1. **Read the caching test**
-2. **Implement simple in-memory cache**:
-   - Dictionary to store city → (data, timestamp)
-   - Check cache before calling API
-   - Cache results for 10 minutes
-3. **Verify test passes**
+1. **Lire le test de cache**
+2. **Implémenter un cache en mémoire simple**:
+   - Dictionnaire pour stocker ville → (données, timestamp)
+   - Vérifier le cache avant d'appeler l'API
+   - Mettre en cache les résultats pendant 10 minutes
+3. **Vérifier que le test passe**
 
-**Hint**: Use a dictionary and `datetime` for timestamps
+**Indice**: Utilisez un dictionnaire et `datetime` pour les timestamps
 
 ```bash
 uv run pytest test_weather_api.py::test_weather_caching -v
@@ -295,17 +250,17 @@ uv run pytest test_weather_api.py::test_weather_caching -v
 
 ---
 
-### ☕ Break (10 minutes)
+### ☕ Pause (10 minutes)
 
 ---
 
-## Part 3: GitHub Actions CI/CD (30 minutes)
+## Partie 2: GitHub Actions CI/CD (30 minutes)
 
-**Goal**: Automate testing with GitHub Actions
+**Objectif**: Automatiser les tests avec GitHub Actions
 
-### Step 1: Create Workflow File (10 min)
+### Étape 1: Créer le Fichier Workflow (10 min)
 
-Create `.github/workflows/test.yml`:
+Créez `.github/workflows/test.yml`:
 
 ```yaml
 name: Weather API Tests
@@ -339,7 +294,7 @@ jobs:
       run: uv run pytest -v --cov=app
 ```
 
-### Step 2: Commit and Push (5 min)
+### Étape 2: Commit et Push (5 min)
 
 ```bash
 git add .github/workflows/test.yml
@@ -347,140 +302,140 @@ git commit -m "Add GitHub Actions CI workflow"
 git push origin workshop-1
 ```
 
-### Step 3: View Results on GitHub (5 min)
+### Étape 3: Voir les Résultats sur GitHub (5 min)
 
-1. Go to your repository on GitHub
-2. Click **Actions** tab
-3. See your workflow running
-4. Explore the logs
-5. Verify all tests pass ✅
+1. Allez sur votre dépôt GitHub
+2. Cliquez sur l'onglet **Actions**
+3. Voyez votre workflow s'exécuter
+4. Explorez les logs
+5. Vérifiez que tous les tests passent ✅
 
-### Step 4: Create a Pull Request (10 min)
+### Étape 4: Créer une Pull Request (10 min)
 
 ```bash
-# Create a new branch for a small change
+# Créer une nouvelle branche pour un petit changement
 git checkout -b add-documentation
 
-# Make a small change (e.g., add a comment)
-# Commit and push
+# Faire un petit changement (ex: ajouter un commentaire)
+# Commit et push
 git add .
 git commit -m "Add documentation"
 git push origin add-documentation
 
-# Create PR
+# Créer une PR
 gh pr create --title "Add documentation" --body "Testing CI workflow"
 ```
 
-**Observe**:
-- GitHub Actions runs automatically
-- PR shows check status
-- Can't merge until checks pass (optional: enable branch protection)
+**Observez**:
+- GitHub Actions s'exécute automatiquement
+- La PR montre l'état des vérifications
+- Impossible de merger tant que les vérifications ne passent pas (optionnel: activer la protection de branche)
 
 ---
 
-## Part 4: Wrap-up & Review (10 minutes)
+## Partie 3: Conclusion & Révision (10 minutes)
 
-### What You Built
+### Ce que Vous Avez Construit
 
-✅ Weather API with FastAPI
-✅ Unit tests with mocking
-✅ Error handling
-✅ Weather comparison endpoint
-✅ Optional: Caching
-✅ CI/CD with GitHub Actions
+✅ API Météo avec FastAPI  
+✅ Tests unitaires avec mocking  
+✅ Gestion d'erreurs  
+✅ Endpoint de comparaison météo  
+✅ Optionnel: Cache  
+✅ CI/CD avec GitHub Actions
 
-### Key Concepts Learned
+### Concepts Clés Appris
 
-1. **Test-Driven Development**
-   - Write tests first
-   - Let tests guide implementation
+1. **Développement Piloté par les Tests**
+   - Écrire les tests en premier
+   - Laisser les tests guider l'implémentation
    - Red → Green → Refactor
 
 2. **Mocking**
-   - Mock external dependencies
-   - Control test behavior
-   - Test in isolation
+   - Simuler les dépendances externes
+   - Contrôler le comportement des tests
+   - Tester en isolation
 
-3. **API Testing**
-   - Test status codes
-   - Test response data
-   - Test error cases
+3. **Tests d'API**
+   - Tester les codes de statut
+   - Tester les données de réponse
+   - Tester les cas d'erreur
 
-4. **Continuous Integration**
-   - Automate testing
-   - Catch bugs early
-   - Maintain code quality
+4. **Intégration Continue**
+   - Automatiser les tests
+   - Détecter les bugs tôt
+   - Maintenir la qualité du code
 
-### Next Steps
+### Prochaines Étapes
 
-**Homework (Optional)**:
-1. Add 5-day forecast endpoint
-2. Add temperature unit conversion (°F, °C, K)
-3. Improve caching (use Redis)
-4. Add more error handling
-5. Deploy to a cloud platform
+**Devoir (Optionnel)**:
+1. Ajouter un endpoint de prévisions à 5 jours
+2. Ajouter la conversion d'unités de température (°F, °C, K)
+3. Améliorer le cache (utiliser Redis)
+4. Ajouter plus de gestion d'erreurs
+5. Déployer sur une plateforme cloud
 
-**Workshop 2 Preview**:
-- URL Shortener with database
-- Integration testing strategies
-- Database testing patterns
-- Advanced pytest features
+**Aperçu du TP 2**:
+- Raccourcisseur d'URL avec base de données
+- Stratégies de tests d'intégration
+- Patterns de tests de base de données
+- Fonctionnalités avancées de pytest
 
 ---
 
-## Troubleshooting
+## Dépannage
 
-### Tests Failing?
+### Tests qui Échouent?
 
 ```bash
-# Run with verbose output
+# Lancer avec sortie détaillée
 uv run pytest -vv
 
-# Run specific test
+# Lancer un test spécifique
 uv run pytest test_weather_api.py::test_name -v
 
-# Show print statements
+# Afficher les instructions print
 uv run pytest -s
 ```
 
-### Import Errors?
+### Erreurs d'Import?
 
 ```bash
-# Reinstall dependencies
+# Réinstaller les dépendances
 uv sync --reinstall
 
-# Check Python version
+# Vérifier la version Python
 uv python list
 ```
 
-### Mock Not Working?
+### Mock qui ne Fonctionne Pas?
 
-- Check the patch path: `@patch('app.requests.get')` not `@patch('requests.get')`
-- Ensure mock is configured before calling function
-- Print mock calls: `print(mock_get.call_args_list)`
+- Vérifiez le chemin du patch: `@patch('app.requests.get')` et non `@patch('requests.get')`
+- Assurez-vous que le mock est configuré avant d'appeler la fonction
+- Affichez les appels du mock: `print(mock_get.call_args_list)`
 
-📖 **Full troubleshooting guide**: [troubleshooting.md](troubleshooting.md)
-
----
-
-## Resources
-
-- [pytest Documentation](https://docs.pytest.org/)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [unittest.mock Guide](https://docs.python.org/3/library/unittest.mock.html)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [OpenWeatherMap API Docs](https://openweathermap.org/api)
-
-## Evaluation Criteria
-
-- [ ] All tests pass locally
-- [ ] GitHub Actions workflow passes
-- [ ] Code is clean and readable
-- [ ] Error handling is implemented
-- [ ] Mocking is used correctly
-- [ ] Comparison endpoint works
-- [ ] (Optional) Caching implemented
+📖 **Guide complet de dépannage**: [troubleshooting.md](troubleshooting.md)
 
 ---
 
-**Questions? Ask your instructor or check the troubleshooting guide!**
+## Ressources
+
+- [Documentation pytest](https://docs.pytest.org/)
+- [Documentation FastAPI](https://fastapi.tiangolo.com/)
+- [Guide unittest.mock](https://docs.python.org/3/library/unittest.mock.html)
+- [Documentation GitHub Actions](https://docs.github.com/en/actions)
+- [Documentation API OpenWeatherMap](https://openweathermap.org/api)
+
+## Critères d'Évaluation
+
+- [ ] Tous les tests passent localement
+- [ ] Le workflow GitHub Actions passe
+- [ ] Le code est propre et lisible
+- [ ] La gestion d'erreurs est implémentée
+- [ ] Le mocking est utilisé correctement
+- [ ] L'endpoint de comparaison fonctionne
+- [ ] (Optionnel) Le cache est implémenté
+
+---
+
+**Des questions? Demandez à votre instructeur ou consultez le guide de dépannage!**
