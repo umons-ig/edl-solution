@@ -15,9 +15,22 @@ L'objectif principal de ces workshops est d'apprendre les **méthodes CI/CD** et
 - 🚀 **FastAPI** - Construction d'APIs REST testables
 - 🎭 **Mocking** - Simulation de dépendances externes
 
+### 📊 Workflow TDD + CI/CD
+
+```mermaid
+graph TD
+    A[🔴 Écrire un test] --> B[▶️ pytest]
+    B -->|❌ Échoue| C[🟢 Écrire le code]
+    C --> B
+    B -->|✅ Passe| D[📤 git push]
+    D --> E[🤖 GitHub Actions]
+    E -->|✅| F[🎉 Merge]
+    E -->|❌| A
+```
+
 ## 📚 Série de workshops
 
-### Workshop 1 : Fondamentaux TDD & CI/CD (3 heures)
+### Workshop 1 : Fondamentaux TDD & CI/CD
 
 **Projet** : API Météo
 
@@ -115,23 +128,6 @@ Consultez le dossier [`docs/`](docs/) pour :
 - [Aide-mémoire pytest](docs/pytest-cheatsheet.md) - Référence rapide
 - [Dépannage](docs/troubleshooting.md) - Problèmes courants et solutions
 - [Guide GitHub Actions](GITHUB_ACTIONS_GUIDE.md) - Configuration CI/CD pas-à-pas
-
-## 🎓 Méthodologie CI/CD enseignée
-
-Ce workshop met l'accent sur les **pratiques DevOps modernes** :
-
-### 📊 Workflow TDD + CI/CD
-
-```mermaid
-graph TD
-    A[🔴 Écrire un test] --> B[▶️ pytest]
-    B -->|❌ Échoue| C[🟢 Écrire le code]
-    C --> B
-    B -->|✅ Passe| D[📤 git push]
-    D --> E[🤖 GitHub Actions]
-    E -->|✅| F[🎉 Merge]
-    E -->|❌| A
-```
 
 ## 🤝 Contribution
 
