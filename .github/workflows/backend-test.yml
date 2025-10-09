@@ -1,0 +1,90 @@
+# TaskFlow Backend CI/CD Pipeline
+# Runs automated tests for the FastAPI backend
+
+name: Backend Tests
+
+on:
+  push:
+    branches: [ main, workshop-1, workshop-2, workshop-3 ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-test.yml'
+
+jobs:
+  test:
+    name: Run Backend Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install UV
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+
+    - name: 📦 Install dependencies
+      run: uv sync --dev
+
+    - name: 🧪 Run tests with coverage
+      run: |
+        uv run pytest \
+          --cov=src \
+          --cov-report=term-missing \
+          --cov-report=xml \
+          --cov-fail-under=95 \
+          --junitxml=junit/test-results.xml
+
+    - name: 📊 Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: Backend Coverage
+
+    - name: 📤 Upload test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-test-results
+        path: ./backend/junit/test-results.xml
+      if: always()
+
+    - name: 🔍 Test API functionality
+      run: |
+        # Start the server in background
+        uv run uvicorn src.app:app --host 0.0.0.0 --port 8000 &
+        SERVER_PID=$!
+
+        # Wait for server to start
+        sleep 5
+
+        # Test basic endpoints
+        curl -f http://localhost:8000/ || exit 1
+        curl -f http://localhost:8000/tasks || exit 1
+
+        # Test a task creation
+        TASK_RESPONSE=$(curl -s -X POST http://localhost:8000/tasks \
+          -H "Content-Type: application/json" \
+          -d '{"title": "CI/CD Test Task"}')
+        echo "Task creation response: $TASK_RESPONSE"
+
+        # Verify task was created
+        echo "$TASK_RESPONSE" | jq -e '.title == "CI/CD Test Task"' || exit 1
+
+        # Clean up
+        kill $SERVER_PID 2>/dev/null || true
