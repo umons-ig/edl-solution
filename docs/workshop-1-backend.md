@@ -1,36 +1,61 @@
-# Workshop 1: TaskFlow Backend & TDD Fundamentals
+# Workshop 1: Full-Stack TaskFlow Development & TDD Fundamentals
 
-**Duration**: 4 hours
+**Duration**: 6 hours (Backend: 3.5 hours + Frontend: 2.5 hours)
 **Branch**: `main` (students start here)
 **Level**: Beginner to Intermediate
+**Architecture**: Full-Stack (FastAPI Backend + React Frontend)
 
 ## 🎯 Objectives
 
 By the end of this workshop, you will be able to:
+### Backend (Python/FastAPI)
 - Implement **Test-Driven Development (TDD)** in a real project
 - Build a RESTful API with **FastAPI** and **Python**
 - Use **UV** for modern Python package management
 - Write comprehensive unit tests with **pytest**
 - Follow the **Red-Green-Refactor** development cycle
 - Understand **API design patterns** and error handling
-- Use **GitHub Actions** for automated testing
+
+### Frontend (TypeScript/React)
+- Build modern React components with TypeScript
+- Use **TaskFlow** for state management
+- Implement responsive UI with **Tailwind CSS**
+- Write React tests with **Vitest**
+- Use **ESLint** for code quality
+
+### DevOps & Quality
+- Use **GitHub Actions** for automated testing (full-stack)
+- Set up **ESLint** for React/TypeScript code quality
+- Implement **integration testing** between services
 
 ## 📋 Prerequisites
 
 Before starting, ensure you have:
 
+### Backend Requirements
 - ✅ **Python 3.11+** installed
-- ✅ **Git** installed and configured
-- ✅ **GitHub account**
 - ✅ Basic Python knowledge
 - ✅ Understanding of web APIs (REST concepts)
 
+### Frontend Requirements
+- ✅ **Node.js 18+** and **npm** installed
+- ✅ Basic JavaScript/TypeScript knowledge
+- ✅ Understanding of React concepts (preferred)
+
+### General Requirements
+- ✅ **Git** installed and configured
+- ✅ **GitHub account** with repository access
+
 ### Verification Commands
 ```bash
-# Check Python version
+# Backend verification
 python --version
 
-# Check Git configuration
+# Frontend verification
+node --version
+npm --version
+
+# Git verification
 git config --list --local
 ```
 
@@ -39,23 +64,44 @@ git config --list --local
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/taskflow-workshops.git
-cd taskflow-workshops
+git clone https://github.com/your-username/taskflow.git
+cd taskflow
 ```
 
-### 2. Navigate to Backend
+### 2. Backend Setup (Python/FastAPI)
 ```bash
 cd backend
 ```
 
 ### 3. Install Dependencies with UV
 ```bash
-# Install dependencies
-uv sync
+# Install Python dependencies with UV
+uv sync --dev
 
-# Verify installation
+# Verify backend installation
 uv run python --version
 uv run pytest --version
+
+# Return to root directory
+cd ..
+```
+
+### 3. Frontend Setup (React/TypeScript)
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install Node.js dependencies
+npm install
+
+# Verify frontend installation
+node --version
+npm --version
+npx eslint --version
+
+# Return to root directory
+cd ..
 ```
 
 ## 📚 Workshop Structure
@@ -717,14 +763,97 @@ uv run pytest -v --cov=src --cov-report=html
 
 ---
 
+## 🔗 Integration Testing: Backend + Frontend
+
+### Testing the Full Stack
+
+Once both backend and frontend are running, test their integration:
+
+#### 1. Start Both Services
+
+```bash
+# Terminal 1: Backend API
+cd backend
+uv run uvicorn src.app:app --reload --host 0.0.0.0 --port 8000
+
+# Terminal 2: Frontend App
+cd frontend
+npm run dev
+```
+
+#### 2. API Connectivity Tests
+
+```bash
+# Test backend API endpoints
+curl http://localhost:8000/
+curl http://localhost:8000/tasks
+
+# Create test task via API
+curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Integration Test Task", "description": "Testing full stack"}'
+
+# List tasks to verify creation
+curl http://localhost:8000/tasks
+```
+
+#### 3. Frontend UI Tests
+
+1. **Open browser to** `http://localhost:5173` (frontend dev server)
+2. **Verify header** shows "TaskFlow 📋"
+3. **Check stats cards** display zeros (no data yet)
+4. **Form functionality**:
+   - Try submitting form with empty title (should fail)
+   - Create a task with title and submit
+   - Verify task appears in UI (after implementing task list)
+
+#### 4. End-to-End Flow
+
+1. Create task via frontend form
+2. Verify task appears in task list
+3. Check backend API directly - new task should be there
+4. Update task status via frontend
+5. Delete task via frontend
+6. Confirm deletion in both frontend and backend API
+
+### Full Stack Test Suite
+
+```bash
+# Run all backend tests
+cd backend
+uv run pytest -v --cov=src --cov-report=html
+
+# Run all frontend tests
+cd frontend
+npm test
+
+# Run integration tests (when implemented)
+npm run test:e2e  # If using Cypress/Playwright
+```
+
 ## 📋 Assessment Criteria
 
-- [ ] API responds on all endpoints
-- [ ] All tests pass (95%+ coverage)
-- [ ] Error handling implemented
-- [ ] TDD approach followed
+### Backend Only (Workshop 1)
+- [ ] API responds on all endpoints (`/` and `/tasks/*`)
+- [ ] All backend tests pass (90%+ coverage)
+- [ ] Error handling implemented (404s, validation)
+- [ ] TDD approach followed (tests first)
 - [ ] GitHub Actions workflow runs successfully
 - [ ] Code is well-documented and clean
+
+### Full Stack (Workshops 1 + 2)
+- [ ] Backend API and Frontend UI both running
+- [ ] API connectivity confirmed (curl requests work)
+- [ ] Frontend can create/fetch tasks via API
+- [ ] UI updates correctly after API operations
+- [ ] Error states handled gracefully
+- [ ] Both test suites pass
+
+---
+
+**Workshop 1 (Backend): 3.5 hours | Workshop 2 (Frontend): 2.5 hours**
+
+**Next:** Ready for Workshop 2 - React Frontend Implementation!
 
 ---
 

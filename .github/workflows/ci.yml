@@ -1,0 +1,126 @@
+name: TaskFlow CI/CD
+
+# Run tests on pushes and PRs
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-backend:
+    name: Backend (FastAPI)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: 🏫 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Setup UV
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: 📚 Install Dependencies
+        run: uv sync --dev
+
+      - name: 🧪 Run Tests
+        run: |
+          uv run pytest \
+            --cov=src \
+            --cov-report=term-missing \
+            --cov-report=html \
+            --cov-fail-under=90 \
+            --verbose
+
+      - name: 📊 Upload Coverage Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: ./backend/htmlcov/
+
+  test-frontend:
+    name: Frontend (React)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: 🏫 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🧪 Run Tests
+        run: npm run test -- --run --coverage
+
+      - name: 🏗️ Build Check
+        run: npm run build
+
+      - name: 📊 Upload Coverage Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: ./frontend/coverage/
+
+  # Basic integration test
+  integration-check:
+    name: Basic Integration
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+
+    steps:
+      - name: 🏫 Checkout Code
+        uses: actions/checkout@v4
+
+      # Setup backend
+      - name: 🐍 Setup Python (Backend)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Setup UV
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: 🔧 Setup Node.js (Frontend)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 🔗 Basic Integration Test
+        run: |
+          # Start backend and test basic functionality
+          cd backend
+          uv sync
+          timeout 30s uv run uvicorn src.app:app --host 0.0.0.0 --port 8000 &
+          BACKEND_PID=$!
+
+          sleep 3
+
+          # Test backend API
+          echo "Testing backend API..."
+          curl -f http://localhost:8000/ | grep -q "TaskFlow" || exit 1
+          curl -f http://localhost:8000/tasks || exit 1
+
+          echo "✅ Basic integration test passed!"
+          kill $BACKEND_PID 2>/dev/null || true
