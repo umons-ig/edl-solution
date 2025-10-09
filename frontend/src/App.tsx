@@ -14,6 +14,7 @@ function App() {
   const { data: tasks = [], isLoading, error } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => api.getTasks(),
+    staleTime: 0, // Always refetch when invalidated (for instant delete feedback)
   });
 
   // Mutations
@@ -37,8 +38,11 @@ function App() {
   const deleteTaskMutation = useMutation({
     mutationFn: (taskId: string) => api.deleteTask(taskId),
     onSuccess: () => {
+      // Immediately refetch - with staleTime: 0, this will update the UI instantly
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
+    retry: false,  // Don't retry failed deletes
+    mutationKey: ['delete-task'], // Prevent duplicate mutations
   });
 
   // Handle task status updates (drag and drop)
@@ -58,6 +62,8 @@ function App() {
   const handleDeleteTask = useCallback((taskId: string) => {
     deleteTaskMutation.mutate(taskId);
   }, [deleteTaskMutation]);
+
+  const isDeletePending = deleteTaskMutation.isPending;
 
   const handleEditTask = useCallback((task: Task) => {
     setEditingTask(task);
@@ -143,6 +149,7 @@ function App() {
             onStatusUpdate={handleStatusUpdate}
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTask}
+            isDeletePending={isDeletePending}
           />
         )}
       </main>

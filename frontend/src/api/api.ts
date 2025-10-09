@@ -64,8 +64,17 @@ export const api = {
 
   // Delete task
   async deleteTask(taskId: string): Promise<void> {
-    await apiRequest(`/tasks/${taskId}`, {
+    const url = `${API_BASE}/tasks/${taskId}`;
+    const response = await fetch(url, {
       method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
+    }
+    // Don't try to parse JSON for DELETE - it may return 204 No Content
   },
 };

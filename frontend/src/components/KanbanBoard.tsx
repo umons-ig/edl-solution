@@ -6,6 +6,7 @@ interface KanbanBoardProps {
   onStatusUpdate: (taskId: string, newStatus: TaskStatus) => void;
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
+  isDeletePending: boolean;
 }
 
 export function KanbanBoard({
@@ -13,6 +14,7 @@ export function KanbanBoard({
   onStatusUpdate,
   onEditTask,
   onDeleteTask,
+  isDeletePending,
 }: KanbanBoardProps) {
   const columns: { id: TaskStatus; title: string; color: string }[] = [
     { id: 'todo', title: 'To Do', color: 'bg-gray-100 border-gray-300' },
@@ -51,6 +53,7 @@ export function KanbanBoard({
                 onEdit={() => onEditTask(task)}
                 onDelete={() => onDeleteTask(task.id)}
                 onStatusChange={(newStatus) => handleDrop(task.id, newStatus)}
+                isDeleteDisabled={isDeletePending}
               />
             ))}
 

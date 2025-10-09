@@ -5,9 +5,10 @@ interface TaskCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onStatusChange: (newStatus: TaskStatus) => void;
+  isDeleteDisabled?: boolean;
 }
 
-export function TaskCard({ task, onEdit, onDelete, onStatusChange }: TaskCardProps) {
+export function TaskCard({ task, onEdit, onDelete, onStatusChange, isDeleteDisabled = false }: TaskCardProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   void onStatusChange; // Parameter kept for future status change functionality
   const getPriorityColor = (priority: string) => {
@@ -38,8 +39,13 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange }: TaskCardPro
             ✏️
           </button>
           <button
-            onClick={onDelete}
-            className="text-gray-400 hover:text-red-600 transition-colors"
+            onClick={() => {
+              if (window.confirm(`Are you sure you want to delete "${task.title}"?`)) {
+                onDelete();
+              }
+            }}
+            disabled={isDeleteDisabled}
+            className="text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Delete task"
           >
             🗑️
