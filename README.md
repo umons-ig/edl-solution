@@ -21,11 +21,12 @@ A collaborative task management platform where you build a full-stack applicatio
 - **Skills**: Component testing, API integration, responsive design
 - **Deliverable**: Full-stack application with synchronized frontend/backend
 
-### **Workshop 3: Production & Advanced CI/CD**
-- **Focus**: DevOps, monitoring, scaling, multi-environment deployment
-- **Domain**: User authentication, team features, performance optimization
-- **Skills**: Production deployments, containerization, advanced workflows
-- **Deliverable**: Production-ready platform with automated DevOps
+### **Workshop 3: Production & Cloud Deployment**
+
+- **Focus**: Database persistence, cloud deployment, CI/CD automation
+- **Domain**: Production configuration, environment management, monitoring
+- **Skills**: Cloud databases, GitHub Actions, production deployments
+- **Deliverable**: Production-ready application deployed to the cloud
 
 ## 🏗️ Project Architecture
 
@@ -87,11 +88,12 @@ taskflow/
 - [ ] Deploy multi-service application
 
 ### **Workshop 3 Objectives**
-- [ ] Add user authentication and permissions
-- [ ] Implement database persistence
-- [ ] Set up production CI/CD pipelines
-- [ ] Add monitoring and error tracking
-- [ ] Deploy to production environment
+
+- [ ] Implement database persistence with MongoDB Atlas
+- [ ] Set up production CI/CD pipelines with GitHub Actions
+- [ ] Configure environment variables and production settings
+- [ ] Add health checks and monitoring
+- [ ] Deploy to cloud platform (Render/Railway)
 
 ## 📖 Workshop Documentation
 
