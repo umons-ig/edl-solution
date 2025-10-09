@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from './lib/api';
+import { api } from './api/api';
 import { Task, TaskStatus, TaskCreate, TaskUpdate } from './types/index';
 import { KanbanBoard } from './components/KanbanBoard';
 import { TaskForm } from './components/TaskForm';
