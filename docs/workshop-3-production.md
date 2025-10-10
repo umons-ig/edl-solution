@@ -11,7 +11,7 @@ By the end of this workshop, you will be able to:
 
 - Add **database persistence** with MongoDB Atlas (cloud database)
 - Set up **production CI/CD pipelines** with GitHub Actions
-- **Deploy to production** using cloud platforms (Render/Railway)
+- **Deploy to production** using Render cloud platform
 - Configure **environment-based settings** for dev/staging/prod
 - Implement **health checks and monitoring** patterns
 - Understand **secrets management** and production best practices
@@ -29,7 +29,7 @@ By the end of this workshop, you will be able to:
 
 - ✅ **GitHub account** with repository access
 - ✅ **MongoDB Atlas account** (free tier) - https://www.mongodb.com/cloud/atlas/register
-- ✅ **Cloud platform account** (Render or Railway free tier)
+- ✅ **Render account** (free tier with 750 hours)
 - ✅ Understanding of environment variables and secrets management
 
 ## 🚀 Getting Started
@@ -87,7 +87,7 @@ graph TB
 
 - Environment variable configuration
 - Health check endpoints
-- Deploy to Render or Railway
+- Deploy to Render
 - Test production deployment
 
 ### Part 3: Production CI/CD (60 min)
@@ -544,19 +544,19 @@ Verify in MongoDB Atlas:
 
 ### 2A: Deployment Options
 
-We'll cover two beginner-friendly platforms that **auto-detect** your app:
+We'll use **Render** - a beginner-friendly platform that **auto-detects** your app:
 
-| Feature | Render | Railway |
-|---------|--------|---------|
+| Feature | Render | Railway (Alternative) |
+|---------|--------|----------------------|
 | **Free Tier** | ✅ 750 hours/month | ✅ $5 credit/month |
 | **Auto-detection** | ✅ Detects FastAPI/React | ✅ Detects FastAPI/React |
-| **Database** | PostgreSQL only | PostgreSQL/MongoDB |
+| **Database** | MongoDB Atlas (our choice) | PostgreSQL/MongoDB |
 | **Custom Domain** | ✅ | ✅ |
-| **Best For** | Simple deployments | More control |
+| **Documentation** | ✅ Extensive | ✅ Good |
 
-Both platforms automatically detect your stack and deploy without needing Docker!
+Render automatically detects your FastAPI + React stack and deploys without needing Docker!
 
-### 2B: Option 1 - Deploy to Render
+### 2B: Deploy to Render
 
 #### Backend Deployment
 
@@ -602,9 +602,9 @@ Both platforms automatically detect your stack and deploy without needing Docker
 
 4. **Deploy**: Click "Create Static Site"
 
-### 2C: Option 2 - Deploy to Railway
+### 2C: Alternative - Railway
 
-#### Install Railway CLI
+If you prefer Railway over Render, you can use these commands:
 
 ```bash
 # Install Railway CLI
@@ -612,39 +612,13 @@ npm install -g @railway/cli
 
 # Login
 railway login
-```
 
-#### Deploy Backend
-
-```bash
-cd backend
-
-# Initialize Railway project
+# For each service (backend/frontend):
+cd backend  # or cd frontend
 railway init
-
-# Add MongoDB connection string as secret
-railway variables set MONGODB_URL="mongodb+srv://..."
-
-# Deploy
+railway variables set MONGODB_URL="your-connection-string"
 railway up
-
-# Get the deployment URL
-railway domain
-```
-
-#### Deploy Frontend
-
-```bash
-cd frontend
-
-# Create new Railway service
-railway init
-
-# Add backend API URL
-railway variables set VITE_API_URL="https://your-backend-url.railway.app"
-
-# Deploy
-railway up
+railway domain  # Get your deployment URL
 ```
 
 ### 2D: Update CORS Configuration
@@ -877,7 +851,6 @@ Store sensitive data securely in GitHub Secrets:
 2. **Add Secrets**:
    - `MONGODB_URL`: Your MongoDB Atlas connection string
    - `RENDER_DEPLOY_HOOK_URL`: Your Render deploy hook (optional)
-   - `RAILWAY_TOKEN`: Your Railway CLI token (optional)
 
 3. **Use in Workflows**:
    ```yaml
@@ -1233,7 +1206,7 @@ graph TB
 ### ✅ Achievements
 
 - ✅ **Cloud database** with MongoDB Atlas (no local DB needed!)
-- ✅ **Cloud deployment** on Render or Railway (no Docker needed!)
+- ✅ **Cloud deployment** on Render (no Docker needed!)
 - ✅ **Automated CI/CD** with GitHub Actions
 - ✅ **Environment configuration** for dev/staging/prod
 - ✅ **Health checks** for monitoring

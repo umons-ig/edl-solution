@@ -93,7 +93,7 @@ taskflow/
 - [ ] Set up production CI/CD pipelines with GitHub Actions
 - [ ] Configure environment variables and production settings
 - [ ] Add health checks and monitoring
-- [ ] Deploy to cloud platform (Render/Railway)
+- [ ] Deploy to Render cloud platform
 
 ## 📖 Workshop Documentation
 
