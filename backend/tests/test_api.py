@@ -18,7 +18,7 @@ class TestHealthCheck:
         response = client.get("/")
         assert response.status_code == 200
         data = response.json()
-        assert data["message"] == "Welcome to TaskFlow API"
+        assert data["message"] == "Welcome to TaskFlow API - Workshop 3 Complete!"
         assert "version" in data
         assert data["docs"] == "/docs"
         assert data["health"] == "/health"
