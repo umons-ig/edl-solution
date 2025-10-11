@@ -29,8 +29,8 @@ class TestHealthCheck:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert "database" in data
-        assert data["database"] == "connected"
+        assert "storage" in data
+        assert data["storage"] == "in-memory"
         assert "timestamp" in data
         assert "version" in data
 
@@ -64,7 +64,7 @@ class TestTaskCreation:
         assert data["title"] == "Fix bug"
         assert data["status"] == "todo"  # Default value
         assert data["priority"] == "medium"  # Default value
-        assert data["description"] == ""  # Empty string from MongoDB
+        assert data["description"] is None
         assert data["assignee"] is None
 
     def test_create_task_invalid_title_too_long(self, client):
@@ -98,15 +98,7 @@ class TestTaskRetrieval:
 
     def test_get_task_not_found(self, client):
         """Test retrieving non-existent task."""
-        # Use invalid ObjectId format
         response = client.get("/tasks/non-existent-id")
-        assert response.status_code == 400
-        assert "invalid" in response.json()["detail"].lower()
-
-    def test_get_task_valid_id_not_found(self, client):
-        """Test retrieving valid but non-existent task ID."""
-        # Use a valid ObjectId format that doesn't exist
-        response = client.get("/tasks/507f1f77bcf86cd799439011")
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 
@@ -246,8 +238,7 @@ class TestTaskUpdates:
     def test_update_task_not_found(self, client):
         """Test updating non-existent task."""
         update_data = {"title": "Updated title"}
-        # Use valid ObjectId format but non-existent
-        response = client.put("/tasks/507f1f77bcf86cd799439011", json=update_data)
+        response = client.put("/tasks/non-existent-id", json=update_data)
         assert response.status_code == 404
 
     def test_update_task_invalid_data(self, client, create_sample_task):
@@ -284,8 +275,7 @@ class TestTaskDeletion:
 
     def test_delete_task_not_found(self, client):
         """Test deleting non-existent task."""
-        # Use valid ObjectId format but non-existent
-        response = client.delete("/tasks/507f1f77bcf86cd799439011")
+        response = client.delete("/tasks/non-existent-id")
         assert response.status_code == 404
 
 

@@ -1,51 +1,21 @@
 """
 Test configuration for TaskFlow backend.
-Sets up test database and fixtures.
+Sets up test fixtures for in-memory storage.
 """
 
 import pytest
 from fastapi.testclient import TestClient
-from motor.motor_asyncio import AsyncIOMotorClient
-from src.app import app
-import os
-
-# Set test MongoDB URL
-TEST_MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-TEST_DATABASE_NAME = "taskflow_test"
-
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_environment():
-    """Set up test environment variables."""
-    os.environ["MONGODB_URL"] = TEST_MONGODB_URL
-    os.environ["TEST_MODE"] = "true"
-    yield
-    # Cleanup
-    if "TEST_MODE" in os.environ:
-        del os.environ["TEST_MODE"]
+from src.app import app, tasks_db
 
 
 @pytest.fixture(autouse=True)
 def reset_database():
-    """Reset test database before each test."""
-    # Create MongoDB client for cleanup
-    client = AsyncIOMotorClient(TEST_MONGODB_URL)
-    db = client[TEST_DATABASE_NAME]
-
-    # Clear database synchronously using run_sync helper
-    import asyncio
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    # Clean before test
-    loop.run_until_complete(db.tasks.delete_many({}))
-
+    """Reset in-memory storage before each test."""
+    # Clear before test
+    tasks_db.clear()
     yield
-
-    # Clean after test
-    loop.run_until_complete(db.tasks.delete_many({}))
-    client.close()
-    loop.close()
+    # Clear after test
+    tasks_db.clear()
 
 
 @pytest.fixture

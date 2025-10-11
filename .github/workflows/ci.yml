@@ -33,14 +33,7 @@ jobs:
       - name: 📚 Install Dependencies
         run: uv sync --dev
 
-      - name: 🗄️ Start MongoDB
-        uses: supercharge/mongodb-github-action@1.11.0
-        with:
-          mongodb-version: '7.0'
-
       - name: 🧪 Run Tests
-        env:
-          MONGODB_URL: mongodb://localhost:27017
         run: |
           uv run pytest \
             --cov=src \

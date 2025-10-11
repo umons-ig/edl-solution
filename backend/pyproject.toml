@@ -8,11 +8,6 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
     "pydantic>=2.5.0",
     "httpx>=0.25.2", # For external API calls
-    "motor>=3.7.1",
-    "pymongo>=4.15.3",
-    "python-dotenv>=1.1.1",
-    "pydantic-settings>=2.11.0",
-    "dnspython>=2.4.0", # Required for mongodb+srv:// connections
 ]
 
 [build-system]
