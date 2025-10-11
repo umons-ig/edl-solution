@@ -110,8 +110,8 @@ app.add_middleware(
 async def root():
     """API root endpoint."""
     return {
-        "message": "Welcome to TaskFlow API",
-        "version": "2.0.0",
+        "message": "Welcome to TaskFlow API - Workshop 3 Complete!",
+        "version": "2.1.0",
         "docs": "/docs",
         "health": "/health",
         "status": "healthy"
@@ -126,7 +126,7 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "environment": environment,
-        "version": "2.0.0",
+        "version": "2.1.0",
         "storage": "in-memory"
     }
 
