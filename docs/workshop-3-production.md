@@ -1,1543 +1,556 @@
-# Workshop 3: Production Deployment & Cloud CI/CD
+# Atelier 3 : Déploiement en Production & CI/CD Cloud
 
-**Duration**: 3 hours
-**Branch**: Based on workshops 1 & 2 completion
-**Level**: Intermediate to Advanced
-**Prerequisites**: Workshops 1 & 2 (full-stack application) completed
+**Durée** : 3 heures
+**Branche** : Basé sur la complétion des ateliers 1 & 2
+**Niveau** : Intermédiaire à Avancé
+**Prérequis** : Ateliers 1 & 2 (application full-stack) complétés
 
-## 🎯 Objectives
+## 🎯 Objectifs
 
-By the end of this workshop, you will be able to:
+À la fin de cet atelier, vous serez capable de :
 
-- Add **database persistence** with MongoDB Atlas (cloud database)
-- Set up **production CI/CD pipelines** with GitHub Actions
-- **Deploy to production** using Render cloud platform
-- Configure **environment-based settings** for dev/staging/prod
-- Implement **health checks and monitoring** patterns
-- Understand **secrets management** and production best practices
+- Configurer une application avec **stockage en mémoire simplifié** pour la production
+- Mettre en place des **pipelines CI/CD de production** avec GitHub Actions
+- **Déployer en production** sur la plateforme cloud Render
+- Configurer des **paramètres basés sur l'environnement** pour dev/staging/prod
+- Implémenter des patterns de **health checks et monitoring**
+- Comprendre la **gestion des secrets** et les bonnes pratiques de production
+- Gérer la **configuration CORS** pour les déploiements cloud
 
-## 📋 Prerequisites
+## 📋 Prérequis
 
-### Completed Previous Workshops
+### Ateliers Précédents Complétés
 
-- ✅ Workshop 1: Backend API with FastAPI and comprehensive tests
-- ✅ Workshop 2: Frontend React application with API integration
-- ✅ GitHub repository with existing CI/CD workflows
-- ✅ Full-stack application running locally
+- ✅ Atelier 1 : API Backend avec FastAPI et tests complets
+- ✅ Atelier 2 : Application Frontend React avec intégration API
+- ✅ Dépôt GitHub avec workflows CI/CD existants
+- ✅ Application full-stack fonctionnelle localement
 
-### Additional Requirements
+### Exigences Supplémentaires
 
-- ✅ **GitHub account** with repository access
-- ✅ **MongoDB Atlas account** (free tier) - https://www.mongodb.com/cloud/atlas/register
-- ✅ **Render account** (free tier with 750 hours)
-- ✅ Understanding of environment variables and secrets management
+- ✅ **Compte GitHub** avec accès au dépôt
+- ✅ **Compte Render** (niveau gratuit avec 750 heures)
+- ✅ Compréhension des variables d'environnement et gestion des secrets
 
-## 🚀 Getting Started
+## 🚀 Démarrage
 
-### Workshop Evolution
+### Évolution de l'Atelier
 
-This workshop builds upon the foundation from Workshops 1 & 2:
+Cet atelier s'appuie sur les fondations des Ateliers 1 & 2 :
 
-```mermaid
-graph LR
-    A[Workshop 1<br/>FastAPI Backend<br/>In-Memory Storage] --> B[Workshop 2<br/>React Frontend<br/>Full Integration]
-    B --> C[Workshop 3<br/>Database + Cloud<br/>Production Ready]
+**Atelier 1** : Backend FastAPI + Stockage en mémoire
+↓
+**Atelier 2** : Frontend React + Intégration complète
+↓
+**Atelier 3** : Déploiement Cloud + Production Ready
 
-    style A fill:#e1f5ff
-    style B fill:#b3e5fc
-    style C fill:#4fc3f7
+### Architecture Actuelle vs Cible
+
+**Après Atelier 2 (Local)** :
+
+- React App (localhost:5173)
+- FastAPI Backend (localhost:8000)
+- Stockage en mémoire
+
+**Après Atelier 3 (Production)** :
+
+- React App (Déployé sur Render)
+- FastAPI Backend (Déployé sur Render)
+- Stockage en mémoire (simplifié pour l'atelier)
+- GitHub Actions (Pipeline CI/CD)
+- Configuration CORS multi-origines
+- Health checks et monitoring
+
+## 📚 Structure de l'Atelier
+
+### Partie 1 : Configuration pour la Production (45 min)
+
+#### 1.1 Variables d'Environnement Frontend
+
+**Objectif** : Permettre au frontend de se connecter au backend en production
+
+Créer `frontend/src/env.d.ts` :
+
+```typescript
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL?: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
 ```
 
-### Current vs Target Architecture
+Mettre à jour `frontend/src/api/api.ts` :
 
-```mermaid
-graph TB
-    subgraph "After Workshop 2"
-        A1[React App<br/>localhost:5173]
-        A2[FastAPI Backend<br/>localhost:8000<br/>In-Memory Storage]
-        A1 -->|HTTP| A2
-    end
-
-    subgraph "After Workshop 3"
-        B1[React App<br/>Cloud Deployed]
-        B2[FastAPI Backend<br/>Cloud Deployed]
-        B3[(MongoDB Atlas<br/>Cloud Database)]
-        B4[GitHub Actions<br/>CI/CD Pipeline]
-
-        B1 -->|HTTPS| B2
-        B2 -->|MongoDB Protocol| B3
-        B4 -->|Auto Deploy| B1
-        B4 -->|Auto Deploy| B2
-    end
-
-    style B3 fill:#4caf50
-    style B4 fill:#ff9800
+```typescript
+// API Base URL - utilise variable d'environnement en production
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 ```
 
-## 📚 Workshop Structure
-
-### Part 1: Database Integration with MongoDB Atlas (50 min)
-
-- MongoDB Atlas setup (cloud database, no local installation!)
-- Motor (async MongoDB driver) integration
-- Update API endpoints to use database
-- Test database integration
-
-### Part 2: Cloud Deployment Setup (40 min)
-
-- Environment variable configuration
-- Health check endpoints
-- Deploy to Render
-- Test production deployment
-
-### Part 3: Production CI/CD (60 min)
-
-- GitHub Actions workflow for automated testing
-- Automated deployment on push to main
-- Environment secrets management
-- Branch-based deployment strategies
-
-### Part 4: Production Configuration (20 min)
-
-- CORS configuration for production
-- Logging and monitoring setup
-- Error handling improvements
-
-### Part 5: Verification & Testing (10 min)
-
-- Test the live application
-- Monitor logs and health checks
-- Celebrate! 🎉
-
----
-
-## 🗄️ Part 1: Database Integration with MongoDB Atlas (50 min)
-
-### 1A: MongoDB Atlas Setup
-
-**Concept**: Moving from in-memory storage to a cloud-hosted MongoDB database. No local database installation required!
-
-#### Step 1: Create MongoDB Atlas Account
-
-1. Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register)
-2. Sign up for a free account
-3. Create a new **M0 Free Cluster** (512MB storage, perfect for learning!)
-   - Choose a cloud provider (AWS/GCP/Azure)
-   - Select a region close to you
-   - Name your cluster: `taskflow-cluster`
-
-#### Step 2: Configure Database Access
-
-1. **Create Database User**:
-   - Go to "Database Access" → "Add New Database User"
-   - Authentication Method: Password
-   - Username: `taskflow_user`
-   - Password: Generate a secure password (save it!)
-   - Database User Privileges: **Read and write to any database**
-
-2. **Configure Network Access**:
-   - Go to "Network Access" → "Add IP Address"
-   - For development: Click "Allow Access from Anywhere" (0.0.0.0/0)
-   - ⚠️ **Note**: In real production, you'd whitelist specific IPs
-
-#### Step 3: Get Connection String
-
-1. Go to "Database" → Click "Connect" on your cluster
-2. Choose "Connect your application"
-3. Driver: **Python**, Version: **3.12 or later**
-4. Copy the connection string, it looks like:
-   ```
-   mongodb+srv://taskflow_user:<password>@taskflow-cluster.xxxxx.mongodb.net/?retryWrites=true&w=majority
-   ```
-5. **Replace `<password>`** with your actual database user password
-
-#### Step 4: Create Database and Collection
-
-MongoDB will create these automatically when you first write data, but let's verify:
-
-1. Go to "Database" → "Browse Collections"
-2. Click "Add My Own Data"
-3. Database name: `taskflow_db`
-4. Collection name: `tasks`
-
-### 1B: Install MongoDB Driver
+Créer `frontend/.env.example` :
 
 ```bash
-cd backend
-
-# Add Motor (async MongoDB driver for FastAPI)
-uv add motor pymongo
+# Backend API URL (pour le déploiement en production)
+# En développement, l'app utilise le proxy Vite vers localhost:8000
+# En production (Render), définir ceci vers votre URL backend
+VITE_API_URL=https://taskflow-backend-XXXX.onrender.com
 ```
 
-### 1C: Create Database Configuration
+#### 1.2 Configuration CORS Backend
 
-Create `backend/src/database.py`:
+**Objectif** : Permettre au frontend déployé d'accéder au backend
 
-```python
-from motor.motor_asyncio import AsyncIOMotorClient
-from typing import Optional
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# MongoDB configuration
-MONGODB_URL = os.getenv(
-    "MONGODB_URL",
-    "mongodb://localhost:27017"  # Fallback for local dev (though we use Atlas)
-)
-
-# Global MongoDB client
-mongodb_client: Optional[AsyncIOMotorClient] = None
-
-
-async def connect_to_mongo():
-    """
-    Connect to MongoDB Atlas.
-    Called on application startup.
-    """
-    global mongodb_client
-    mongodb_client = AsyncIOMotorClient(MONGODB_URL)
-
-    # Verify connection
-    try:
-        await mongodb_client.admin.command('ping')
-        print("✅ Successfully connected to MongoDB Atlas!")
-    except Exception as e:
-        print(f"❌ Failed to connect to MongoDB: {e}")
-        raise
-
-
-async def close_mongo_connection():
-    """
-    Close MongoDB connection.
-    Called on application shutdown.
-    """
-    global mongodb_client
-    if mongodb_client:
-        mongodb_client.close()
-        print("✅ MongoDB connection closed")
-
-
-def get_database():
-    """
-    Get the database instance.
-    Returns the 'taskflow_db' database.
-    """
-    return mongodb_client.taskflow_db
-
-
-def get_tasks_collection():
-    """
-    Get the tasks collection.
-    This is where we store all task documents.
-    """
-    db = get_database()
-    return db.tasks
-```
-
-### 1D: Update Models for MongoDB
-
-MongoDB uses `_id` as the primary key. Let's create helper functions in `backend/src/models.py`:
+Dans `backend/src/app.py`, la configuration CORS permet toutes les origines pour simplifier l'atelier :
 
 ```python
-from typing import Optional
-from datetime import datetime
-from bson import ObjectId
+# Configuration CORS
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
 
-
-def task_helper(task) -> dict:
-    """
-    Helper to convert MongoDB document to Task dict.
-    MongoDB stores documents with _id (ObjectId), we convert to id (string).
-    """
-    return {
-        "id": str(task["_id"]),
-        "title": task["title"],
-        "description": task.get("description", ""),
-        "status": task["status"],
-        "priority": task["priority"],
-        "assignee": task.get("assignee"),
-        "due_date": task.get("due_date"),
-        "created_at": task.get("created_at"),
-        "updated_at": task.get("updated_at"),
-    }
-
-
-def task_to_db(task_data: dict) -> dict:
-    """
-    Prepare task data for MongoDB insertion.
-    Adds timestamps and removes None values.
-    """
-    now = datetime.utcnow()
-
-    db_task = {
-        "title": task_data["title"],
-        "description": task_data.get("description", ""),
-        "status": task_data.get("status", "todo"),
-        "priority": task_data.get("priority", "medium"),
-        "assignee": task_data.get("assignee"),
-        "due_date": task_data.get("due_date"),
-        "created_at": task_data.get("created_at", now),
-        "updated_at": now,
-    }
-
-    # Remove None values
-    return {k: v for k, v in db_task.items() if v is not None}
-```
-
-### 1E: Update API to Use MongoDB
-
-Update `backend/src/app.py`:
-
-```python
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
-from datetime import datetime
-from bson import ObjectId
-
-from src.database import (
-    connect_to_mongo,
-    close_mongo_connection,
-    get_tasks_collection
-)
-from src.models import task_helper, task_to_db
-
-# Import your existing Pydantic models
-from src.app import Task, TaskCreate, TaskUpdate, TaskStatus, TaskPriority
-
-app = FastAPI(
-    title="TaskFlow API",
-    description="Production-ready task management API with MongoDB",
-    version="2.0.0"
-)
-
-# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Frontend dev server
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+```
 
-# Startup/Shutdown events
-@app.on_event("startup")
-async def startup_db_client():
-    await connect_to_mongo()
+#### 1.3 Health Check et Monitoring
 
+Vérifier le endpoint `/health` :
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    await close_mongo_connection()
-
-
-# Health check endpoint
+```python
 @app.get("/health")
 async def health_check():
-    """Health check endpoint for monitoring."""
-    try:
-        # Check database connection
-        collection = get_tasks_collection()
-        await collection.database.command('ping')
-
-        return {
-            "status": "healthy",
-            "database": "connected",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Service unhealthy: {str(e)}"
-        )
-
-
-# CRUD Operations with MongoDB
-
-@app.post("/tasks", response_model=Task, status_code=201)
-async def create_task(task_data: TaskCreate):
-    """Create a new task in MongoDB."""
-    collection = get_tasks_collection()
-
-    # Prepare task for database
-    db_task = task_to_db(task_data.dict())
-
-    # Insert into MongoDB
-    result = await collection.insert_one(db_task)
-
-    # Retrieve the created task
-    created_task = await collection.find_one({"_id": result.inserted_id})
-
-    return task_helper(created_task)
-
-
-@app.get("/tasks", response_model=List[Task])
-async def list_tasks(
-    status: Optional[TaskStatus] = None,
-    priority: Optional[TaskPriority] = None,
-    assignee: Optional[str] = None
-):
-    """List all tasks with optional filtering."""
-    collection = get_tasks_collection()
-
-    # Build query filter
-    query = {}
-    if status:
-        query["status"] = status
-    if priority:
-        query["priority"] = priority
-    if assignee:
-        query["assignee"] = assignee
-
-    # Query MongoDB
-    tasks = []
-    async for task in collection.find(query):
-        tasks.append(task_helper(task))
-
-    return tasks
-
-
-@app.get("/tasks/{task_id}", response_model=Task)
-async def get_task(task_id: str):
-    """Get a specific task by ID."""
-    collection = get_tasks_collection()
-
-    # Validate ObjectId
-    if not ObjectId.is_valid(task_id):
-        raise HTTPException(status_code=400, detail="Invalid task ID format")
-
-    # Find task
-    task = await collection.find_one({"_id": ObjectId(task_id)})
-
-    if not task:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Task with ID '{task_id}' not found"
-        )
-
-    return task_helper(task)
-
-
-@app.put("/tasks/{task_id}", response_model=Task)
-async def update_task(task_id: str, update_data: TaskUpdate):
-    """Update an existing task."""
-    collection = get_tasks_collection()
-
-    # Validate ObjectId
-    if not ObjectId.is_valid(task_id):
-        raise HTTPException(status_code=400, detail="Invalid task ID format")
-
-    # Prepare update data
-    update_dict = {k: v for k, v in update_data.dict(exclude_unset=True).items() if v is not None}
-    update_dict["updated_at"] = datetime.utcnow()
-
-    # Update in MongoDB
-    result = await collection.update_one(
-        {"_id": ObjectId(task_id)},
-        {"$set": update_dict}
-    )
-
-    if result.matched_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Task with ID '{task_id}' not found"
-        )
-
-    # Return updated task
-    updated_task = await collection.find_one({"_id": ObjectId(task_id)})
-    return task_helper(updated_task)
-
-
-@app.delete("/tasks/{task_id}", status_code=204)
-async def delete_task(task_id: str):
-    """Delete a task by ID."""
-    collection = get_tasks_collection()
-
-    # Validate ObjectId
-    if not ObjectId.is_valid(task_id):
-        raise HTTPException(status_code=400, detail="Invalid task ID format")
-
-    # Delete from MongoDB
-    result = await collection.delete_one({"_id": ObjectId(task_id)})
-
-    if result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Task with ID '{task_id}' not found"
-        )
-
-
-@app.get("/")
-async def root():
-    """API root endpoint."""
+    """Health check endpoint pour le monitoring."""
+    environment = os.getenv("ENVIRONMENT", "development")
     return {
-        "message": "Welcome to TaskFlow API",
-        "version": "2.0.0",
-        "docs": "/docs",
-        "health": "/health"
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": environment,
+        "version": "2.1.0",
+        "storage": "in-memory"
     }
 ```
 
-### 1F: Configure Environment Variables
+#### 1.4 Configuration Client-Side Routing
 
-Create `backend/.env`:
+Créer `frontend/public/_redirects` :
+
+```
+/* /index.html 200
+```
+
+Ce fichier permet à Render de gérer correctement le routing côté client React.
+
+### Partie 2 : Déploiement sur Render (60 min)
+
+#### 2.1 Créer le Service Backend
+
+1. Aller sur [dashboard.render.com](https://dashboard.render.com)
+2. Cliquer **"New +" → "Web Service"**
+3. Connecter votre dépôt GitHub : `umons-ig/edl-tp-1`
+
+**Configuration Backend** :
+
+```yaml
+Name: taskflow-backend
+Branch: main
+Region: Frankfurt (EU Central)
+Root Directory: backend
+Build Command: pip install uv && uv sync
+Start Command: uv run uvicorn src.app:app --host 0.0.0.0 --port $PORT
+Instance Type: Free
+```
+
+**Variables d'Environnement** :
 
 ```bash
-# MongoDB Atlas connection string
-MONGODB_URL=mongodb+srv://taskflow_user:<password>@taskflow-cluster.xxxxx.mongodb.net/?retryWrites=true&w=majority
-
-# Replace <password> with your actual MongoDB Atlas password
+ENVIRONMENT=production
+CORS_ORIGINS=*
+PYTHON_VERSION=3.11.9
 ```
 
-Add `.env` to `.gitignore`:
+**Build Filters** (Important pour monorepo) :
+
+- **Included Paths** : `backend/**`, `.github/workflows/**`
+- **Ignored Paths** : `frontend/**`, `docs/**`, `*.md`
+
+**Health Check** :
+
+- Health Check Path : `/health`
+
+#### 2.2 Créer le Site Statique Frontend
+
+1. Cliquer **"New +" → "Static Site"**
+2. Connecter le même dépôt GitHub
+
+**Configuration Frontend** :
+
+```yaml
+Name: taskflow-frontend
+Branch: main
+Root Directory: frontend
+Build Command: npm install && npm run build
+Publish Directory: dist
+```
+
+**Variables d'Environnement** :
 
 ```bash
-# In your .gitignore file
-.env
-.env.*
-!.env.example
+VITE_API_URL=https://taskflow-backend-XXXX.onrender.com
 ```
 
-Create `backend/.env.example` (safe to commit):
+(Remplacer `XXXX` par votre ID de service backend)
+
+**Build Filters** :
+
+- **Included Paths** : `frontend/**`, `.github/workflows/**`
+- **Ignored Paths** : `backend/**`, `docs/**`, `*.md`
+
+#### 2.3 Vérifier les Déploiements
+
+**Backend** :
 
 ```bash
-# MongoDB Atlas connection string
-MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
+curl https://taskflow-backend-XXXX.onrender.com/health
 ```
 
-### 1G: Test Database Integration
+Réponse attendue :
 
-```bash
-# Start the backend
-cd backend
-uv run uvicorn src.app:app --reload
-
-# Test creating a task
-curl -X POST http://localhost:8000/tasks \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "MongoDB test task",
-    "description": "Testing MongoDB Atlas integration",
-    "status": "todo",
-    "priority": "high"
-  }'
-
-# List all tasks
-curl http://localhost:8000/tasks
-
-# Check health endpoint
-curl http://localhost:8000/health
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-10-11T21:22:54.902Z",
+  "environment": "production",
+  "version": "2.1.0",
+  "storage": "in-memory"
+}
 ```
 
-Verify in MongoDB Atlas:
+**Frontend** :
 
-1. Go to your MongoDB Atlas dashboard
-2. Click "Browse Collections"
-3. Navigate to `taskflow_db` → `tasks`
-4. You should see your tasks stored as documents!
+Ouvrir `https://taskflow-frontend-XXXX.onrender.com` dans le navigateur.
 
----
+### Partie 3 : CI/CD avec GitHub Actions (45 min)
 
-## ☁️ Part 2: Cloud Deployment (40 min)
+#### 3.1 Workflow GitHub Actions Existant
 
-### 2A: Deployment Options
-
-We'll use **Render** - a beginner-friendly platform that **auto-detects** your app:
-
-| Feature | Render | Railway (Alternative) |
-|---------|--------|----------------------|
-| **Free Tier** | ✅ 750 hours/month | ✅ $5 credit/month |
-| **Auto-detection** | ✅ Detects FastAPI/React | ✅ Detects FastAPI/React |
-| **Database** | MongoDB Atlas (our choice) | PostgreSQL/MongoDB |
-| **Custom Domain** | ✅ | ✅ |
-| **Documentation** | ✅ Extensive | ✅ Good |
-
-Render automatically detects your FastAPI + React stack and deploys without needing Docker!
-
-### 2B: Deploy to Render
-
-#### Backend Deployment
-
-1. **Sign up** at [render.com](https://render.com)
-
-2. **Connect GitHub Repository**:
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-   - Grant Render access
-
-3. **Configure Backend Service**:
-   ```
-   Name: taskflow-backend
-   Root Directory: backend
-   Environment: Python 3
-   Build Command: pip install uv && uv sync
-   Start Command: uv run uvicorn src.app:app --host 0.0.0.0 --port $PORT
-   ```
-
-4. **Add Environment Variables**:
-   - Go to "Environment" tab
-   - Add: `MONGODB_URL` = (your MongoDB Atlas connection string)
-   - Add: `PORT` = 8000
-
-5. **Deploy**: Click "Create Web Service"
-
-#### Frontend Deployment
-
-1. **Create New Static Site**:
-   - Click "New +" → "Static Site"
-   - Select your repository
-
-2. **Configure Frontend**:
-   ```
-   Name: taskflow-frontend
-   Root Directory: frontend
-   Build Command: npm install && npm run build
-   Publish Directory: dist
-   ```
-
-3. **Add Environment Variables**:
-   - `VITE_API_URL` = (your backend URL from step above)
-
-4. **Deploy**: Click "Create Static Site"
-
-### 2C: Alternative - Railway
-
-If you prefer Railway over Render, you can use these commands:
-
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login
-railway login
-
-# For each service (backend/frontend):
-cd backend  # or cd frontend
-railway init
-railway variables set MONGODB_URL="your-connection-string"
-railway up
-railway domain  # Get your deployment URL
-```
-
-### 2D: Update CORS Configuration
-
-After deployment, update your backend's CORS settings to allow requests from your production frontend:
-
-```python
-# backend/src/app.py
-
-import os
-
-# CORS configuration
-allowed_origins = os.getenv(
-    "CORS_ORIGINS",
-    "http://localhost:5173"  # Default for local dev
-).split(",")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-Set environment variable in your cloud platform:
-
-```bash
-CORS_ORIGINS=http://localhost:5173,https://your-frontend-url.com
-```
-
-### 2E: Test Production Deployment
-
-```bash
-# Test health endpoint
-curl https://your-backend-url.com/health
-
-# Test creating a task via production API
-curl -X POST https://your-backend-url.com/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Production test", "status": "todo", "priority": "medium"}'
-
-# Open frontend in browser
-open https://your-frontend-url.com
-```
-
----
-
-## 🚀 Part 3: Production CI/CD with GitHub Actions (60 min)
-
-### 3A: Understanding CI/CD Concepts
-
-```mermaid
-graph LR
-    A[Developer<br/>Pushes Code] --> B[GitHub Actions<br/>Triggered]
-    B --> C[Run Tests]
-    C --> D{Tests Pass?}
-    D -->|Yes| E[Deploy to Cloud]
-    D -->|No| F[Notify Developer]
-    E --> G[Application Live]
-
-    style C fill:#4caf50
-    style D fill:#ff9800
-    style E fill:#2196f3
-    style F fill:#f44336
-```
-
-**Key Concepts**:
-
-- **Continuous Integration (CI)**: Automatically test code on every commit
-- **Continuous Deployment (CD)**: Automatically deploy passing code to production
-- **GitHub Actions**: GitHub's built-in CI/CD automation platform
-- **Workflows**: YAML files defining automated processes
-- **Secrets**: Encrypted environment variables for sensitive data
-
-### 3B: Essential CI/CD Workflow
-
-Create `.github/workflows/ci-cd.yml`:
+Le fichier `.github/workflows/ci.yml` est déjà configuré avec :
 
 ```yaml
 name: TaskFlow CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  # Test backend
-  backend-test:
-    runs-on: ubuntu-latest
+  test-backend:
+    # Tests backend avec pytest et couverture
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  test-frontend:
+    # Tests frontend avec vitest et couverture
 
-      - name: Install UV
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "latest"
+  integration-check:
+    # Tests d'intégration basiques
 
-      - name: Set up Python
-        run: uv python install 3.11
-
-      - name: Install dependencies
-        run: |
-          cd backend
-          uv sync --dev
-
-      - name: Run tests
-        env:
-          MONGODB_URL: mongodb://localhost:27017/taskflow_test
-        run: |
-          cd backend
-          uv run pytest --cov=src --cov-report=term
-
-      - name: Run linting
-        run: |
-          cd backend
-          uv run ruff check src/
-
-  # Test frontend
-  frontend-test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: |
-          cd frontend
-          npm ci
-
-      - name: Run linting
-        run: |
-          cd frontend
-          npm run lint
-
-      - name: Run tests
-        run: |
-          cd frontend
-          npm run test -- --run
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm run build
-
-  # Deploy to production (only on main branch)
   deploy:
-    needs: [backend-test, frontend-test]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to Render
-        env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: |
-          if [ -n "$RENDER_DEPLOY_HOOK_URL" ]; then
-            curl "$RENDER_DEPLOY_HOOK_URL"
-            echo "✅ Deployment triggered on Render"
-          else
-            echo "⚠️ RENDER_DEPLOY_HOOK_URL not set, skipping deployment"
-          fi
+    # Déploiement vers Render (optionnel)
 ```
 
-### 3C: GitHub Actions Features Explained
+#### 3.2 Auto-Deploy Render (Recommandé)
 
-#### 1. Parallel Testing
+**Option 1 : Auto-Deploy Natif Render** (Plus Simple) ✅
 
-Tests run in parallel to save time:
+Render détecte automatiquement les pushs vers GitHub et redéploie :
 
-```mermaid
-graph LR
-    A[Push to GitHub] --> B[Backend Tests]
-    A --> C[Frontend Tests]
-    B --> D{Both Pass?}
-    C --> D
-    D -->|Yes| E[Deploy]
-    D -->|No| F[Fail Build]
+1. Dans les paramètres du service Render → **"Build & Deploy"**
+2. Vérifier que **"Auto-Deploy"** est sur **"Yes"**
+3. Les build filters garantissent que seuls les changements pertinents déclenchent un rebuild
 
-    style B fill:#4caf50
-    style C fill:#4caf50
-    style E fill:#2196f3
+**Avantages** :
+
+- Configuration zéro
+- Fonctionne immédiatement
+- Logs de déploiement dans le dashboard Render
+
+**Option 2 : Deploy Hooks via GitHub Actions** (Avancé)
+
+Pour un contrôle plus fin, ajouter des deploy hooks :
+
+1. **Obtenir les Deploy Hooks de Render** :
+   - Service backend → Settings → Deploy Hook → Copier l'URL
+   - Site frontend → Settings → Deploy Hook → Copier l'URL
+
+2. **Ajouter comme Secrets GitHub** :
+   - Dépôt GitHub → Settings → Secrets → Actions
+   - `RENDER_DEPLOY_HOOK_URL` (backend)
+
+3. **Le workflow déclenchera automatiquement le déploiement**
+
+#### 3.3 Tester le Pipeline CI/CD
+
+Faire un petit changement et pusher :
+
+```bash
+# Exemple : changer le message de bienvenue
+# Dans backend/src/app.py
+
+git add .
+git commit -m "Test CI/CD pipeline"
+git push origin main
 ```
 
-#### 2. Conditional Deployment
+**Vérifier** :
 
-Only deploy when:
-- Tests pass ✅
-- Branch is `main` ✅
-- Event is `push` (not pull request) ✅
+1. **GitHub Actions** : [github.com/umons-ig/edl-tp-1/actions](https://github.com/umons-ig/edl-tp-1/actions)
+   - ✅ Tests backend passent
+   - ✅ Tests frontend passent
+   - ✅ Tests d'intégration passent
 
-```yaml
-if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+2. **Render Dashboard** :
+   - 📦 Nouveau déploiement en cours
+   - 🚀 Déployé avec succès
+   - ✅ Health check OK
+
+### Partie 4 : Bonnes Pratiques de Production (30 min)
+
+#### 4.1 Gestion des Secrets
+
+**❌ Ne JAMAIS committer** :
+
+```bash
+.env
+.env.local
+.env.production
+credentials.json
+secrets/
 ```
 
-#### 3. Caching Dependencies
+**✅ Utiliser** :
 
-Speed up workflows by caching dependencies:
+- Variables d'environnement Render
+- GitHub Secrets pour les workflows
+- Fichiers `.env.example` pour la documentation
 
-```yaml
-- name: Setup Node.js
-  uses: actions/setup-node@v4
-  with:
-    node-version: '18'
-    cache: 'npm'  # ← Caches node_modules
-```
+#### 4.2 Monitoring et Health Checks
 
-### 3D: Secrets Management
-
-Store sensitive data securely in GitHub Secrets:
-
-1. **Go to Repository Settings** → "Secrets and variables" → "Actions"
-
-2. **Add Secrets**:
-   - `MONGODB_URL`: Your MongoDB Atlas connection string
-   - `RENDER_DEPLOY_HOOK_URL`: Your Render deploy hook (optional)
-
-3. **Use in Workflows**:
-   ```yaml
-   env:
-     MONGODB_URL: ${{ secrets.MONGODB_URL }}
-   ```
-
-**⚠️ Security Notes**:
-- Secrets are encrypted and never exposed in logs
-- Never commit `.env` files with sensitive data
-- Rotate secrets periodically
-
-### 3E: Branch-Based Deployment Strategy
-
-```mermaid
-gitGraph
-    commit
-    branch develop
-    checkout develop
-    commit
-    commit
-    commit id: "Deploy to Staging"
-    checkout main
-    merge develop
-    commit id: "Deploy to Production"
-```
-
-**Recommended Strategy**:
-
-| Branch | Environment | Auto-Deploy? | Use Case |
-|--------|-------------|--------------|----------|
-| `main` | Production | ✅ Yes | Live application |
-| `develop` | Staging | ✅ Yes | Test before prod |
-| `feature/*` | None | ❌ No | Development |
-
-Create `.github/workflows/deploy-staging.yml`:
-
-```yaml
-name: Deploy to Staging
-
-on:
-  push:
-    branches: [develop]
-
-jobs:
-  deploy-staging:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to staging
-        env:
-          STAGING_DEPLOY_HOOK: ${{ secrets.STAGING_DEPLOY_HOOK }}
-        run: |
-          curl "$STAGING_DEPLOY_HOOK"
-          echo "✅ Deployed to staging environment"
-```
-
-### 3F: Advanced CI/CD Features (Optional)
-
-#### Pull Request Checks
-
-Prevent merging broken code:
-
-```yaml
-name: PR Checks
-
-on:
-  pull_request:
-    branches: [main, develop]
-
-jobs:
-  pr-checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check code quality
-        run: |
-          echo "Running quality checks..."
-          # Add your checks here
-
-      - name: Comment on PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '✅ All checks passed! Ready to merge.'
-            })
-```
-
-#### Deployment Notifications
-
-Get notified when deployments complete:
-
-```yaml
-- name: Notify on deployment
-  if: success()
-  run: |
-    echo "🚀 Deployment successful!"
-    # Add Slack/Discord webhook notification here
-```
-
----
-
-## ⚙️ Part 4: Production Configuration (20 min)
-
-### 4A: Environment-Based Settings
-
-Create `backend/src/config.py`:
-
-```python
-from pydantic_settings import BaseSettings
-from functools import lru_cache
-from typing import List
-
-
-class Settings(BaseSettings):
-    """Application settings with environment-based configuration."""
-
-    # Application
-    app_name: str = "TaskFlow API"
-    environment: str = "development"
-    debug: bool = True
-
-    # Database
-    mongodb_url: str = "mongodb://localhost:27017"
-
-    # CORS
-    cors_origins: str = "http://localhost:5173"
-
-    # Monitoring (optional)
-    sentry_dsn: str = ""
-
-    @property
-    def cors_origins_list(self) -> List[str]:
-        """Convert comma-separated CORS origins to list."""
-        return [origin.strip() for origin in self.cors_origins.split(",")]
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
-
-
-@lru_cache()
-def get_settings() -> Settings:
-    """Get cached settings instance."""
-    return Settings()
-```
-
-Use in your app:
-
-```python
-from src.config import get_settings
-
-settings = get_settings()
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-### 4B: Structured Logging
-
-Add proper logging for production:
-
-```python
-import logging
-from datetime import datetime
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger("taskflow")
-
-# Use in routes
-@app.post("/tasks", response_model=Task, status_code=201)
-async def create_task(task_data: TaskCreate):
-    logger.info(f"Creating task: {task_data.title}")
-    # ... rest of code
-    logger.info(f"Task created successfully: {created_task['id']}")
-    return task_helper(created_task)
-```
-
-### 4C: Error Handling
-
-Add global exception handler:
-
-```python
-from fastapi import Request
-from fastapi.responses import JSONResponse
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Handle unexpected errors gracefully."""
-    logger.error(f"Unexpected error: {exc}", exc_info=True)
-
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": "Internal server error",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    )
-```
-
-### 4D: Health Checks with Database Status
-
-Enhance health check endpoint:
+**Health Check Configuration** :
 
 ```python
 @app.get("/health")
 async def health_check():
-    """Comprehensive health check."""
-    health_status = {
+    return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "environment": settings.environment,
-        "version": "2.0.0"
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "version": "2.1.0",
+        "storage": "in-memory"
     }
-
-    # Check database
-    try:
-        collection = get_tasks_collection()
-        await collection.database.command('ping')
-        health_status["database"] = "connected"
-    except Exception as e:
-        logger.error(f"Database health check failed: {e}")
-        health_status["status"] = "unhealthy"
-        health_status["database"] = "disconnected"
-        raise HTTPException(status_code=503, detail="Database unavailable")
-
-    return health_status
 ```
 
----
+**Render Health Check** :
 
-## ✅ Part 5: Verification & Testing (10 min)
+- Intervalle : 30 secondes
+- Path : `/health`
+- Timeout : 10 secondes
 
-### 5A: Test Your Production Application
+#### 4.3 Gestion des Erreurs en Production
 
-**Backend Health Check**:
+**Logging** :
+
+```python
+import logging
+
+logger = logging.getLogger("taskflow")
+logger.setLevel(logging.INFO if os.getenv("DEBUG") != "true" else logging.DEBUG)
+
+# Dans les endpoints
+logger.info(f"Creating task: {task_data.title}")
+logger.error(f"Failed to process request: {error}")
+```
+
+**Error Handling** :
+
+```python
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
+```
+
+#### 4.4 Optimisations de Performance
+
+**Backend** :
+
+```python
+# CORS - en production, spécifier les origines exactes
+CORS_ORIGINS=https://taskflow-frontend-XXXX.onrender.com,https://www.votredomaine.com
+
+# Désactiver le mode debug
+DEBUG=false
+```
+
+**Frontend** :
 
 ```bash
-curl https://your-backend-url.com/health
+# Build de production optimisé
+npm run build
 
-# Expected response:
-# {
-#   "status": "healthy",
-#   "database": "connected",
-#   "environment": "production",
-#   "version": "2.0.0",
-#   "timestamp": "2025-10-09T12:00:00"
-# }
+# Variables d'environnement de production
+VITE_API_URL=https://taskflow-backend-XXXX.onrender.com
 ```
 
-**Create a Task**:
+## 🎯 Livrables de l'Atelier
+
+À la fin de cet atelier, vous devez avoir :
+
+### ✅ Services Déployés
+
+- [ ] Backend API déployé sur Render
+- [ ] Frontend déployé sur Render
+- [ ] URLs publiques fonctionnelles
+- [ ] Health checks configurés
+
+### ✅ CI/CD Fonctionnel
+
+- [ ] GitHub Actions exécute les tests à chaque push
+- [ ] Auto-deploy configuré sur la branche main
+- [ ] Build filters configurés pour le monorepo
+- [ ] Tous les tests passent (96%+ couverture)
+
+### ✅ Configuration de Production
+
+- [ ] Variables d'environnement configurées
+- [ ] CORS correctement configuré
+- [ ] Secrets managés de manière sécurisée
+- [ ] Logs et monitoring en place
+
+### ✅ Documentation
+
+- [ ] README mis à jour avec URLs de production
+- [ ] Instructions de déploiement documentées
+- [ ] Variables d'environnement documentées (.env.example)
+
+## 📊 URLs de l'Application
+
+Après déploiement, votre application sera accessible à :
+
+**Backend** :
+
+- API : `https://taskflow-backend-XXXX.onrender.com`
+- Docs : `https://taskflow-backend-XXXX.onrender.com/docs`
+- Health : `https://taskflow-backend-XXXX.onrender.com/health`
+
+**Frontend** :
+
+- Application : `https://taskflow-frontend-XXXX.onrender.com`
+
+**GitHub** :
+
+- Actions : `https://github.com/umons-ig/edl-tp-1/actions`
+- Repository : `https://github.com/umons-ig/edl-tp-1`
+
+## 🐛 Dépannage Courant
+
+### Problème : "Connection Error" dans le frontend
+
+**Cause** : Configuration CORS incorrecte
+
+**Solution** :
 
 ```bash
-curl -X POST https://your-backend-url.com/tasks \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Production deployment test",
-    "description": "Testing the live application",
-    "status": "done",
-    "priority": "high"
-  }'
+# Dans Render backend → Environment
+CORS_ORIGINS=*
+
+# Ou spécifique :
+CORS_ORIGINS=https://taskflow-frontend-XXXX.onrender.com
 ```
 
-**Test Frontend**:
+### Problème : Frontend ne se déploie pas
 
-1. Open your production frontend URL in browser
-2. Create a new task
-3. Move tasks between columns (todo → in progress → done)
-4. Edit and delete tasks
-5. Verify data persists on page refresh
+**Cause** : Mauvais Publish Directory
 
-### 5B: Monitor Your Deployment
+**Solution** :
 
-**View Application Logs**:
-
-**Render**:
-```bash
-# View logs in dashboard
-# Or use Render CLI
-render logs taskflow-backend
+```yaml
+Root Directory: frontend
+Publish Directory: dist  # PAS frontend/dist
 ```
 
-**Railway**:
-```bash
-railway logs
-```
+### Problème : Tests échouent dans GitHub Actions
 
-**Check GitHub Actions**:
+**Cause** : Tests non mis à jour après changements
 
-1. Go to your repository → "Actions" tab
-2. View workflow runs
-3. Check deployment status
-
-### 5C: Verification Checklist
-
-- [ ] Backend deployed and accessible
-- [ ] Frontend deployed and accessible
-- [ ] Health check endpoint returns "healthy"
-- [ ] Can create tasks via API
-- [ ] Frontend can load tasks
-- [ ] Data persists in MongoDB Atlas
-- [ ] GitHub Actions workflow runs successfully
-- [ ] No secrets exposed in logs or code
-
----
-
-## 🎉 Workshop 3 Complete!
-
-### What You Built
-
-```mermaid
-graph TB
-    subgraph "Production Architecture"
-        A[React Frontend<br/>Deployed on Cloud]
-        B[FastAPI Backend<br/>Deployed on Cloud]
-        C[(MongoDB Atlas<br/>Cloud Database)]
-        D[GitHub Actions<br/>CI/CD Pipeline]
-        E[GitHub Repository<br/>Version Control]
-
-        E -->|Push Code| D
-        D -->|Run Tests| D
-        D -->|Deploy| A
-        D -->|Deploy| B
-        A -->|HTTPS API Calls| B
-        B -->|Async Queries| C
-    end
-
-    style A fill:#61dafb
-    style B fill:#009688
-    style C fill:#4caf50
-    style D fill:#ff9800
-    style E fill:#333
-```
-
-### ✅ Achievements
-
-- ✅ **Cloud database** with MongoDB Atlas (no local DB needed!)
-- ✅ **Cloud deployment** on Render (no Docker needed!)
-- ✅ **Automated CI/CD** with GitHub Actions
-- ✅ **Environment configuration** for dev/staging/prod
-- ✅ **Health checks** for monitoring
-- ✅ **Secrets management** with GitHub Secrets
-- ✅ **Production-ready** full-stack application
-
-### 🎓 Concepts Mastered
-
-| Category | Skills Learned |
-|----------|----------------|
-| **Database** | Cloud databases, async MongoDB driver (Motor), document storage |
-| **Deployment** | PaaS deployment, environment variables, health checks |
-| **CI/CD** | GitHub Actions workflows, automated testing, automated deployment |
-| **Security** | Secrets management, CORS configuration, environment separation |
-| **Monitoring** | Logging, health endpoints, error tracking |
-| **DevOps** | Branch-based deployment, parallel testing, deployment strategies |
-
-### 📊 CI/CD Pipeline Flow
-
-```mermaid
-graph TB
-    A[Developer Pushes Code] --> B{Which Branch?}
-    B -->|feature/*| C[Run Tests Only]
-    B -->|develop| D[Tests + Deploy Staging]
-    B -->|main| E[Tests + Deploy Production]
-
-    C --> F{Tests Pass?}
-    D --> F
-    E --> F
-
-    F -->|Yes| G[✅ Success]
-    F -->|No| H[❌ Fail Build]
-
-    G -->|If main| I[Live in Production]
-    G -->|If develop| J[Live in Staging]
-
-    style G fill:#4caf50
-    style H fill:#f44336
-    style I fill:#2196f3
-```
-
-### 🚀 Next Steps & Advanced Topics
-
-**Immediate Improvements**:
-
-- Add **rate limiting** to prevent API abuse
-- Implement **caching** with Redis for better performance
-- Add **API versioning** (/api/v1/, /api/v2/)
-- Create **database indexes** for faster queries
-
-**Advanced Features**:
-
-- **Authentication**: JWT tokens, OAuth2, user sessions
-- **Real-time updates**: WebSockets, Server-Sent Events
-- **File uploads**: Cloud storage (S3/GCS), image processing
-- **Search**: Full-text search with MongoDB Atlas Search
-- **Analytics**: Track usage metrics, performance monitoring
-
-**Scaling & Performance**:
-
-- **Horizontal scaling**: Multiple backend instances
-- **Database optimization**: Indexes, query optimization
-- **CDN**: Content delivery network for frontend
-- **Load balancing**: Distribute traffic across servers
-
-**Testing & Quality**:
-
-- **Integration tests**: Test full API flows
-- **E2E tests**: Playwright/Cypress for frontend
-- **Load testing**: k6, Locust for performance
-- **Security scanning**: OWASP ZAP, Bandit
-
-### 📚 Resources
-
-**Cloud Platforms**:
-- [MongoDB Atlas Documentation](https://docs.atlas.mongodb.com/)
-- [Render Documentation](https://render.com/docs)
-- [Railway Documentation](https://docs.railway.app/)
-
-**CI/CD**:
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [GitHub Actions Best Practices](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
-
-**Database**:
-- [Motor (Async MongoDB)](https://motor.readthedocs.io/)
-- [MongoDB Python Tutorial](https://www.mongodb.com/languages/python)
-
-**General**:
-- [FastAPI Deployment](https://fastapi.tiangolo.com/deployment/)
-- [The Twelve-Factor App](https://12factor.net/)
-
----
-
-## 📋 Assessment Criteria
-
-### Technical Implementation (60 points)
-
-- [ ] MongoDB Atlas successfully integrated (15 pts)
-- [ ] All CRUD operations work with database (15 pts)
-- [ ] Application deployed to cloud platform (15 pts)
-- [ ] Health check endpoint functional (5 pts)
-- [ ] Environment variables properly configured (10 pts)
-
-### CI/CD Pipeline (25 points)
-
-- [ ] GitHub Actions workflow created (10 pts)
-- [ ] Automated tests run on every push (5 pts)
-- [ ] Automated deployment configured (10 pts)
-
-### Production Readiness (15 points)
-
-- [ ] CORS properly configured for production (5 pts)
-- [ ] Error handling and logging implemented (5 pts)
-- [ ] Secrets not exposed in code or logs (5 pts)
-
----
-
-## ✅ Implementation Status
-
-### What Has Been Completed
-
-All Workshop 3 requirements have been **successfully implemented**:
-
-#### 1. MongoDB Integration ✅
-- **Files Created**:
-  - [`backend/src/database.py`](../backend/src/database.py) - MongoDB connection management
-  - [`backend/src/models.py`](../backend/src/models.py) - Document conversion helpers
-  - [`backend/src/config.py`](../backend/src/config.py) - Environment-based configuration
-
-- **Files Updated**:
-  - [`backend/src/app.py`](../backend/src/app.py) - All endpoints now use MongoDB
-  - [`backend/pyproject.toml`](../backend/pyproject.toml) - Added motor, pymongo, python-dotenv, pydantic-settings
-
-- **Features**:
-  - ✅ Async MongoDB driver (Motor) integration
-  - ✅ MongoDB Atlas cloud database support
-  - ✅ Automatic database/collection creation
-  - ✅ ObjectId validation and conversion
-  - ✅ Test database isolation (`taskflow_test`)
-
-#### 2. Production Configuration ✅
-- **Files Created**:
-  - [`backend/.env.example`](../backend/.env.example) - Environment variable template
-  - [`backend/render.yaml`](../backend/render.yaml) - Render deployment configuration
-
-- **Features**:
-  - ✅ Environment-based settings (development/production)
-  - ✅ CORS configuration via environment variables
-  - ✅ Structured logging with proper log levels
-  - ✅ Global exception handler for error tracking
-
-#### 3. Health Checks & Monitoring ✅
-- **New Endpoints**:
-  - `GET /health` - Comprehensive health check with database status
-  - Updated `GET /` - API information endpoint
-
-- **Features**:
-  - ✅ Database connectivity verification
-  - ✅ Environment information
-  - ✅ Timestamp tracking
-  - ✅ HTTP 503 on unhealthy status
-
-#### 4. Testing Infrastructure ✅
-- **Files Updated**:
-  - [`backend/tests/conftest.py`](../backend/tests/conftest.py) - MongoDB test setup
-  - [`backend/tests/test_api.py`](../backend/tests/test_api.py) - Updated for MongoDB ObjectIds
-
-- **Test Results**:
-  - ✅ 23 tests passing
-  - ✅ 92% code coverage
-  - ✅ Separate test database
-  - ✅ Automatic cleanup between tests
-
-#### 5. CI/CD Pipeline ✅
-- **File Updated**:
-  - [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) - Enhanced with MongoDB and deployment
-
-- **Features**:
-  - ✅ MongoDB service for tests
-  - ✅ Automated deployment to Render on main branch
-  - ✅ Parallel test execution (backend + frontend)
-  - ✅ Integration checks before deployment
-  - ✅ Deploy hook support via GitHub Secrets
-
-### Quick Start Guide
-
-#### Prerequisites Completed
-- ✅ MongoDB Atlas account created
-- ✅ Connection string obtained
-- ✅ Local `.env` file configured
-
-#### To Run Locally
+**Solution** :
 
 ```bash
-# Start backend with MongoDB
-cd backend
-uv run uvicorn src.app:app --reload
-
-# Should see:
-# ✅ Successfully connected to MongoDB Atlas!
-# 🚀 TaskFlow backend starting up...
-
-# Test health endpoint
-curl http://localhost:8000/health
-# Returns: {"status":"healthy","database":"connected",...}
-```
-
-#### To Run Tests
-
-```bash
+# Lancer les tests localement
 cd backend
 uv run pytest
 
-# Results:
-# 23 passed, 1 warning in ~24s
-# Coverage: 92.27%
+# Mettre à jour les tests si nécessaire
+# Commit et push
 ```
 
-#### To Deploy to Render
+### Problème : Render "Build failed"
 
-1. **Create Web Service** on [render.com](https://render.com):
-   ```
-   Name: taskflow-backend
-   Root Directory: backend
-   Build Command: pip install uv && uv sync
-   Start Command: uv run uvicorn src.app:app --host 0.0.0.0 --port $PORT
-   ```
+**Cause** : Commandes de build incorrectes
 
-2. **Add Environment Variables**:
-   ```
-   MONGODB_URL = (your MongoDB Atlas connection string)
-   ENVIRONMENT = production
-   DEBUG = false
-   CORS_ORIGINS = http://localhost:5173,http://localhost:3000
-   ```
+**Solution** :
 
-3. **Set Up CI/CD**:
-   - Get deploy hook from Render dashboard
-   - Add `RENDER_DEPLOY_HOOK_URL` secret to GitHub repository
-   - Push to main branch → automatic deployment!
+```yaml
+# Backend
+Build Command: pip install uv && uv sync
+Start Command: uv run uvicorn src.app:app --host 0.0.0.0 --port $PORT
 
-### File Structure
-
-```
-backend/
-├── src/
-│   ├── __init__.py
-│   ├── app.py          # ✅ Updated with MongoDB integration
-│   ├── config.py       # ✅ NEW - Environment settings
-│   ├── database.py     # ✅ NEW - MongoDB connection
-│   └── models.py       # ✅ NEW - Document helpers
-├── tests/
-│   ├── conftest.py     # ✅ Updated with MongoDB test setup
-│   └── test_api.py     # ✅ Updated for MongoDB ObjectIds
-├── .env.example        # ✅ NEW - Environment template
-├── .env                # ✅ Created locally (not committed)
-├── pyproject.toml      # ✅ Updated with MongoDB dependencies
-└── render.yaml         # ✅ NEW - Deployment configuration
-
-.github/workflows/
-└── ci.yml              # ✅ Updated with MongoDB and deployment
+# Frontend
+Build Command: npm install && npm run build
+Publish Directory: dist
 ```
 
-### API Changes
+## 📚 Ressources Supplémentaires
 
-#### New Response Format
-Tasks now use MongoDB ObjectIds:
-```json
-{
-  "id": "68ea227db42985fff462a48a",  // MongoDB ObjectId (was UUID)
-  "title": "My task",
-  "description": "",
-  "status": "todo",
-  "priority": "medium",
-  "assignee": null,
-  "due_date": null,
-  "created_at": "2025-10-11T09:25:17.178000",
-  "updated_at": "2025-10-11T09:25:17.178000"
-}
-```
+### Documentation
 
-#### New Validation
-- Invalid ObjectId format → HTTP 400
-- Valid ObjectId but not found → HTTP 404
+- [Documentation Render](https://render.com/docs)
+- [GitHub Actions](https://docs.github.com/en/actions)
+- [FastAPI Deployment](https://fastapi.tiangolo.com/deployment/)
+- [Vite Environment Variables](https://vitejs.dev/guide/env-and-mode.html)
 
-### Production Architecture
+### Tutoriels
 
-```
-┌─────────────────────────────────────────┐
-│       GitHub Repository (main)           │
-│              git push                    │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────┐
-│      GitHub Actions CI/CD                │
-│  • Run tests with MongoDB                │
-│  • Check coverage (90%+)                 │
-│  • Deploy to Render (if pass)           │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────┐
-│        Render (PaaS)                     │
-│  FastAPI Backend                         │
-│  https://taskflow-backend-xxxx.onrender.com │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────┐
-│      MongoDB Atlas (Cloud DB)            │
-│  • Database: taskflow_db                 │
-│  • Collection: tasks                     │
-│  • Free M0 Cluster (512MB)              │
-└─────────────────────────────────────────┘
-```
+- [Deploying FastAPI to Render](https://render.com/docs/deploy-fastapi)
+- [React Static Site on Render](https://render.com/docs/deploy-create-react-app)
+- [Managing Environment Variables](https://render.com/docs/environment-variables)
 
-### Verification Checklist
+## 🏆 Félicitations !
 
-- [x] MongoDB Atlas cluster created
-- [x] Local `.env` file configured
-- [x] Backend connects to MongoDB locally
-- [x] All 23 tests pass with MongoDB
-- [x] Health endpoint returns "healthy"
-- [x] Data persists in MongoDB Atlas
-- [ ] Backend deployed to Render
-- [ ] GitHub Actions deploy hook configured
-- [ ] CI/CD pipeline runs successfully
+Vous avez terminé l'Atelier 3 ! Votre application TaskFlow est maintenant :
+
+✅ Déployée en production sur le cloud
+✅ Testée automatiquement à chaque changement
+✅ Déployée automatiquement via CI/CD
+✅ Configurée avec des bonnes pratiques de production
+✅ Accessible publiquement via HTTPS
+
+**Prochaines Étapes** :
+
+- Ajouter une base de données persistante (PostgreSQL/MongoDB)
+- Implémenter l'authentification utilisateur
+- Ajouter des tests end-to-end (Playwright/Cypress)
+- Configurer un nom de domaine personnalisé
+- Mettre en place du monitoring avancé (Sentry, DataDog)
 
 ---
 
-**Duration**: 3 hours | **Level**: Intermediate to Advanced
-
-**Congratulations!** 🎉 You've built and deployed a production-ready full-stack application with cloud database, automated CI/CD, and professional DevOps practices!
+**Version 2.1.0** - Atelier 3 Complété avec Succès ! 🎉

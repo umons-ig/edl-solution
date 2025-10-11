@@ -1,189 +1,202 @@
-# TaskFlow: Task Management Workshops
+# TaskFlow : Ateliers de Gestion de Tâches
 
-Series of hands-on workshops for learning CI/CD methods through building a modern task management application.
+Série d'ateliers pratiques pour apprendre les méthodes CI/CD en construisant une application moderne de gestion de tâches.
 
-## 🎯 Project: TaskFlow
-A collaborative task management platform where you build a full-stack application from scratch, learning modern development practices at each step.
+## 🎯 Projet : TaskFlow
+Une plateforme collaborative de gestion de tâches où vous construisez une application full-stack depuis zéro, en apprenant les pratiques de développement modernes à chaque étape.
 
-**Final Result**: A production-ready Kanban-style task manager with team collaboration, real-time updates, and automated deployment.
+**Résultat Final** : Un gestionnaire de tâches de type Kanban prêt pour la production, avec collaboration d'équipe et déploiement automatisé.
 
-## 📚 Workshop Series Overview
+## 📚 Aperçu des Ateliers
 
-### **Workshop 1: Python Backend & Testing Fundamentals**
-- **Focus**: TDD, FastAPI, pytest, UV environment management
-- **Domain**: Core task management API (CRUD operations)
-- **Skills**: RESTful APIs, automated testing, error handling
-- **Deliverable**: Complete backend service with 95%+ test coverage
+### **Atelier 1 : Backend Python & Fondamentaux des Tests**
+- **Focus** : TDD, FastAPI, pytest, gestion d'environnement UV
+- **Domaine** : API de gestion de tâches (opérations CRUD)
+- **Compétences** : APIs RESTful, tests automatisés, gestion d'erreurs
+- **Livrable** : Service backend complet avec couverture de tests > 95%
 
-### **Workshop 2: TypeScript Frontend & Integration**
-- **Focus**: React development, cross-service testing, real-time UI
-- **Domain**: Interactive Kanban boards, task visualization
-- **Skills**: Component testing, API integration, responsive design
-- **Deliverable**: Full-stack application with synchronized frontend/backend
+### **Atelier 2 : Frontend TypeScript & Intégration**
+- **Focus** : Développement React, tests inter-services, UI temps réel
+- **Domaine** : Tableaux Kanban interactifs, visualisation des tâches
+- **Compétences** : Tests de composants, intégration API, design responsive
+- **Livrable** : Application full-stack avec frontend/backend synchronisés
 
-### **Workshop 3: Production & Cloud Deployment**
+### **Atelier 3 : Production & Déploiement Cloud**
+- **Focus** : Stockage en mémoire simplifié, déploiement cloud, automatisation CI/CD
+- **Domaine** : Configuration de production, gestion d'environnement, monitoring
+- **Compétences** : Déploiement cloud, GitHub Actions, configurations production
+- **Livrable** : Application prête pour la production déployée dans le cloud
 
-- **Focus**: Database persistence, cloud deployment, CI/CD automation
-- **Domain**: Production configuration, environment management, monitoring
-- **Skills**: Cloud databases, GitHub Actions, production deployments
-- **Deliverable**: Production-ready application deployed to the cloud
-
-## 🏗️ Project Architecture
+## 🏗️ Architecture du Projet
 
 ```
 taskflow/
-├── backend/               # FastAPI Python service
-│   ├── src/              # Application code
-│   ├── tests/            # Backend tests
-│   ├── pyproject.toml    # UV dependencies
-│   └── Dockerfile        # Containerization
-├── frontend/             # React TypeScript service
-│   ├── src/              # Component code
-│   ├── tests/            # Frontend tests
-│   ├── package.json      # Node dependencies
-│   └── Dockerfile        # Containerization
-├── docs/                 # Workshop documentation
-├── .github/workflows/    # CI/CD pipelines
-└── docker-compose.yml    # Multi-service orchestration
+├── backend/               # Service FastAPI Python
+│   ├── src/              # Code de l'application
+│   ├── tests/            # Tests backend
+│   └── pyproject.toml    # Dépendances UV
+├── frontend/             # Service React TypeScript
+│   ├── src/              # Code des composants
+│   ├── tests/            # Tests frontend
+│   └── package.json      # Dépendances Node
+├── docs/                 # Documentation des ateliers
+├── .github/workflows/    # Pipelines CI/CD
+└── README.md            # Ce fichier
 ```
 
-## 🚀 Learning Path
+## 🚀 Parcours d'Apprentissage
 
-### **Red-Green-Refactor Cycle**
-1. **Write failing tests (Red)** → Define expected behavior
-2. **Implement minimal code (Green)** → Make tests pass
-3. **Refactor and optimize** → Improve code quality
-4. **Commit and CI/CD** → Automate testing and deployment
+### **Cycle Red-Green-Refactor**
+1. **Écrire des tests qui échouent (Red)** → Définir le comportement attendu
+2. **Implémenter le code minimal (Green)** → Faire passer les tests
+3. **Refactoriser et optimiser** → Améliorer la qualité du code
+4. **Commit et CI/CD** → Automatiser les tests et le déploiement
 
-### **Technical Stack**
-- **Backend**: FastAPI + Python 3.11+ + UV package management
-- **Frontend**: React 18 + TypeScript + Tailwind CSS
-- **Testing**: pytest + Jest + React Testing Library
-- **Database**: In-memory → SQLite → PostgreSQL progression
-- **CI/CD**: GitHub Actions with multi-service pipelines
-- **Containerization**: Docker + docker-compose
+### **Stack Technique**
+- **Backend** : FastAPI + Python 3.11+ + Gestionnaire de paquets UV
+- **Frontend** : React 18 + TypeScript + Tailwind CSS
+- **Tests** : pytest + Jest + React Testing Library
+- **Stockage** : En mémoire (Workshop 3 simplifié)
+- **CI/CD** : GitHub Actions avec pipelines multi-services
+- **Déploiement** : Render (Cloud Platform)
 
-## 📋 Prerequisites
+## 📋 Prérequis
 
-- **Python 3.11+** and **uv** package manager
-- **Node.js 18+** and **npm** or **yarn**
-- **Git** and **GitHub account**
-- **Code editor** (VS Code recommended)
-- Basic knowledge of Python and JavaScript
+- **Python 3.11+** et gestionnaire de paquets **uv**
+- **Node.js 18+** et **npm** ou **yarn**
+- **Git** et **compte GitHub**
+- **Éditeur de code** (VS Code recommandé)
+- Connaissances de base en Python et JavaScript
 
-## 🎯 Workshop Milestones
+## 🎯 Objectifs des Ateliers
 
-### **Workshop 1 Objectives**
-- [ ] Set up UV environment and project structure
-- [ ] Implement RESTful API for task management
-- [ ] Write comprehensive unit tests with mocking
-- [ ] Configure automated testing with GitHub Actions
-- [ ] Practice TDD methodology and error handling
+### **Objectifs Atelier 1**
+- ✅ Configurer l'environnement UV et la structure du projet
+- ✅ Implémenter l'API RESTful pour la gestion des tâches
+- ✅ Écrire des tests unitaires complets avec mocking
+- ✅ Configurer les tests automatisés avec GitHub Actions
+- ✅ Pratiquer la méthodologie TDD et la gestion d'erreurs
 
-### **Workshop 2 Objectives**
-- [ ] Build responsive React/TypeScript frontend
-- [ ] Implement Kanban board drag-and-drop interface
-- [ ] Write integration tests across services
-- [ ] Add real-time synchronization features
-- [ ] Deploy multi-service application
+### **Objectifs Atelier 2**
+- ✅ Construire un frontend React/TypeScript responsive
+- ✅ Implémenter une interface Kanban avec drag-and-drop
+- ✅ Écrire des tests d'intégration entre services
+- ✅ Ajouter des fonctionnalités de synchronisation temps réel
+- ✅ Déployer l'application multi-services
 
-### **Workshop 3 Objectives**
+### **Objectifs Atelier 3**
+- ✅ Implémenter le stockage en mémoire simplifié
+- ✅ Configurer les pipelines CI/CD de production avec GitHub Actions
+- ✅ Configurer les variables d'environnement et paramètres de production
+- ✅ Ajouter des health checks et du monitoring
+- ✅ Déployer sur la plateforme cloud Render
 
-- [ ] Implement database persistence with MongoDB Atlas
-- [ ] Set up production CI/CD pipelines with GitHub Actions
-- [ ] Configure environment variables and production settings
-- [ ] Add health checks and monitoring
-- [ ] Deploy to Render cloud platform
+## 🌐 Application Déployée
 
-## 📖 Workshop Documentation
+### **URLs de Production**
+- **Backend API** : https://taskflow-backend-0dax.onrender.com
+- **Frontend** : https://taskflow-frontend-[votre-id].onrender.com
+- **Documentation API** : https://taskflow-backend-0dax.onrender.com/docs
+- **Health Check** : https://taskflow-backend-0dax.onrender.com/health
 
-Detailed instructions for each workshop:
+### **Pipeline CI/CD**
+- Tests automatiques sur chaque push
+- Déploiement automatique sur la branche `main`
+- Couverture de tests : 96%+
+- GitHub Actions : [Voir les workflows](https://github.com/umons-ig/edl-tp-1/actions)
 
-- **[Workshop 1: Backend & Testing](docs/workshop-1-backend.md)** - FastAPI fundamentals
-- **[Workshop 2: Frontend & Integration](docs/workshop-2-frontend.md)** - React development
-- **[Workshop 3: Production & DevOps](docs/workshop-3-production.md)** - Advanced CI/CD
+## 📖 Documentation des Ateliers
 
-## 🛠️ Getting Started
+Instructions détaillées pour chaque atelier :
+
+- **[Atelier 1 : Backend & Tests](docs/workshop-1-backend.md)** - Fondamentaux FastAPI
+- **[Atelier 2 : Frontend & Intégration](docs/workshop-2-frontend.md)** - Développement React
+- **[Atelier 3 : Production & DevOps](docs/workshop-3-production.md)** - CI/CD Avancé
+
+## 🛠️ Démarrage Rapide
 
 ### **Installation**
 ```bash
-# Clone repository
+# Cloner le dépôt
 git clone https://github.com/umons-ig/edl-tp-1.git
 cd edl-tp-1
-
-# Choose your workshop branch
-git checkout workshop-1  # For backend fundamentals
 ```
 
-### **Quick Setup**
+### **Configuration Backend**
 ```bash
-# Workshop 1: Backend setup
 cd backend
-uv sync  # Install dependencies
-uv run pytest  # Run tests
-
-# Workshop 2: Frontend setup (coming soon)
-cd frontend
-npm install  # Install dependencies
-npm test     # Run tests
+uv sync                                      # Installer les dépendances
+uv run uvicorn src.app:app --reload        # Démarrer le serveur
+uv run pytest                               # Lancer les tests
 ```
 
-## 🤝 Learning Approach
+### **Configuration Frontend**
+```bash
+cd frontend
+npm install                                 # Installer les dépendances
+npm run dev                                # Démarrer le serveur dev
+npm test                                   # Lancer les tests
+```
 
-Each workshop follows a **guided discovery** format:
-- **Starter code** with intentional gaps and TODOs
-- **Test-driven development** approach
-- **Progressive disclosure** - learn one concept at a time
-- **Practical exercises** with immediate feedback
-- **Real-world challenges** and edge cases
+## 🤝 Approche d'Apprentissage
 
-## 📊 Assessment Criteria
+Chaque atelier suit un format de **découverte guidée** :
+- **Code de départ** avec des lacunes et TODOs intentionnels
+- Approche **test-driven development**
+- **Divulgation progressive** - apprendre un concept à la fois
+- **Exercices pratiques** avec feedback immédiat
+- **Défis réels** et cas limites
 
-### **Technical Excellence**
-- Code follows modern best practices
-- Comprehensive test coverage maintained
-- Proper error handling and validation
-- Clean, readable code structure
+## 📊 Critères d'Évaluation
 
-### **CI/CD Implementation**
-- Automated testing on every commit
-- Consistent code quality checks
-- Successful automated deployments
-- Proper environment management
+### **Excellence Technique**
+- Le code suit les meilleures pratiques modernes
+- Couverture de tests complète maintenue
+- Gestion appropriée des erreurs et validation
+- Structure de code propre et lisible
 
-### **Problem-Solving**
-- Effective use of available resources
-- Creative solutions to requirements
-- Proper debugging techniques
-- Collaboration and communication
+### **Implémentation CI/CD**
+- Tests automatisés à chaque commit
+- Vérifications cohérentes de la qualité du code
+- Déploiements automatisés réussis
+- Gestion appropriée des environnements
 
-## 🏆 Final Deliverables
+### **Résolution de Problèmes**
+- Utilisation efficace des ressources disponibles
+- Solutions créatives aux exigences
+- Techniques de débogage appropriées
+- Collaboration et communication
 
-By the end of Workshop 3, you will have built:
+## 🏆 Livrables Finaux
 
-✅ **Functional task management application**
-✅ **Automated CI/CD pipelines**
-✅ **Production deployment capabilities**
-✅ **Comprehensive test suite**
-✅ **Modern full-stack architecture**
-✅ **Team collaboration features**
+À la fin de l'Atelier 3, vous aurez construit :
 
-## 📚 Additional Resources
+✅ **Application fonctionnelle de gestion de tâches**
+✅ **Pipelines CI/CD automatisés**
+✅ **Capacités de déploiement en production**
+✅ **Suite de tests complète (96%+ couverture)**
+✅ **Architecture full-stack moderne**
+✅ **Déploiement cloud fonctionnel**
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [React Documentation](https://react.dev/)
-- [pytest Documentation](https://docs.pytest.org/)
-- [GitHub Actions Guide](https://docs.github.com/en/actions)
-- [UV Package Manager](https://docs.astral.sh/uv/)
+## 📚 Ressources Supplémentaires
 
-## 🤝 Contributing
+- [Documentation FastAPI](https://fastapi.tiangolo.com/)
+- [Documentation React](https://react.dev/)
+- [Documentation pytest](https://docs.pytest.org/)
+- [Guide GitHub Actions](https://docs.github.com/en/actions)
+- [Gestionnaire de Paquets UV](https://docs.astral.sh/uv/)
+- [Documentation Render](https://render.com/docs)
 
-Found an issue or have an improvement suggestion? Please open an issue or submit a pull request.
+## 🤝 Contribution
 
-## 📄 License
+Vous avez trouvé un problème ou avez une suggestion d'amélioration ? N'hésitez pas à ouvrir une issue ou soumettre une pull request.
 
-Educational workshop materials - see individual workshop documentation for licensing details.
+## 📄 Licence
+
+Matériel pédagogique pour ateliers - voir la documentation de chaque atelier pour les détails de licence.
 
 ---
 
-**Ready to start building?** Head to [Workshop 1: Backend Fundamentals](docs/workshop-1-backend.md) to begin your journey!
+**Prêt à commencer ?** Rendez-vous sur [Atelier 1 : Fondamentaux Backend](docs/workshop-1-backend.md) pour débuter votre parcours !
+
+🚀 **Version 2.1.0** - Atelier 3 Complété avec Déploiement Cloud
