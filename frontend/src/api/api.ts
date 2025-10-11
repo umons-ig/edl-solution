@@ -1,7 +1,7 @@
 import { Task, TaskCreate, TaskUpdate, TaskStatus, TaskPriority } from '../types/index';
 
-// API Base URL - will proxy to backend via Vite
-const API_BASE = '/api';
+// API Base URL - use environment variable in production or proxy in development
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 // Helper function for API calls
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
