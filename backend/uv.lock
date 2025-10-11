@@ -700,6 +700,7 @@ name = "taskflow-backend"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "dnspython" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "motor" },
@@ -721,6 +722,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "dnspython", specifier = ">=2.4.0" },
     { name = "fastapi", specifier = ">=0.104.1" },
     { name = "httpx", specifier = ">=0.25.2" },
     { name = "motor", specifier = ">=3.7.1" },
