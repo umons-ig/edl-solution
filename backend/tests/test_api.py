@@ -7,56 +7,31 @@ Follows TDD principles with comprehensive coverage.
 
 import pytest
 from datetime import datetime, timedelta
-from fastapi.testclient import TestClient
-from src.app import app, tasks_db, TaskStatus, TaskPriority
-
-
-@pytest.fixture
-def client():
-    """FastAPI test client fixture."""
-    return TestClient(app)
-
-
-# Fixtures
-@pytest.fixture(autouse=True)
-def reset_tasks_db():
-    """Reset the in-memory database before each test."""
-    global tasks_db
-    tasks_db.clear()
-    yield
-    tasks_db.clear()
-
-
-@pytest.fixture
-def sample_task_data():
-    """Sample task data for testing."""
-    return {
-        "title": "Implement user authentication",
-        "description": "Add login and signup functionality",
-        "status": "in_progress",
-        "priority": "high",
-        "assignee": "alice",
-        "due_date": "2024-12-31T23:59:59"
-    }
-
-
-@pytest.fixture
-def create_sample_task(client, sample_task_data):
-    """Create a sample task and return the response."""
-    response = client.post("/tasks", json=sample_task_data)
-    return response
+from src.app import TaskStatus, TaskPriority
 
 
 class TestHealthCheck:
     """Test health check and basic endpoints."""
 
     def test_root_endpoint(self, client):
-        """Test the root health check endpoint."""
+        """Test the root endpoint."""
         response = client.get("/")
         assert response.status_code == 200
         data = response.json()
         assert data["message"] == "Welcome to TaskFlow API"
+        assert "version" in data
+        assert data["docs"] == "/docs"
+        assert data["health"] == "/health"
+
+    def test_health_endpoint(self, client):
+        """Test the health check endpoint."""
+        response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
         assert data["status"] == "healthy"
+        assert "database" in data
+        assert data["database"] == "connected"
+        assert "timestamp" in data
         assert "version" in data
 
 
@@ -89,7 +64,7 @@ class TestTaskCreation:
         assert data["title"] == "Fix bug"
         assert data["status"] == "todo"  # Default value
         assert data["priority"] == "medium"  # Default value
-        assert data["description"] is None
+        assert data["description"] == ""  # Empty string from MongoDB
         assert data["assignee"] is None
 
     def test_create_task_invalid_title_too_long(self, client):
@@ -123,7 +98,15 @@ class TestTaskRetrieval:
 
     def test_get_task_not_found(self, client):
         """Test retrieving non-existent task."""
+        # Use invalid ObjectId format
         response = client.get("/tasks/non-existent-id")
+        assert response.status_code == 400
+        assert "invalid" in response.json()["detail"].lower()
+
+    def test_get_task_valid_id_not_found(self, client):
+        """Test retrieving valid but non-existent task ID."""
+        # Use a valid ObjectId format that doesn't exist
+        response = client.get("/tasks/507f1f77bcf86cd799439011")
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 
@@ -263,7 +246,8 @@ class TestTaskUpdates:
     def test_update_task_not_found(self, client):
         """Test updating non-existent task."""
         update_data = {"title": "Updated title"}
-        response = client.put("/tasks/non-existent-id", json=update_data)
+        # Use valid ObjectId format but non-existent
+        response = client.put("/tasks/507f1f77bcf86cd799439011", json=update_data)
         assert response.status_code == 404
 
     def test_update_task_invalid_data(self, client, create_sample_task):
@@ -300,7 +284,8 @@ class TestTaskDeletion:
 
     def test_delete_task_not_found(self, client):
         """Test deleting non-existent task."""
-        response = client.delete("/tasks/non-existent-id")
+        # Use valid ObjectId format but non-existent
+        response = client.delete("/tasks/507f1f77bcf86cd799439011")
         assert response.status_code == 404
 
 

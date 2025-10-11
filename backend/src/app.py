@@ -6,12 +6,31 @@ A RESTful API for task management with TDD approach.
 
 from contextlib import asynccontextmanager
 from typing import List, Optional
-from uuid import uuid4
 from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
+from bson import ObjectId
+import logging
+
+from src.database import (
+    connect_to_mongo,
+    close_mongo_connection,
+    get_tasks_collection
+)
+from src.models import task_helper, task_to_db
+from src.config import get_settings
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("taskflow")
+
+# Get settings
+settings = get_settings()
 
 
 # Pydantic Models
@@ -59,10 +78,6 @@ class Task(TaskBase):
     updated_at: datetime
 
 
-# In-memory storage (will be replaced with database later)
-tasks_db: List[Task] = []
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -70,16 +85,18 @@ async def lifespan(app: FastAPI):
     Initialize and cleanup resources.
     """
     # Startup
-    print("🚀 TaskFlow backend starting up...")
+    logger.info("🚀 TaskFlow backend starting up...")
+    await connect_to_mongo()
     yield
     # Shutdown
-    print("🛑 TaskFlow backend shutting down...")
+    logger.info("🛑 TaskFlow backend shutting down...")
+    await close_mongo_connection()
 
 
 app = FastAPI(
     title="TaskFlow API",
-    description="Task management API built with FastAPI",
-    version="0.1.0",
+    description="Production-ready task management API with MongoDB",
+    version="2.0.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -88,7 +105,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Vite dev server
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -97,12 +114,40 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    """Health check endpoint."""
+    """API root endpoint."""
     return {
         "message": "Welcome to TaskFlow API",
-        "version": "0.1.0",
-        "status": "healthy"
+        "version": "2.0.0",
+        "docs": "/docs",
+        "health": "/health"
     }
+
+
+@app.get("/health")
+async def health_check():
+    """Comprehensive health check endpoint for monitoring."""
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": settings.environment,
+        "version": "2.0.0"
+    }
+
+    # Check database connection
+    try:
+        collection = get_tasks_collection()
+        await collection.database.command('ping')
+        health_status["database"] = "connected"
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        health_status["status"] = "unhealthy"
+        health_status["database"] = "disconnected"
+        raise HTTPException(
+            status_code=503,
+            detail=f"Service unhealthy: {str(e)}"
+        )
+
+    return health_status
 
 
 @app.get("/tasks", response_model=List[Task])
@@ -119,15 +164,21 @@ async def list_tasks(
     - priority: Filter by priority level (low, medium, high)
     - assignee: Filter by assigned person
     """
-    tasks = tasks_db.copy()
+    collection = get_tasks_collection()
 
-    # Apply filters
+    # Build query filter
+    query = {}
     if status:
-        tasks = [t for t in tasks if t.status == status]
+        query["status"] = status
     if priority:
-        tasks = [t for t in tasks if t.priority == priority]
+        query["priority"] = priority
     if assignee:
-        tasks = [t for t in tasks if t.assignee == assignee]
+        query["assignee"] = assignee
+
+    # Query MongoDB
+    tasks = []
+    async for task in collection.find(query):
+        tasks.append(task_helper(task))
 
     return tasks
 
@@ -135,21 +186,24 @@ async def list_tasks(
 @app.post("/tasks", response_model=Task, status_code=201)
 async def create_task(task_data: TaskCreate):
     """
-    Create a new task.
+    Create a new task in MongoDB.
 
     Returns the created task with generated ID and timestamps.
     """
-    now = datetime.utcnow()
+    logger.info(f"Creating task: {task_data.title}")
+    collection = get_tasks_collection()
 
-    task = Task(
-        id=str(uuid4()),
-        created_at=now,
-        updated_at=now,
-        **task_data.model_dump()
-    )
+    # Prepare task for database
+    db_task = task_to_db(task_data.model_dump())
 
-    tasks_db.append(task)
-    return task
+    # Insert into MongoDB
+    result = await collection.insert_one(db_task)
+
+    # Retrieve the created task
+    created_task = await collection.find_one({"_id": result.inserted_id})
+
+    logger.info(f"Task created successfully: {str(result.inserted_id)}")
+    return task_helper(created_task)
 
 
 @app.get("/tasks/{task_id}", response_model=Task)
@@ -159,11 +213,22 @@ async def get_task(task_id: str):
 
     Returns 404 if task not found.
     """
-    for task in tasks_db:
-        if task.id == task_id:
-            return task
+    collection = get_tasks_collection()
 
-    raise HTTPException(status_code=404, detail=f"Task with ID '{task_id}' not found")
+    # Validate ObjectId
+    if not ObjectId.is_valid(task_id):
+        raise HTTPException(status_code=400, detail="Invalid task ID format")
+
+    # Find task
+    task = await collection.find_one({"_id": ObjectId(task_id)})
+
+    if not task:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task with ID '{task_id}' not found"
+        )
+
+    return task_helper(task)
 
 
 @app.put("/tasks/{task_id}", response_model=Task)
@@ -173,22 +238,31 @@ async def update_task(task_id: str, update_data: TaskUpdate):
 
     Returns the updated task or 404 if not found.
     """
-    for i, task in enumerate(tasks_db):
-        if task.id == task_id:
-            # Get updated data, using existing values for fields not provided
-            update_dict = update_data.model_dump(exclude_unset=True)
-            updated_task_data = task.model_dump()
-            updated_task_data.update(update_dict)
+    collection = get_tasks_collection()
 
-            # Create new task with updated data and new timestamp
-            updated_task_data["updated_at"] = datetime.utcnow()
+    # Validate ObjectId
+    if not ObjectId.is_valid(task_id):
+        raise HTTPException(status_code=400, detail="Invalid task ID format")
 
-            updated_task = Task(**updated_task_data)
+    # Prepare update data
+    update_dict = {k: v for k, v in update_data.model_dump(exclude_unset=True).items() if v is not None}
+    update_dict["updated_at"] = datetime.utcnow()
 
-            tasks_db[i] = updated_task
-            return updated_task
+    # Update in MongoDB
+    result = await collection.update_one(
+        {"_id": ObjectId(task_id)},
+        {"$set": update_dict}
+    )
 
-    raise HTTPException(status_code=404, detail=f"Task with ID '{task_id}' not found")
+    if result.matched_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task with ID '{task_id}' not found"
+        )
+
+    # Return updated task
+    updated_task = await collection.find_one({"_id": ObjectId(task_id)})
+    return task_helper(updated_task)
 
 
 @app.delete("/tasks/{task_id}", status_code=204)
@@ -198,12 +272,32 @@ async def delete_task(task_id: str):
 
     Returns 204 on success, 404 if not found.
     """
-    for i, task in enumerate(tasks_db):
-        if task.id == task_id:
-            tasks_db.pop(i)
-            return
+    collection = get_tasks_collection()
 
-    raise HTTPException(status_code=404, detail=f"Task with ID '{task_id}' not found")
+    # Validate ObjectId
+    if not ObjectId.is_valid(task_id):
+        raise HTTPException(status_code=400, detail="Invalid task ID format")
+
+    # Delete from MongoDB
+    result = await collection.delete_one({"_id": ObjectId(task_id)})
+
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task with ID '{task_id}' not found"
+        )
+
+
+# Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc: Exception):
+    """Handle unexpected errors gracefully."""
+    logger.error(f"Unexpected error: {exc}", exc_info=True)
+
+    return {
+        "detail": "Internal server error",
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
 
 if __name__ == "__main__":
