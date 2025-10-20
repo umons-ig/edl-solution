@@ -68,8 +68,8 @@ class Task(TaskBase):
     updated_at: datetime
 
 
-# In-memory storage
-tasks_db: List[Task] = []
+# In-memory storage (just a simple list)
+tasks_storage: List[Task] = []
 
 
 @asynccontextmanager
@@ -145,7 +145,7 @@ async def list_tasks(
     - priority: Filter by priority level (low, medium, high)
     - assignee: Filter by assigned person
     """
-    tasks = tasks_db.copy()
+    tasks = tasks_storage.copy()
 
     # Apply filters
     if status:
@@ -175,7 +175,7 @@ async def create_task(task_data: TaskCreate):
         **task_data.model_dump()
     )
 
-    tasks_db.append(task)
+    tasks_storage.append(task)
     logger.info(f"Task created successfully: {task.id}")
     return task
 
@@ -187,7 +187,7 @@ async def get_task(task_id: str):
 
     Returns 404 if task not found.
     """
-    for task in tasks_db:
+    for task in tasks_storage:
         if task.id == task_id:
             return task
 
@@ -201,7 +201,7 @@ async def update_task(task_id: str, update_data: TaskUpdate):
 
     Returns the updated task or 404 if not found.
     """
-    for task in tasks_db:
+    for task in tasks_storage:
         if task.id == task_id:
             # Update fields that are provided
             update_dict = update_data.model_dump(exclude_unset=True)
@@ -222,9 +222,9 @@ async def delete_task(task_id: str):
 
     Returns 204 on success, 404 if not found.
     """
-    for i, task in enumerate(tasks_db):
+    for i, task in enumerate(tasks_storage):
         if task.id == task_id:
-            tasks_db.pop(i)
+            tasks_storage.pop(i)
             return
 
     raise HTTPException(status_code=404, detail=f"Task with ID '{task_id}' not found")
