@@ -5,160 +5,123 @@ import { TaskForm } from './TaskForm';
 import { Task } from '../types/index';
 
 describe('TaskForm', () => {
+  // Tâche de test pour les tests d'édition
   const mockTask: Task = {
     id: '1',
     title: 'Test Task',
-    description: 'This is a test description',
+    description: 'Test description',
     status: 'in_progress',
     priority: 'high',
-    assignee: 'John Doe',
-    due_date: '2025-01-15',
     created_at: '2025-01-01T10:00:00Z',
     updated_at: '2025-01-01T10:00:00Z',
   };
 
-  it('renders create form correctly when no task provided', () => {
+  /**
+   * EXEMPLE : Test de rendu du formulaire de création
+   * Ce test vérifie que le formulaire s'affiche correctement
+   * en mode création (sans tâche fournie)
+   */
+  it('affiche correctement le formulaire de création', () => {
     const onSubmit = vi.fn();
     const onCancel = vi.fn();
 
     render(<TaskForm onSubmit={onSubmit} onCancel={onCancel} />);
 
-    expect(screen.getByText('Create New Task')).toBeInTheDocument();
-    expect(screen.getByText('Create Task')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter task title')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Enter task description (optional)')).toBeInTheDocument();
+    expect(screen.getByText('Créer une Nouvelle Tâche')).toBeTruthy();
+    expect(screen.getByText('Créer')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Entrez le titre de la tâche')).toBeTruthy();
   });
 
-  it('renders edit form correctly when task is provided', () => {
+  /**
+   * EXEMPLE : Test de rendu du formulaire d'édition
+   * Ce test vérifie que le formulaire s'affiche correctement
+   * en mode édition (avec une tâche fournie)
+   */
+  it('affiche correctement le formulaire d\'édition avec les données existantes', () => {
     const onSubmit = vi.fn();
     const onCancel = vi.fn();
 
     render(<TaskForm task={mockTask} onSubmit={onSubmit} onCancel={onCancel} />);
 
-    expect(screen.getByText('Edit Task')).toBeInTheDocument();
-    expect(screen.getByText('Update Task')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Test Task')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('This is a test description')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('John Doe')).toBeInTheDocument();
+    expect(screen.getByText('Modifier la Tâche')).toBeTruthy();
+    expect(screen.getByText('Mettre à Jour')).toBeTruthy();
+    expect(screen.getByDisplayValue('Test Task')).toBeTruthy();
+    expect(screen.getByDisplayValue('Test description')).toBeTruthy();
   });
 
-  it('calls onSubmit with form data when form is submitted', async () => {
+  /**
+   * EXEMPLE : Test de soumission du formulaire
+   * Ce test vérifie que la fonction onSubmit est appelée
+   * avec les bonnes données quand on soumet le formulaire
+   */
+  it('appelle onSubmit avec les données du formulaire', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     const onCancel = vi.fn();
 
     render(<TaskForm onSubmit={onSubmit} onCancel={onCancel} />);
 
-    // Fill out the form
-    await user.type(screen.getByPlaceholderText('Enter task title'), 'New Task Title');
-    await user.type(screen.getByPlaceholderText('Enter task description (optional)'), 'New description');
+    // Remplir le formulaire
+    await user.type(screen.getByPlaceholderText('Entrez le titre de la tâche'), 'New Task');
+    await user.type(screen.getByPlaceholderText('Entrez la description (optionnel)'), 'My description');
 
-    // Select priority
-    const prioritySelect = screen.getByDisplayValue('Medium');
+    // Sélectionner la priorité
+    const prioritySelect = screen.getByDisplayValue('Moyenne');
     await user.selectOptions(prioritySelect, 'high');
 
-    // Add assignee
-    await user.type(screen.getByPlaceholderText('Assign to...'), 'Jane Smith');
-
-    // Submit the form
-    fireEvent.click(screen.getByText('Create Task'));
+    // Soumettre le formulaire
+    fireEvent.click(screen.getByText('Créer'));
 
     await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith({
-        title: 'New Task Title',
-        description: 'New description',
-        status: 'todo',
-        priority: 'high',
-        assignee: 'Jane Smith',
-      });
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'New Task',
+          description: 'My description',
+          status: 'todo',
+          priority: 'high',
+        })
+      );
     });
   });
 
-  it('filters out empty string values when submitting', async () => {
-    const user = userEvent.setup();
-    const onSubmit = vi.fn();
-    const onCancel = vi.fn();
+  /**
+   * EXERCICE 1 : Test du bouton Annuler
+   * Écrivez un test qui vérifie que cliquer sur le bouton "Annuler"
+   * appelle la fonction onCancel
+   */
+  it.todo('appelle onCancel quand on clique sur Annuler');
+  // TODO: Créez des mocks pour onSubmit et onCancel
+  // TODO: Rendez le formulaire
+  // TODO: Cliquez sur le bouton "Annuler"
+  // TODO: Vérifiez que onCancel a été appelé 1 fois
 
-    render(<TaskForm onSubmit={onSubmit} onCancel={onCancel} />);
+  /**
+   * EXERCICE 2 : Test des boutons désactivés pendant le chargement
+   * Écrivez un test qui vérifie que quand isLoading=true,
+   * les boutons sont désactivés et affichent "Enregistrement..."
+   */
+  it.todo('désactive les boutons quand isLoading est true');
+  // TODO: Rendez le formulaire avec isLoading={true}
+  // TODO: Vérifiez que le bouton affiche "Enregistrement..."
+  // TODO: Vérifiez que les boutons sont disabled
 
-    // Fill only title, leave others empty
-    await user.type(screen.getByPlaceholderText('Enter task title'), 'Task with minimal data');
+  /**
+   * EXERCICE 3 : Test du champ titre obligatoire
+   * Écrivez un test qui vérifie que le champ titre est requis
+   * (le formulaire ne peut pas être soumis sans titre)
+   */
+  it.todo('exige le champ titre');
+  // TODO: Rendez le formulaire
+  // TODO: Essayez de soumettre sans remplir le titre
+  // TODO: Vérifiez que onSubmit n'a PAS été appelé
 
-    // Submit the form
-    fireEvent.click(screen.getByText('Create Task'));
-
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith({
-        title: 'Task with minimal data',
-        status: 'todo',
-        priority: 'medium',
-      });
-    });
-  });
-
-  it('calls onCancel when cancel button is clicked', () => {
-    const onSubmit = vi.fn();
-    const onCancel = vi.fn();
-
-    render(<TaskForm onSubmit={onSubmit} onCancel={onCancel} />);
-
-    const cancelButton = screen.getByText('Cancel');
-    fireEvent.click(cancelButton);
-
-    expect(onCancel).toHaveBeenCalledTimes(1);
-  });
-
-  it('disables buttons when isLoading is true', () => {
-    const onSubmit = vi.fn();
-    const onCancel = vi.fn();
-
-    render(<TaskForm onSubmit={onSubmit} onCancel={onCancel} isLoading={true} />);
-
-    const submitButton = screen.getByText('Saving...');
-    const cancelButton = screen.getByText('Cancel');
-
-    expect(submitButton).toBeDisabled();
-    expect(cancelButton).toBeDisabled();
-  });
-
-  it('requires title field', () => {
-    const onSubmit = vi.fn();
-    const onCancel = vi.fn();
-
-    render(<TaskForm onSubmit={onSubmit} onCancel={onCancel} />);
-
-    const submitButton = screen.getByText('Create Task');
-    fireEvent.click(submitButton);
-
-    // HTML5 validation should prevent submission
-    expect(onSubmit).not.toHaveBeenCalled();
-  });
-
-  it('populates form with existing task data for editing', () => {
-    const onSubmit = vi.fn();
-    const onCancel = vi.fn();
-
-    render(<TaskForm task={mockTask} onSubmit={onSubmit} onCancel={onCancel} />);
-
-    // Check that the edit form shows existing task data
-    expect(screen.getByDisplayValue('Test Task')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('This is a test description')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('In Progress')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('High')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('John Doe')).toBeInTheDocument();
-  });
-
-  it('shows all status options in dropdown', () => {
-    const onSubmit = vi.fn();
-    const onCancel = vi.fn();
-
-    render(<TaskForm onSubmit={onSubmit} onCancel={onCancel} />);
-
-    const statusSelect = screen.getAllByRole('option', { hidden: true });
-    const statusOptions = statusSelect.map(option => option.textContent);
-
-    expect(statusOptions).toContain('To Do');
-    expect(statusOptions).toContain('In Progress');
-    expect(statusOptions).toContain('Done');
-  });
+  /**
+   * EXERCICE 4 : Test des options de statut
+   * Écrivez un test qui vérifie que le dropdown de statut
+   * contient bien les 3 options : "À Faire", "En Cours", "Terminé"
+   */
+  it.todo('affiche toutes les options de statut');
+  // TODO: Rendez le formulaire
+  // TODO: Récupérez toutes les options du select de statut
+  // TODO: Vérifiez que les 3 statuts sont présents ("À Faire", "En Cours", "Terminé")
 });

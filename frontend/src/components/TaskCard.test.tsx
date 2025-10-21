@@ -4,19 +4,22 @@ import { TaskCard } from './TaskCard';
 import { Task } from '../types/index';
 
 describe('TaskCard', () => {
+  // Tâche de test utilisée dans tous les tests
   const mockTask: Task = {
     id: '1',
     title: 'Test Task',
     description: 'This is a test description',
     status: 'todo',
     priority: 'medium',
-    assignee: 'John Doe',
-    due_date: '2025-01-15',
     created_at: '2025-01-01T10:00:00Z',
     updated_at: '2025-01-01T10:00:00Z',
   };
 
-  it('renders task information correctly', () => {
+  /**
+   * EXEMPLE : Test de rendu des informations de la tâche
+   * Ce test vérifie que tous les éléments de la tâche sont affichés
+   */
+  it('affiche correctement les informations de la tâche', () => {
     render(
       <TaskCard
         task={mockTask}
@@ -26,46 +29,41 @@ describe('TaskCard', () => {
       />
     );
 
-    // Check title is rendered
-    expect(screen.getByText('Test Task')).toBeInTheDocument();
+    // Vérifier que le titre est affiché
+    expect(screen.getByText('Test Task')).toBeTruthy();
 
-    // Check description is rendered
-    expect(screen.getByText('This is a test description')).toBeInTheDocument();
+    // Vérifier que la description est affichée
+    expect(screen.getByText('This is a test description')).toBeTruthy();
 
-    // Check assignee is rendered
-    expect(screen.getByText('👤 John Doe')).toBeInTheDocument();
-
-    // Check priority badge
-    expect(screen.getByText('medium')).toBeInTheDocument();
+    // Vérifier que la priorité est affichée
+    expect(screen.getByText('medium')).toBeTruthy();
   });
 
-  it('shows correct priority colors', () => {
-    const renderWithPriority = (priority: 'low' | 'medium' | 'high') => {
-      render(
-        <TaskCard
-          task={{ ...mockTask, priority }}
-          onEdit={vi.fn()}
-          onDelete={vi.fn()}
-          onStatusChange={vi.fn()}
-        />
-      );
-      return screen.getByText(priority);
-    };
+  /**
+   * EXEMPLE : Test des couleurs de priorité
+   * Ce test vérifie que chaque niveau de priorité a la bonne couleur
+   */
+  it('affiche les bonnes couleurs selon la priorité', () => {
+    render(
+      <TaskCard
+        task={{ ...mockTask, priority: 'high' }}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onStatusChange={vi.fn()}
+      />
+    );
 
-    // High priority should have red background
-    const highTask = renderWithPriority('high');
-    expect(highTask).toHaveClass('bg-red-100', 'text-red-800');
-
-    // Medium priority should have yellow background
-    const mediumTask = renderWithPriority('medium');
-    expect(mediumTask).toHaveClass('bg-yellow-100', 'text-yellow-800');
-
-    // Low priority should have green background
-    const lowTask = renderWithPriority('low');
-    expect(lowTask).toHaveClass('bg-green-100', 'text-green-800');
+    // Haute priorité = rouge
+    const highBadge = screen.getByText('high');
+    expect(highBadge.className).toContain('bg-red-100');
+    expect(highBadge.className).toContain('text-red-800');
   });
 
-  it('calls onEdit when edit button is clicked', () => {
+  /**
+   * EXEMPLE : Test du bouton d'édition
+   * Ce test vérifie que cliquer sur le bouton Edit appelle la fonction onEdit
+   */
+  it('appelle onEdit quand on clique sur le bouton éditer', () => {
     const onEdit = vi.fn();
     render(
       <TaskCard
@@ -82,117 +80,34 @@ describe('TaskCard', () => {
     expect(onEdit).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onDelete when delete button is clicked and confirmed', () => {
-    const onDelete = vi.fn();
+  /**
+   * EXERCICE 1 : Test du bouton de suppression
+   * Écrivez un test qui vérifie que cliquer sur le bouton Delete
+   * et confirmer la suppression appelle bien la fonction onDelete
+   *
+   * Indice : Vous devez mocker window.confirm pour qu'il retourne true
+   */
+  it.todo('appelle onDelete quand on clique sur supprimer et confirme');
+  // TODO: Créez un mock de onDelete
+  // TODO: Mockez window.confirm avec vi.spyOn(window, 'confirm').mockReturnValue(true)
+  // TODO: Cliquez sur le bouton de suppression (title='Delete task')
+  // TODO: Vérifiez que onDelete a été appelé
 
-    // Mock window.confirm to return true
-    const confirmSpy = vi.spyOn(window, 'confirm');
-    confirmSpy.mockReturnValue(true);
+  /**
+   * EXERCICE 2 : Test d'annulation de suppression
+   * Écrivez un test qui vérifie que si l'utilisateur annule
+   * la confirmation de suppression, onDelete n'est PAS appelé
+   */
+  it.todo('n\'appelle pas onDelete si l\'utilisateur annule');
+  // TODO: Mockez window.confirm pour retourner false
+  // TODO: Vérifiez que onDelete n'est PAS appelé (avec .not.toHaveBeenCalled())
 
-    render(
-      <TaskCard
-        task={mockTask}
-        onEdit={vi.fn()}
-        onDelete={onDelete}
-        onStatusChange={vi.fn()}
-      />
-    );
-
-    const deleteButton = screen.getByTitle('Delete task');
-    fireEvent.click(deleteButton);
-
-    expect(onDelete).toHaveBeenCalledTimes(1);
-    expect(confirmSpy).toHaveBeenCalledWith('Are you sure you want to delete "Test Task"?');
-
-    confirmSpy.mockRestore();
-  });
-
-  it('does not call onDelete when delete is cancelled', () => {
-    const onDelete = vi.fn();
-
-    // Mock window.confirm to return false
-    const confirmSpy = vi.spyOn(window, 'confirm');
-    confirmSpy.mockReturnValue(false);
-
-    render(
-      <TaskCard
-        task={mockTask}
-        onEdit={vi.fn()}
-        onDelete={onDelete}
-        onStatusChange={vi.fn()}
-      />
-    );
-
-    const deleteButton = screen.getByTitle('Delete task');
-    fireEvent.click(deleteButton);
-
-    expect(onDelete).not.toHaveBeenCalled();
-    expect(confirmSpy).toHaveBeenCalledWith('Are you sure you want to delete "Test Task"?');
-
-    confirmSpy.mockRestore();
-  });
-
-  it('formats due dates correctly', () => {
-    render(
-      <TaskCard
-        task={mockTask}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onStatusChange={vi.fn()}
-      />
-    );
-
-    // Date should be formatted as Jan 15
-    expect(screen.getByText('📅 Jan 15')).toBeInTheDocument();
-  });
-
-  it('does not render description when not provided', () => {
-    const taskWithoutDescription = { ...mockTask, description: undefined };
-    render(
-      <TaskCard
-        task={taskWithoutDescription}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onStatusChange={vi.fn()}
-      />
-    );
-
-    // Should not find the description text
-    expect(screen.queryByText('This is a test description')).not.toBeInTheDocument();
-  });
-
-  it('does not render assignee when not provided', () => {
-    const taskWithoutAssignee = { ...mockTask, assignee: undefined };
-    render(
-      <TaskCard
-        task={taskWithoutAssignee}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onStatusChange={vi.fn()}
-      />
-    );
-
-    // Should not find the assignee text
-    expect(screen.queryByText('👤 John Doe')).not.toBeInTheDocument();
-  });
-
-  it('truncates long titles', () => {
-    const taskWithLongTitle = {
-      ...mockTask,
-      title: 'This is a very long task title that should be truncated in the UI'
-    };
-
-    render(
-      <TaskCard
-        task={taskWithLongTitle}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onStatusChange={vi.fn()}
-      />
-    );
-
-    // Check that the title element has truncate class
-    const titleElement = screen.getByText('This is a very long task title that should be truncated in the UI');
-    expect(titleElement).toHaveClass('truncate');
-  });
+  /**
+   * EXERCICE 3 : Test sans description
+   * Écrivez un test qui vérifie que si une tâche n'a pas de description,
+   * celle-ci n'est pas affichée dans le DOM
+   */
+  it.todo('n\'affiche pas la description si elle est absente');
+  // TODO: Créez une tâche sans description ({ ...mockTask, description: undefined })
+  // TODO: Vérifiez que la description n'apparaît pas avec screen.queryByText()
 });

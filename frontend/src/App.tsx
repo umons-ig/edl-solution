@@ -1,107 +1,74 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from './api/api';
-import { Task, TaskStatus, TaskCreate, TaskUpdate } from './types/index';
+import { Task, TaskStatus, TaskCreate } from './types/index';
 import { KanbanBoard } from './components/KanbanBoard';
 import { TaskForm } from './components/TaskForm';
 
 function App() {
-  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const queryClient = useQueryClient();
 
-  // Fetch all tasks
+  // Fetch tasks
   const { data: tasks = [], isLoading, error } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => api.getTasks(),
-    staleTime: 0, // Always refetch when invalidated (for instant delete feedback)
   });
 
-  // Mutations
-  const createTaskMutation = useMutation({
-    mutationFn: (taskData: TaskCreate) => api.createTask(taskData),
+  // Create task
+  const createMutation = useMutation({
+    mutationFn: api.createTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      setShowTaskForm(false);
+      setShowForm(false);
     },
   });
 
-  const updateTaskMutation = useMutation({
-    mutationFn: ({ taskId, updates }: { taskId: string; updates: TaskUpdate }) =>
-      api.updateTask(taskId, updates),
+  // Update task
+  const updateMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<TaskCreate> }) =>
+      api.updateTask(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setEditingTask(null);
     },
   });
 
-  const deleteTaskMutation = useMutation({
-    mutationFn: (taskId: string) => api.deleteTask(taskId),
+  // Delete task
+  const deleteMutation = useMutation({
+    mutationFn: api.deleteTask,
     onSuccess: () => {
-      // Immediately refetch - with staleTime: 0, this will update the UI instantly
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
-    retry: false,  // Don't retry failed deletes
-    mutationKey: ['delete-task'], // Prevent duplicate mutations
   });
 
-  // Handle task status updates (drag and drop)
-  const handleStatusUpdate = useCallback((taskId: string, newStatus: TaskStatus) => {
-    updateTaskMutation.mutate({ taskId, updates: { status: newStatus } });
-  }, [updateTaskMutation]);
-
-  // Handle form submission
-  const handleTaskSubmit = useCallback((taskData: TaskCreate) => {
-    createTaskMutation.mutate(taskData);
-  }, [createTaskMutation]);
-
-  const handleTaskEdit = useCallback((taskData: TaskUpdate, taskId: string) => {
-    updateTaskMutation.mutate({ taskId, updates: taskData });
-  }, [updateTaskMutation]);
-
-  const handleDeleteTask = useCallback((taskId: string) => {
-    deleteTaskMutation.mutate(taskId);
-  }, [deleteTaskMutation]);
-
-  const isDeletePending = deleteTaskMutation.isPending;
-
-  const handleEditTask = useCallback((task: Task) => {
-    setEditingTask(task);
-  }, []);
-
-  const handleFormCancel = useCallback(() => {
-    setShowTaskForm(false);
-    setEditingTask(null);
-  }, []);
-
-  const handleCreateTask = useCallback(() => {
-    setShowTaskForm(true);
-  }, []);
-
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading TaskFlow...</p>
+          <p className="mt-4 text-gray-600">Chargement...</p>
         </div>
       </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md p-8 bg-white rounded-lg shadow-lg">
           <div className="text-center">
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">Connection Error</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Erreur de Connexion</h2>
             <p className="text-gray-600 mb-4">
-              Unable to connect to the backend API. Make sure the backend server is running.
+              Impossible de se connecter au backend. Assurez-vous que le serveur backend est démarré.
             </p>
             <div className="bg-gray-100 p-4 rounded text-sm font-mono text-left">
-              <p>1. Start the backend: <code className="text-blue-600">cd backend && uv run uvicorn src.app:app --reload</code></p>
-              <p>2. Refresh this page</p>
+              <p>1. Démarrez le backend: <code className="text-blue-600">cd backend && uv run uvicorn src.app:app --reload</code></p>
+              <p>2. Rafraîchissez cette page</p>
             </div>
           </div>
         </div>
@@ -117,13 +84,13 @@ function App() {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">TaskFlow</h1>
-              <p className="text-gray-600 mt-1">Kanban-style task management</p>
+              <p className="text-gray-600 mt-1">Gestion de tâches Kanban</p>
             </div>
             <button
-              onClick={handleCreateTask}
+              onClick={() => setShowForm(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium"
             >
-              + New Task
+              + Nouvelle Tâche
             </button>
           </div>
         </div>
@@ -134,39 +101,43 @@ function App() {
         {tasks.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">📋</div>
-            <h3 className="text-xl font-medium text-gray-900 mb-2">No tasks yet</h3>
-            <p className="text-gray-500 mb-6">Get started by creating your first task!</p>
+            <h3 className="text-xl font-medium text-gray-900 mb-2">Aucune tâche</h3>
+            <p className="text-gray-500 mb-6">Créez votre première tâche pour commencer !</p>
             <button
-              onClick={handleCreateTask}
+              onClick={() => setShowForm(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium"
             >
-              Create Your First Task
+              Créer une Tâche
             </button>
           </div>
         ) : (
           <KanbanBoard
             tasks={tasks}
-            onStatusUpdate={handleStatusUpdate}
-            onEditTask={handleEditTask}
-            onDeleteTask={handleDeleteTask}
-            isDeletePending={isDeletePending}
+            onStatusChange={(taskId: string, newStatus: TaskStatus) => {
+              updateMutation.mutate({ id: taskId, updates: { status: newStatus } });
+            }}
+            onEdit={(task: Task) => setEditingTask(task)}
+            onDelete={(taskId: string) => deleteMutation.mutate(taskId)}
           />
         )}
       </main>
 
       {/* Task Form Modal */}
-      {(showTaskForm || editingTask) && (
+      {(showForm || editingTask) && (
         <TaskForm
           task={editingTask}
-          onSubmit={(taskData) => {
+          onSubmit={(data) => {
             if (editingTask) {
-              handleTaskEdit(taskData, editingTask.id);
+              updateMutation.mutate({ id: editingTask.id, updates: data });
             } else {
-              handleTaskSubmit(taskData);
+              createMutation.mutate(data);
             }
           }}
-          onCancel={handleFormCancel}
-          isLoading={createTaskMutation.isPending || updateTaskMutation.isPending}
+          onCancel={() => {
+            setShowForm(false);
+            setEditingTask(null);
+          }}
+          isLoading={createMutation.isPending || updateMutation.isPending}
         />
       )}
     </div>
