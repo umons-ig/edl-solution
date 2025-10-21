@@ -80,115 +80,76 @@ npm run dev
 
 6. **Redémarrez le backend** et rafraîchissez le frontend
 
-### 1.3 - Comprendre le Proxy Vite
+### 1.3 - 🎯 EXERCICE : Ajouter un Filtre par Priorité
 
-**🎯 EXERCICE : Configurer le proxy**
+**Objectif :** Implémenter un filtre pour afficher seulement les tâches d'une certaine priorité.
 
-Ouvrez `frontend/vite.config.ts` et observez :
+**Ce que vous allez construire :**
+Un menu déroulant qui filtre les tâches par priorité (high, medium, low).
 
-```typescript
-export default defineConfig({
-  server: {
-    port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
-  },
-})
-```
+**Étape 1 : Ajouter le filtre dans l'API**
 
-**Comment ça marche ?**
-
-| Frontend appelle      | Proxy Vite redirige vers          | Backend reçoit |
-|-----------------------|----------------------------------|----------------|
-| `GET /api/tasks`      | `GET http://localhost:8000/tasks` | `GET /tasks` |
-| `POST /api/tasks`     | `POST http://localhost:8000/tasks` | `POST /tasks` |
-| `DELETE /api/tasks/1` | `DELETE http://localhost:8000/tasks/1` | `DELETE /tasks/1` |
-
-**Le préfixe `/api` est supprimé** par le proxy avant d'envoyer la requête au backend.
-
-### 1.4 - Tester Manuellement l'API
-
-**🎯 EXERCICE : Créer une tâche**
-
-1. Cliquez sur **"Nouvelle Tâche"**
-2. Remplissez le formulaire :
-   - Titre : "Tester la connexion"
-   - Priorité : High
-3. Soumettez
-
-**Dans DevTools → Network :**
-- Trouvez la requête `POST /api/tasks`
-- Cliquez dessus
-- Onglet **Payload** : Voyez-vous vos données ?
-- Onglet **Response** : Voyez-vous la tâche créée avec son ID ?
-
-**Dans le terminal backend :**
-Vous devriez voir :
-```
-INFO:     127.0.0.1:xxxxx - "POST /tasks HTTP/1.1" 201 Created
-```
-
-### 1.5 - Analyser le Code d'Appel API
-
-Ouvrez `frontend/src/api/api.ts` :
+Ouvrez `frontend/src/api/api.ts` et **modifiez** la fonction `getTasks` pour accepter un paramètre optionnel :
 
 ```typescript
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
-
-async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE}${endpoint}`;  // Construit /api/tasks
-
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
-  }
-
-  return response.json();
-}
-
-export const api = {
-  async getTasks(): Promise<Task[]> {
-    return apiRequest<Task[]>('/tasks');  // → GET /api/tasks
-  },
-
-  async createTask(task: TaskCreate): Promise<Task> {
-    return apiRequest<Task>('/tasks', {
-      method: 'POST',
-      body: JSON.stringify(task),
-    });
-  },
-
-  async deleteTask(id: string): Promise<void> {
-    return apiRequest<void>(`/tasks/${id}`, {
-      method: 'DELETE',
-    });
-  },
-
-  async updateTask(id: string, updates: Partial<TaskCreate>): Promise<Task> {
-    return apiRequest<Task>(`/tasks/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
-  },
-};
+async getTasks(priority?: string): Promise<Task[]> {
+  // Construire l'URL avec le paramètre priority si fourni
+  const endpoint = priority ? `/tasks?priority=${priority}` : '/tasks';
+  return apiRequest<Task[]>(endpoint);
+},
 ```
 
-**Questions de compréhension :**
-1. Pourquoi utilise-t-on `${API_BASE}${endpoint}` ?
-2. Que fait `response.ok` ?
-3. Pourquoi `JSON.stringify(task)` ?
+**Étape 2 : Ajouter l'état du filtre dans App.tsx**
+
+Ouvrez `frontend/src/App.tsx` et ajoutez un état pour le filtre (après la ligne `const [editingTask, setEditingTask] = ...`) :
+
+```typescript
+const [priorityFilter, setPriorityFilter] = useState<string>('');
+```
+
+**Étape 3 : Utiliser le filtre dans la requête**
+
+Modifiez le `useQuery` pour inclure le filtre :
+
+```typescript
+const { data: tasks = [], isLoading, error } = useQuery({
+  queryKey: ['tasks', priorityFilter],  // ← Ajoutez priorityFilter ici
+  queryFn: () => api.getTasks(priorityFilter || undefined),  // ← Passez le filtre
+});
+```
+
+**Étape 4 : Ajouter le menu déroulant**
+
+Dans `App.tsx`, trouvez la section avec le bouton "Nouvelle Tâche" (autour de la ligne 100).
+
+Juste **avant** le bouton "Nouvelle Tâche", ajoutez ce select :
+
+```typescript
+{/* Filtre par priorité */}
+<select
+  value={priorityFilter}
+  onChange={(e) => setPriorityFilter(e.target.value)}
+  className="px-4 py-2 rounded bg-white text-gray-800 border border-gray-300"
+>
+  <option value="">Toutes les priorités</option>
+  <option value="high">Haute</option>
+  <option value="medium">Moyenne</option>
+  <option value="low">Basse</option>
+</select>
+```
+
+**Étape 5 : Tester**
+
+1. Sauvegardez tous les fichiers
+2. Créez plusieurs tâches avec différentes priorités
+3. Utilisez le menu déroulant pour filtrer
+4. Observez dans DevTools → Network : `GET /api/tasks?priority=high`
+
+**Vous venez d'apprendre :**
+- ✅ Comment passer des paramètres dans une URL
+- ✅ Comment gérer l'état dans React (`useState`)
+- ✅ Comment React Query refetch automatiquement quand les paramètres changent
+- ✅ L'importance de `queryKey` pour le cache
 
 ---
 
