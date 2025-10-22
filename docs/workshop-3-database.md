@@ -829,9 +829,11 @@ Name: taskflow-db
 Database: taskflow_prod
 User: taskflow_user
 Region: Frankfurt (même région que le backend!)
-PostgreSQL Version: 15
+PostgreSQL Version: 17 (ou 16, 15 - toutes fonctionnent)
 Plan: Free (1GB de stockage)
 ```
+
+**Note** : PostgreSQL 17, 16, et 15 sont toutes compatibles avec notre code. Utilisez la version la plus récente disponible sur Render.
 
 3. Cliquer **"Create Database"**
 
