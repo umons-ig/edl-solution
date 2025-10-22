@@ -21,11 +21,11 @@ Une plateforme collaborative de gestion de tâches où vous construisez une appl
 - **Compétences** : Tests de composants, intégration API, design responsive
 - **Livrable** : Application full-stack avec frontend/backend synchronisés
 
-### **Atelier 3 : Production & Déploiement Cloud**
-- **Focus** : Stockage en mémoire simplifié, déploiement cloud, automatisation CI/CD
-- **Domaine** : Configuration de production, gestion d'environnement, monitoring
-- **Compétences** : Déploiement cloud, GitHub Actions, configurations production
-- **Livrable** : Application prête pour la production déployée dans le cloud
+### **Atelier 3 : Production & Déploiement Cloud + Base de Données**
+- **Focus** : Déploiement cloud, automatisation CI/CD, intégration PostgreSQL
+- **Domaine** : Configuration de production, gestion d'environnement, monitoring, persistance des données
+- **Compétences** : Déploiement cloud, GitHub Actions, SQLAlchemy ORM, PostgreSQL
+- **Livrable** : Application prête pour la production avec base de données PostgreSQL
 
 ## 🏗️ Architecture du Projet
 
@@ -56,7 +56,8 @@ taskflow/
 - **Backend** : FastAPI + Python 3.11+ + Gestionnaire de paquets UV
 - **Frontend** : React 18 + TypeScript + Tailwind CSS
 - **Tests** : pytest + Jest + React Testing Library
-- **Stockage** : En mémoire (Workshop 3 simplifié)
+- **Base de Données** : PostgreSQL (production) + SQLite (développement)
+- **ORM** : SQLAlchemy 2.0
 - **CI/CD** : GitHub Actions avec pipelines multi-services
 - **Déploiement** : Render (Cloud Platform)
 
@@ -85,11 +86,11 @@ taskflow/
 - ✅ Déployer l'application multi-services
 
 ### **Objectifs Atelier 3**
-- ✅ Implémenter le stockage en mémoire simplifié
+- ✅ Intégrer PostgreSQL avec SQLAlchemy ORM
 - ✅ Configurer les pipelines CI/CD de production avec GitHub Actions
 - ✅ Configurer les variables d'environnement et paramètres de production
 - ✅ Ajouter des health checks et du monitoring
-- ✅ Déployer sur la plateforme cloud Render
+- ✅ Déployer sur la plateforme cloud Render avec base de données
 
 ## 🌐 Application Déployée
 
@@ -112,6 +113,7 @@ Instructions détaillées pour chaque atelier :
 - **[Atelier 1 : Backend & Tests](docs/workshop-1-backend.md)** - Fondamentaux FastAPI
 - **[Atelier 2 : Frontend & Intégration](docs/workshop-2-frontend.md)** - Développement React
 - **[Atelier 3 : Production & DevOps](docs/workshop-3-production.md)** - CI/CD Avancé
+- **[Atelier 3 (Partie 5) : Intégration PostgreSQL](docs/workshop-3-database.md)** - Base de Données 🆕
 
 ## 🛠️ Démarrage Rapide
 
@@ -172,9 +174,10 @@ Chaque atelier suit un format de **découverte guidée** :
 À la fin de l'Atelier 3, vous aurez construit :
 
 ✅ **Application fonctionnelle de gestion de tâches**
+✅ **Base de données PostgreSQL en production**
 ✅ **Pipelines CI/CD automatisés**
 ✅ **Capacités de déploiement en production**
-✅ **Suite de tests complète (96%+ couverture)**
+✅ **Suite de tests complète (70%+ couverture)**
 ✅ **Architecture full-stack moderne**
 ✅ **Déploiement cloud fonctionnel**
 
@@ -199,4 +202,4 @@ Matériel pédagogique pour ateliers - voir la documentation de chaque atelier p
 
 **Prêt à commencer ?** Rendez-vous sur [Atelier 1 : Fondamentaux Backend](docs/workshop-1-backend.md) pour débuter votre parcours !
 
-🚀 **Version 2.1.0** - Atelier 3 Complété avec Déploiement Cloud
+🚀 **Version 2.2.0** - Atelier 3 Complété avec PostgreSQL & Déploiement Cloud

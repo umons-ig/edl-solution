@@ -644,13 +644,17 @@ Félicitations ! 🎉 Vous avez maintenant :
 
 **Améliorations possibles :**
 
-1. **Domaine personnalisé**
+1. **Base de données persistante PostgreSQL** ⭐ **DISPONIBLE MAINTENANT !**
+   - 📚 **[Guide complet : Intégration PostgreSQL](workshop-3-database.md)**
+   - Remplacer le stockage en mémoire par une vraie base de données
+   - Déployer PostgreSQL sur Render
+   - Utiliser SQLAlchemy ORM
+   - **Durée** : 60-90 minutes
+   - **Prérequis** : Avoir complété les phases 1-5 de cet atelier
+
+2. **Domaine personnalisé**
    - Acheter un nom de domaine
    - Le connecter à Render
-
-2. **Base de données persistante**
-   - Ajouter PostgreSQL sur Render
-   - Remplacer le stockage en mémoire
 
 3. **Authentification**
    - Ajouter un login/signup
@@ -668,10 +672,19 @@ Félicitations ! 🎉 Vous avez maintenant :
 
 ## 📚 Ressources
 
+**Atelier 3 - Extensions :**
+
+- **[Guide PostgreSQL Database](workshop-3-database.md)** - Intégration base de données (Partie 5)
+- **[Migration Checklist](MIGRATION_CHECKLIST.md)** - Guide visuel de migration
+- **[Backend README](../backend/README.md)** - Documentation technique complète
+
+**Documentation Externe :**
+
 - [Render Documentation](https://render.com/docs)
 - [FastAPI Deployment Guide](https://fastapi.tiangolo.com/deployment/)
 - [Vite Production Build](https://vitejs.dev/guide/build.html)
 - [Managing Environment Variables](https://render.com/docs/environment-variables)
+- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/) (pour la base de données)
 
 ---
 
