@@ -493,9 +493,673 @@ logging.basicConfig(
 
 ---
 
-## 📋 Phase 5 : Test et Validation (30 min)
+## 📋 Phase 5 : Migration vers PostgreSQL (Optionnel - 90 min)
 
-### 5.1 - Checklist de Déploiement
+⚠️ **IMPORTANT** : Cette phase est **optionnelle** et permet d'ajouter une vraie base de données PostgreSQL. Les phases 1-4 utilisent le stockage en mémoire (les données sont perdues au redémarrage). Si vous voulez que vos données persistent, suivez cette phase !
+
+### 5.0 - Pourquoi Ajouter une Base de Données ?
+
+**Avec le stockage en mémoire (Phases 1-4) :**
+- ❌ Les tâches disparaissent quand vous redémarrez le backend
+- ❌ Chaque redéploiement efface toutes les données
+- ❌ Impossible de scaler (plusieurs instances)
+
+**Avec PostgreSQL :**
+- ✅ Les données persistent entre les redémarrages
+- ✅ Déploiements sans perte de données
+- ✅ Base de données professionnelle
+- ✅ Requêtes complexes et relations
+
+### 5.1 - Vue d'Ensemble de la Migration
+
+Vous allez transformer votre backend pour utiliser PostgreSQL au lieu de la liste Python en mémoire.
+
+**Ce que vous allez faire :**
+1. Créer une base de données PostgreSQL sur Render (gratuit)
+2. Créer 2 nouveaux fichiers : `database.py` et `models.py`
+3. **Supprimer** le code de stockage en mémoire de `app.py`
+4. **Remplacer** par des appels à la base de données
+5. Adapter les tests
+6. Déployer avec la base de données
+
+**Durée estimée :** 60-90 minutes
+
+### 5.2 - Créer la Base de Données sur Render
+
+**🎯 EXERCICE : Provisionner PostgreSQL**
+
+1. Allez sur <https://dashboard.render.com>
+2. Cliquez **"New +"** → **"PostgreSQL"**
+3. Configuration :
+
+```yaml
+Name: taskflow-db
+Region: Frankfurt (même région que votre backend)
+PostgreSQL Version: 16
+Instance Type: Free
+```
+
+4. Cliquez **"Create Database"**
+5. **Attendez 2-3 minutes** que la base soit provisionnée
+
+6. Une fois prête, cliquez sur votre database → **"Info"**
+7. Copiez **"Internal Database URL"** (commence par `postgresql://`)
+
+**Exemple d'URL :**
+```
+postgresql://taskflow_db_user:mot_de_passe_tres_long@dpg-xxxxx-a/taskflow_db
+```
+
+⚠️ **Gardez cette URL** - vous en aurez besoin plus tard !
+
+### 5.3 - Ajouter les Dépendances Python
+
+**🎯 EXERCICE : Installer SQLAlchemy et psycopg2**
+
+Utilisez `uv add` pour ajouter les dépendances nécessaires :
+
+```bash
+cd backend
+uv add sqlalchemy psycopg2-binary
+```
+
+**Ce que fait cette commande :**
+- Ajoute `sqlalchemy` et `psycopg2-binary` au fichier `pyproject.toml`
+- Installe automatiquement les packages
+- Met à jour le fichier de lock (`uv.lock`)
+
+**Vérifiez l'installation :**
+
+```bash
+uv run python -c "import sqlalchemy; print(f'SQLAlchemy {sqlalchemy.__version__}')"
+```
+
+Vous devriez voir : `SQLAlchemy 2.0.x`
+
+### 5.4 - Créer le Fichier `database.py`
+
+**🎯 EXERCICE : Configuration de la base de données**
+
+Créez le fichier `backend/src/database.py` :
+
+```python
+import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from typing import Generator
+import logging
+
+logger = logging.getLogger("taskflow")
+
+# Lire l'URL de la base de données depuis les variables d'environnement
+# Par défaut : SQLite pour le développement local
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./taskflow.db")
+
+# Fix pour Render : postgres:// → postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Configuration du moteur SQLAlchemy
+engine_kwargs = {}
+if DATABASE_URL.startswith("sqlite"):
+    # SQLite : désactiver le check_same_thread
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    # PostgreSQL : configuration de la pool de connexions
+    engine_kwargs.update({
+        "pool_size": 5,           # 5 connexions dans la pool
+        "max_overflow": 10,       # 10 connexions supplémentaires max
+        "pool_pre_ping": True,    # Vérifier que la connexion est vivante
+    })
+
+# Créer le moteur SQLAlchemy
+engine = create_engine(DATABASE_URL, **engine_kwargs)
+
+# Créer la factory de sessions
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Base pour les modèles ORM
+Base = declarative_base()
+
+def get_db() -> Generator[Session, None, None]:
+    """
+    Dependency function pour obtenir une session de base de données.
+    Utilisée avec FastAPI Depends().
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def init_db() -> None:
+    """Initialise la base de données en créant toutes les tables."""
+    logger.info("Initializing database tables...")
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database tables created successfully!")
+```
+
+**Ce que fait ce fichier :**
+- Configure la connexion à PostgreSQL (ou SQLite en local)
+- Crée le moteur SQLAlchemy avec une pool de connexions
+- Fournit `get_db()` pour les dépendances FastAPI
+- Fournit `init_db()` pour créer les tables
+
+### 5.5 - Créer le Fichier `models.py`
+
+**🎯 EXERCICE : Définir le modèle ORM**
+
+Créez le fichier `backend/src/models.py` :
+
+```python
+from sqlalchemy import Column, String, DateTime, Enum as SQLEnum
+from sqlalchemy.sql import func
+from .database import Base
+from enum import Enum
+
+class TaskStatus(str, Enum):
+    """Statuts possibles d'une tâche."""
+    TODO = "todo"
+    IN_PROGRESS = "in_progress"
+    DONE = "done"
+
+class TaskPriority(str, Enum):
+    """Priorités possibles d'une tâche."""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+class TaskModel(Base):
+    """Modèle SQLAlchemy pour la table tasks."""
+    __tablename__ = "tasks"
+
+    # Colonnes
+    id = Column(String, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(String(1000), nullable=True)
+    status = Column(
+        SQLEnum(TaskStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=TaskStatus.TODO.value
+    )
+    priority = Column(
+        SQLEnum(TaskPriority, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=TaskPriority.MEDIUM.value
+    )
+    assignee = Column(String(100), nullable=True)
+    due_date = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+```
+
+**Ce que fait ce fichier :**
+- Définit le schéma de la table `tasks` en base de données
+- Chaque `Column` correspond à une colonne SQL
+- Les enums `TaskStatus` et `TaskPriority` seront déplacés ici
+
+### 5.6 - Modifier `app.py` : Supprimer le Stockage en Mémoire
+
+**🎯 EXERCICE : Migration du code**
+
+⚠️ **ATTENTION** : Vous allez **supprimer** et **remplacer** du code dans `app.py`. Suivez attentivement !
+
+#### **Étape 1 : Ajouter les imports en haut du fichier**
+
+**Après les imports existants**, ajoutez :
+
+```python
+from .database import get_db, init_db
+from .models import TaskModel, TaskStatus, TaskPriority
+from sqlalchemy.orm import Session
+```
+
+#### **Étape 2 : SUPPRIMER les anciennes définitions**
+
+**❌ SUPPRIMEZ ces lignes (dans `app.py`) :**
+
+```python
+# SUPPRIMEZ cette classe (TaskStatus)
+class TaskStatus(str, Enum):
+    TODO = "todo"
+    IN_PROGRESS = "in_progress"
+    DONE = "done"
+
+# SUPPRIMEZ cette classe (TaskPriority)
+class TaskPriority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+# SUPPRIMEZ cette ligne (tasks_storage)
+tasks_storage: List[Task] = []
+```
+
+**Pourquoi ?** Ces éléments sont maintenant dans `models.py` !
+
+#### **Étape 3 : Modifier la fonction lifespan**
+
+**❌ REMPLACEZ cette section :**
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup/shutdown events."""
+    logger.info("🚀 Starting TaskFlow backend...")
+    yield
+    logger.info("👋 Shutting down TaskFlow backend...")
+```
+
+**✅ PAR ce nouveau code :**
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup/shutdown events."""
+    logger.info("🚀 Starting TaskFlow backend...")
+
+    # Initialiser la base de données (créer les tables)
+    if not app.dependency_overrides:  # Seulement en production
+        init_db()
+    else:
+        logger.info("Test mode - skipping database initialization")
+
+    yield
+    logger.info("👋 Shutting down TaskFlow backend...")
+```
+
+#### **Étape 4 : Modifier TOUS les endpoints**
+
+Chaque endpoint doit maintenant utiliser la base de données au lieu de `tasks_storage`.
+
+**🔹 Endpoint GET /tasks**
+
+**❌ REMPLACEZ :**
+
+```python
+@app.get("/tasks", response_model=list[Task])
+async def get_tasks():
+    """Get all tasks."""
+    logger.info("Fetching all tasks")
+    return tasks_storage
+```
+
+**✅ PAR :**
+
+```python
+@app.get("/tasks", response_model=list[Task])
+async def get_tasks(db: Session = Depends(get_db)):
+    """Get all tasks."""
+    logger.info("Fetching all tasks")
+    db_tasks = db.query(TaskModel).all()
+    return db_tasks
+```
+
+**🔹 Endpoint POST /tasks**
+
+**❌ REMPLACEZ :**
+
+```python
+@app.post("/tasks", response_model=Task, status_code=201)
+async def create_task(task_data: TaskCreate):
+    logger.info(f"Creating task: {task_data.title}")
+
+    task = Task(
+        id=str(uuid4()),
+        **task_data.model_dump()
+    )
+    tasks_storage.append(task)
+
+    logger.info(f"Task created successfully: {task.id}")
+    return task
+```
+
+**✅ PAR :**
+
+```python
+@app.post("/tasks", response_model=Task, status_code=201)
+async def create_task(task_data: TaskCreate, db: Session = Depends(get_db)):
+    logger.info(f"Creating task: {task_data.title}")
+
+    db_task = TaskModel(
+        id=str(uuid4()),
+        **task_data.model_dump()
+    )
+
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+
+    logger.info(f"Task created successfully: {db_task.id}")
+    return db_task
+```
+
+**🔹 Endpoint GET /tasks/{task_id}**
+
+**❌ REMPLACEZ :**
+
+```python
+@app.get("/tasks/{task_id}", response_model=Task)
+async def get_task(task_id: str):
+    logger.info(f"Fetching task: {task_id}")
+
+    task = next((t for t in tasks_storage if t.id == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    return task
+```
+
+**✅ PAR :**
+
+```python
+@app.get("/tasks/{task_id}", response_model=Task)
+async def get_task(task_id: str, db: Session = Depends(get_db)):
+    logger.info(f"Fetching task: {task_id}")
+
+    db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    return db_task
+```
+
+**🔹 Endpoint PUT /tasks/{task_id}**
+
+**❌ REMPLACEZ :**
+
+```python
+@app.put("/tasks/{task_id}", response_model=Task)
+async def update_task(task_id: str, task_update: TaskUpdate):
+    logger.info(f"Updating task: {task_id}")
+
+    task = next((t for t in tasks_storage if t.id == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    update_data = task_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(task, field, value)
+
+    logger.info(f"Task updated: {task_id}")
+    return task
+```
+
+**✅ PAR :**
+
+```python
+@app.put("/tasks/{task_id}", response_model=Task)
+async def update_task(task_id: str, task_update: TaskUpdate, db: Session = Depends(get_db)):
+    logger.info(f"Updating task: {task_id}")
+
+    db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    update_data = task_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_task, field, value)
+
+    db.commit()
+    db.refresh(db_task)
+
+    logger.info(f"Task updated: {task_id}")
+    return db_task
+```
+
+**🔹 Endpoint DELETE /tasks/{task_id}**
+
+**❌ REMPLACEZ :**
+
+```python
+@app.delete("/tasks/{task_id}", status_code=204)
+async def delete_task(task_id: str):
+    logger.info(f"Deleting task: {task_id}")
+
+    task = next((t for t in tasks_storage if t.id == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    tasks_storage.remove(task)
+    logger.info(f"Task deleted: {task_id}")
+```
+
+**✅ PAR :**
+
+```python
+@app.delete("/tasks/{task_id}", status_code=204)
+async def delete_task(task_id: str, db: Session = Depends(get_db)):
+    logger.info(f"Deleting task: {task_id}")
+
+    db_task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    db.delete(db_task)
+    db.commit()
+    logger.info(f"Task deleted: {task_id}")
+```
+
+#### **Étape 5 : Modifier le Health Check**
+
+**❌ REMPLACEZ :**
+
+```python
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "version": "1.0.0"
+    }
+```
+
+**✅ PAR :**
+
+```python
+from sqlalchemy import text
+
+@app.get("/health")
+async def health_check(db: Session = Depends(get_db)):
+    """Health check endpoint with database connectivity test."""
+    try:
+        # Tester la connexion à la base de données
+        db.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        db_status = "disconnected"
+
+    return {
+        "status": "healthy",
+        "database": db_status,
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "version": "1.0.0"
+    }
+```
+
+### 5.7 - Adapter les Tests
+
+**🎯 EXERCICE : Configurer les tests avec la base de données**
+
+Ouvrez `backend/tests/conftest.py` et **remplacez tout le contenu** par :
+
+```python
+import pytest
+import tempfile
+import os as os_module
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from src.app import app
+from src.database import Base, get_db
+from src.models import TaskModel
+
+# Créer une base de données de test temporaire
+TEST_DB_FILE = tempfile.mktemp(suffix=".db")
+TEST_DATABASE_URL = f"sqlite:///{TEST_DB_FILE}"
+
+test_engine = create_engine(
+    TEST_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+)
+
+TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_database():
+    """Créer les tables de test une seule fois pour toute la session."""
+    Base.metadata.create_all(bind=test_engine)
+    yield
+    # Nettoyer après tous les tests
+    Base.metadata.drop_all(bind=test_engine)
+    if os_module.path.exists(TEST_DB_FILE):
+        os_module.remove(TEST_DB_FILE)
+
+@pytest.fixture(autouse=True)
+def clear_test_data():
+    """Nettoyer les données entre chaque test."""
+    session = TestSessionLocal()
+    try:
+        session.query(TaskModel).delete()
+        session.commit()
+    finally:
+        session.close()
+    yield
+
+@pytest.fixture
+def client():
+    """Fournir un client de test avec une base de données de test."""
+    def override_get_db():
+        session = TestSessionLocal()
+        try:
+            yield session
+        finally:
+            session.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.clear()
+```
+
+**Ce que fait ce code :**
+- Crée une base SQLite temporaire pour les tests
+- Nettoie les données entre chaque test
+- Override `get_db()` pour utiliser la DB de test
+
+### 5.8 - Tester Localement
+
+**🎯 EXERCICE : Vérifier que tout fonctionne**
+
+```bash
+cd backend
+
+# Lancer les tests
+uv run pytest
+
+# Lancer le serveur
+uv run uvicorn src.app:app --reload
+
+# Dans un autre terminal, tester l'API
+curl http://localhost:8000/health
+curl http://localhost:8000/tasks
+
+# Créer une tâche
+curl -X POST http://localhost:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Test database",
+    "description": "Vérifier PostgreSQL",
+    "status": "todo",
+    "priority": "high"
+  }'
+```
+
+**✅ Checkpoint :** Les tests doivent passer et l'API doit fonctionner !
+
+En local, SQLite est utilisé automatiquement (`taskflow.db` créé dans `backend/`).
+
+### 5.9 - Connecter PostgreSQL sur Render
+
+**🎯 EXERCICE : Lier la base de données au backend**
+
+1. Allez sur <https://dashboard.render.com>
+2. Cliquez sur votre service **taskflow-backend**
+3. Allez dans **"Environment"** (menu de gauche)
+4. Cliquez **"Add Environment Variable"**
+5. Ajoutez :
+
+```bash
+Key: DATABASE_URL
+Value: postgresql://taskflow_db_user:mot_de_passe@dpg-xxxxx-a/taskflow_db
+```
+
+**⚠️ Utilisez l'URL "Internal Database URL"** que vous avez copiée en 5.2 !
+
+6. Cliquez **"Save Changes"**
+7. Render va automatiquement redéployer le backend
+
+### 5.10 - Vérifier le Déploiement avec PostgreSQL
+
+**🎯 EXERCICE : Tester en production**
+
+```bash
+# Health check (doit montrer "database": "connected")
+curl https://taskflow-backend-XXXX.onrender.com/health
+
+# Créer une tâche
+curl -X POST https://taskflow-backend-XXXX.onrender.com/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Production database test",
+    "status": "todo",
+    "priority": "high"
+  }'
+
+# Voir les tâches
+curl https://taskflow-backend-XXXX.onrender.com/tasks
+```
+
+**Test final :**
+
+1. Créez une tâche depuis le frontend en production
+2. Dans Render Dashboard, allez dans le backend → **"Manual Deploy"** → **"Deploy latest commit"**
+3. Attendez le redéploiement (2-3 minutes)
+4. **Rafraîchissez le frontend** → La tâche doit toujours être là ! 🎉
+
+**✅ Félicitations !** Vos données persistent maintenant entre les redémarrages !
+
+### 5.11 - Checklist de Migration Complète
+
+**Fichiers créés :**
+- [ ] `backend/src/database.py`
+- [ ] `backend/src/models.py`
+
+**Fichiers modifiés :**
+- [ ] `backend/pyproject.toml` (dépendances ajoutées)
+- [ ] `backend/src/app.py` (migration vers DB)
+- [ ] `backend/tests/conftest.py` (tests adaptés)
+
+**Déploiement :**
+- [ ] Base de données PostgreSQL créée sur Render
+- [ ] Variable `DATABASE_URL` configurée sur le backend
+- [ ] Backend redéployé avec succès
+- [ ] Health check montre `"database": "connected"`
+- [ ] Les tâches persistent après redéploiement
+
+---
+
+## 📋 Phase 6 : Test et Validation (30 min)
+
+### 6.1 - Checklist de Déploiement
 
 **🎯 EXERCICE : Vérifier que tout fonctionne**
 
@@ -522,7 +1186,7 @@ logging.basicConfig(
 - [ ] Auto-deploy activé
 - [ ] Push sur main déclenche un redéploiement
 
-### 5.2 - Tester les Scénarios Réels
+### 6.2 - Tester les Scénarios Réels
 
 **🎯 EXERCICE : Cas d'utilisation complets**
 
@@ -550,7 +1214,7 @@ logging.basicConfig(
 1. Ouvrez l'URL sur votre téléphone
 2. L'interface doit être responsive
 
-### 5.3 - Déboguer les Problèmes Courants
+### 6.3 - Déboguer les Problèmes Courants
 
 #### ❌ "Connection Error" dans le frontend
 
