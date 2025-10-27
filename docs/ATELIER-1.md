@@ -1,7 +1,7 @@
-# 🎓 Atelier 1 : Tests Modernes en Python & CI/CD
+# 🎓 Atelier 1 : Tests Unitaires Backend & Frontend
 
-**Durée :** 3 heures
-**Objectif :** Apprendre UV, pytest et GitHub Actions
+**Durée :** 3-4 heures
+**Objectif :** Apprendre les tests unitaires avec Python (pytest) et TypeScript (Vitest)
 
 ---
 
@@ -9,11 +9,13 @@
 
 Dans cet atelier, vous allez :
 
-- ✅ Utiliser **UV** pour gérer les dépendances Python
-- ✅ Écrire des **tests** avec pytest
+- ✅ Tester le **backend Python** avec pytest (FastAPI)
+- ✅ Tester le **frontend TypeScript** avec Vitest (React)
+- ✅ Comprendre le stockage en mémoire (préparation pour Atelier 3)
 - ✅ Configurer **GitHub Actions** pour l'intégration continue
+- ✅ Lancer l'application en local (frontend + backend)
 
-**Important :** Vous n'allez PAS construire l'application depuis zéro. L'application est déjà prête, vous allez apprendre à la tester !
+**Important :** L'application est déjà construite. Vous allez apprendre à la tester et à garantir sa qualité !
 
 ---
 
@@ -314,15 +316,124 @@ start htmlcov/index.html  # Windows
 
 ---
 
-## Phase 6 : GitHub Actions (40 min)
+## Phase 6 : Tests Frontend (30 min)
 
-### Étape 6.1 : Créer le Fichier Workflow
+### Étape 6.1 : Comprendre le Frontend
+
+Le frontend est une application **React + TypeScript** simple qui communique avec le backend.
+
+**Structure :**
+```
+frontend/
+├── src/
+│   ├── App.tsx              # Composant principal
+│   ├── App.css              # Styles simples
+│   ├── api/
+│   │   ├── api.ts           # Client API
+│   │   └── api.test.ts      # Tests API ← ON TESTE ÇA
+│   └── components/
+│       ├── SimpleTaskList.tsx
+│       └── TaskForm.tsx
+└── package.json
+```
+
+**Important :** On teste **uniquement l'API** (pas les composants React) pour rester simple.
+
+### Étape 6.2 : Lancer les Tests Frontend
+
+```bash
+cd frontend
+npm test
+```
+
+Vous devriez voir :
+
+```
+✓ src/api/api.test.ts (3 tests) 4ms
+  ✓ fetches tasks from the backend
+  ✓ creates a new task
+  ✓ throws error when API fails
+
+Test Files  1 passed (1)
+     Tests  3 passed (3)
+```
+
+### Étape 6.3 : Analyser les Tests
+
+Ouvrez `frontend/src/api/api.test.ts` :
+
+```typescript
+describe('API Module', () => {
+  it('fetches tasks from the backend', async () => {
+    // Mock fetch pour simuler la réponse
+    (globalThis as any).fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve([
+          { id: 1, title: 'Test Task', status: 'todo' }
+        ]),
+      })
+    );
+
+    const tasks = await api.getTasks();
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].title).toBe('Test Task');
+  });
+});
+```
+
+**Concepts clés :**
+- **Mocking** : On simule `fetch()` pour ne pas appeler le vrai backend
+- **async/await** : Tests asynchrones
+- **expect()** : Assertions Vitest (similaire à pytest)
+
+### Étape 6.4 : Couverture Frontend
+
+```bash
+npm run test:coverage
+```
+
+Résultat :
+
+```
+File       | % Stmts | % Branch | % Funcs | % Lines |
+-----------|---------|----------|---------|---------|
+api.ts     |   68.42 |    55.55 |      50 |   68.42 |
+```
+
+**Note :** On teste uniquement l'API (pas les composants React) pour Atelier 1. C'est suffisant !
+
+### Étape 6.5 : Lancer l'Application Complète
+
+**Terminal 1 - Backend :**
+```bash
+cd backend
+uv run uvicorn src.app:app --reload
+```
+
+**Terminal 2 - Frontend :**
+```bash
+cd frontend
+npm run dev
+```
+
+**Ouvrir :** http://localhost:5173
+
+Vous pouvez créer/modifier/supprimer des tâches ! 🎉
+
+**⚠️ Important :** Les données sont en mémoire. Si vous redémarrez le backend, tout est perdu (c'est normal pour Atelier 1-2).
+
+---
+
+## Phase 7 : GitHub Actions (40 min)
+
+### Étape 7.1 : Créer le Fichier Workflow
 
 ```bash
 touch .github/workflows/test.yml
 ```
 
-### Étape 6.2 : Écrire le Workflow
+### Étape 7.2 : Écrire le Workflow
 
 Ouvrez `.github/workflows/test.yml` et ajoutez :
 
@@ -370,7 +481,7 @@ jobs:
         uv run pytest --cov --cov-fail-under=90
 ```
 
-### Étape 6.3 : Comprendre le Workflow
+### Étape 7.3 : Comprendre le Workflow
 
 **Déclencheurs (`on`) :**
 
@@ -386,7 +497,7 @@ jobs:
 5. Lancer les tests
 6. Vérifier que la couverture est ≥ 90%
 
-### Étape 6.4 : Pousser sur GitHub
+### Étape 7.4 : Pousser sur GitHub
 
 ```bash
 git add .
@@ -394,7 +505,7 @@ git commit -m "Ajout des tests et du workflow CI/CD"
 git push origin main
 ```
 
-### Étape 6.5 : Vérifier sur GitHub
+### Étape 7.5 : Vérifier sur GitHub
 
 1. Allez sur votre dépôt GitHub
 2. Cliquez sur l'onglet **"Actions"**
@@ -410,17 +521,26 @@ git push origin main
 
 ---
 
-## Phase 7 : Vérification Finale (15 min)
+## Phase 8 : Vérification Finale (15 min)
 
 ### ✅ Liste de Contrôle
 
 Vérifiez que vous avez :
 
+**Backend :**
 - [ ] UV installé (`uv --version` fonctionne)
-- [ ] L'application qui tourne localement
-- [ ] Tous les tests qui passent (19 tests)
+- [ ] Backend qui tourne localement (http://localhost:8000)
+- [ ] Tous les tests backend qui passent (19 tests)
 - [ ] Compréhension du stockage en mémoire (dictionnaire Python)
-- [ ] Couverture > 90% (actuellement 96%)
+- [ ] Couverture backend > 90% (actuellement 96%)
+
+**Frontend :**
+- [ ] Frontend qui tourne localement (http://localhost:5173)
+- [ ] Tous les tests frontend qui passent (3 tests API)
+- [ ] Compréhension du mocking avec Vitest
+- [ ] Application complète fonctionnelle (créer/modifier/supprimer des tâches)
+
+**CI/CD :**
 - [ ] Fichier `.github/workflows/test.yml` créé
 - [ ] Tests qui passent sur GitHub ✅
 
