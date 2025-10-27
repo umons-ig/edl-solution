@@ -1,12 +1,4 @@
-"""
-TaskFlow API Tests - Workshop Version
-
-Simplified test suite for learning TDD with FastAPI.
-Each test is clear, focused, and easy to understand.
-"""
-
 import pytest
-
 
 # =============================================================================
 # BASIC ENDPOINT TESTS
@@ -118,7 +110,7 @@ def test_get_specific_task(client):
 
 def test_get_nonexistent_task(client):
     """Getting a task that doesn't exist should return 404."""
-    response = client.get("/tasks/fake-id-123")
+    response = client.get("/tasks/999")  # Use integer ID
 
     assert response.status_code == 404
 
@@ -195,7 +187,7 @@ def test_update_task_status(client):
 
 def test_update_nonexistent_task(client):
     """Updating a task that doesn't exist should return 404."""
-    response = client.put("/tasks/fake-id", json={"title": "Won't work"})
+    response = client.put("/tasks/999", json={"title": "Won't work"})  # Use integer ID
 
     assert response.status_code == 404
 
@@ -221,7 +213,7 @@ def test_delete_task(client):
 
 def test_delete_nonexistent_task(client):
     """Deleting a task that doesn't exist should return 404."""
-    response = client.delete("/tasks/fake-id")
+    response = client.delete("/tasks/999")  # Use integer ID
 
     assert response.status_code == 404
 

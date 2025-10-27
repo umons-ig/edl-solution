@@ -42,7 +42,7 @@ export const api = {
   },
 
   // Get single task
-  async getTask(taskId: string): Promise<Task> {
+  async getTask(taskId: number): Promise<Task> {
     return apiRequest<Task>(`/tasks/${taskId}`);
   },
 
@@ -55,7 +55,7 @@ export const api = {
   },
 
   // Update existing task
-  async updateTask(taskId: string, updates: TaskUpdate): Promise<Task> {
+  async updateTask(taskId: number, updates: TaskUpdate): Promise<Task> {
     return apiRequest<Task>(`/tasks/${taskId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
@@ -63,7 +63,7 @@ export const api = {
   },
 
   // Delete task
-  async deleteTask(taskId: string): Promise<void> {
+  async deleteTask(taskId: number): Promise<void> {
     const url = `${API_BASE}/tasks/${taskId}`;
     const response = await fetch(url, {
       method: 'DELETE',

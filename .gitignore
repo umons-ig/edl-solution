@@ -232,6 +232,16 @@ build/
 coverage
 *.lcov
 
+# TypeScript build info (generated files)
+*.tsbuildinfo
+*.d.ts.map
+
+# Vite/Vitest compiled config files (keep only .ts versions)
+frontend/vite.config.js
+frontend/vite.config.d.ts
+frontend/vitest.config.js
+frontend/vitest.config.d.ts
+
 # ESLint cache
 .eslintcache
 

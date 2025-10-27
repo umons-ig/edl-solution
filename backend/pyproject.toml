@@ -42,6 +42,11 @@ addopts = [
 
 [tool.coverage.run]
 source = ["src"]
+omit = [
+    "src/database.py",    # Introduced in Atelier 3
+    "src/models.py",      # Introduced in Atelier 3
+    "src/db_init.py",     # Introduced in Atelier 3
+]
 
 [tool.coverage.report]
 exclude_lines = [

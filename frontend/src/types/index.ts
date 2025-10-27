@@ -1,10 +1,11 @@
 // API Types matching the FastAPI backend
+// Updated for Atelier 1 & 2: Using integer IDs (simpler than UUIDs)
 
 export type TaskStatus = "todo" | "in_progress" | "done";
 export type TaskPriority = "low" | "medium" | "high";
 
 export interface Task {
-  id: string;
+  id: number;  // Integer ID instead of string UUID - simpler for learning!
   title: string;
   description?: string;
   status: TaskStatus;

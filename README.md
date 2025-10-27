@@ -127,17 +127,18 @@ cd edl-tp-1
 ### **Configuration Backend**
 ```bash
 cd backend
-uv sync                                      # Installer les dépendances
-uv run uvicorn src.app:app --reload        # Démarrer le serveur
-uv run pytest                               # Lancer les tests
+uv sync                          # Installer les dépendances
+uv run uvicorn src.app:app --reload   # Démarrer le serveur
+uv run pytest                    # Lancer les tests
+uv run pytest --cov=src --cov-report=html  # Tests avec couverture HTML
 ```
 
 ### **Configuration Frontend**
 ```bash
 cd frontend
-npm install                                 # Installer les dépendances
-npm run dev                                # Démarrer le serveur dev
-npm test                                   # Lancer les tests
+npm install                      # Installer les dépendances
+npm run dev                      # Démarrer le serveur dev
+npm test                         # Lancer les tests
 ```
 
 ## 🤝 Approche d'Apprentissage
