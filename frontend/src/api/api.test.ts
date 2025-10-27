@@ -65,4 +65,28 @@ describe('API Module', () => {
 
     await expect(api.getTasks()).rejects.toThrow('API error: 500 Server Error');
   });
+
+  /**
+   * TODO (Atelier 1 - Exercice 6): Implémenter ce test
+   *
+   * Test 4: Verify API can delete tasks
+   */
+  it.todo('deletes a task', async () => {
+    // TODO: Votre code ici
+    // 1. Mocker fetch pour retourner { ok: true, status: 204 }
+    // 2. Appeler await api.deleteTask(1)
+    // 3. Vérifier que fetch a été appelé avec '/tasks/1' et method: 'DELETE'
+  });
+
+  /**
+   * TODO (Atelier 1 - Exercice 7): Implémenter ce test
+   *
+   * Test 5: Verify API can update tasks
+   */
+  it.todo('updates a task', async () => {
+    // TODO: Votre code ici
+    // 1. Mocker fetch pour retourner { ok: true, json: () => Promise.resolve({ id: 1, title: 'Updated', ... }) }
+    // 2. Appeler await api.updateTask(1, { title: 'Updated Title' })
+    // 3. Vérifier que fetch a été appelé avec '/tasks/1', method: 'PUT'
+  });
 });
