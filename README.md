@@ -11,14 +11,16 @@ Une plateforme collaborative de gestion de tâches où vous construisez une appl
 
 ### **Atelier 1 : Backend Python & Fondamentaux des Tests**
 - **Focus** : TDD, FastAPI, pytest, gestion d'environnement UV
-- **Domaine** : API de gestion de tâches (opérations CRUD)
+- **Domaine** : API de gestion de tâches (opérations CRUD) avec stockage en mémoire
 - **Compétences** : APIs RESTful, tests automatisés, gestion d'erreurs
-- **Livrable** : Service backend complet avec couverture de tests > 95%
+- **Stockage** : Dictionnaire Python en mémoire (simple pour l'apprentissage)
+- **Livrable** : Service backend complet avec couverture de tests > 90%
 
 ### **Atelier 2 : Frontend TypeScript & Intégration**
-- **Focus** : Développement React, tests inter-services, UI temps réel
-- **Domaine** : Tableaux Kanban interactifs, visualisation des tâches
-- **Compétences** : Tests de composants, intégration API, design responsive
+- **Focus** : Développement React simplifié, tests API, intégration frontend-backend
+- **Domaine** : Interface utilisateur simple pour visualisation des tâches
+- **Compétences** : React hooks (useState, useEffect), intégration API, tests simples
+- **Frontend** : Interface simplifiée sans frameworks CSS complexes (parfait pour l'apprentissage)
 - **Livrable** : Application full-stack avec frontend/backend synchronisés
 
 ### **Atelier 3 : Production & Déploiement Cloud + Base de Données**
@@ -53,11 +55,13 @@ taskflow/
 4. **Commit et CI/CD** → Automatiser les tests et le déploiement
 
 ### **Stack Technique**
+
 - **Backend** : FastAPI + Python 3.11+ + Gestionnaire de paquets UV
-- **Frontend** : React 18 + TypeScript + Tailwind CSS
-- **Tests** : pytest + Jest + React Testing Library
-- **Base de Données** : PostgreSQL (production) + SQLite (développement)
-- **ORM** : SQLAlchemy 2.0
+- **Frontend** : React 18 + TypeScript + CSS simple (sans frameworks complexes)
+- **Tests** : pytest (backend) + Vitest (frontend)
+- **Stockage** :
+  - **Atelier 1-2** : Dictionnaire Python en mémoire (apprentissage)
+  - **Atelier 3** : PostgreSQL (production) avec SQLAlchemy 2.0
 - **CI/CD** : GitHub Actions avec pipelines multi-services
 - **Déploiement** : Render (Cloud Platform)
 
@@ -72,23 +76,30 @@ taskflow/
 ## 🎯 Objectifs des Ateliers
 
 ### **Objectifs Atelier 1**
+
 - ✅ Configurer l'environnement UV et la structure du projet
-- ✅ Implémenter l'API RESTful pour la gestion des tâches
-- ✅ Écrire des tests unitaires complets avec mocking
+- ✅ Implémenter l'API RESTful avec stockage en mémoire (dictionnaire Python)
+- ✅ Écrire des tests unitaires complets (19 tests, 96% de couverture)
 - ✅ Configurer les tests automatisés avec GitHub Actions
 - ✅ Pratiquer la méthodologie TDD et la gestion d'erreurs
+- ✅ Comprendre le stockage temporaire vs persistant (base de données)
 
 ### **Objectifs Atelier 2**
-- ✅ Construire un frontend React/TypeScript responsive
-- ✅ Implémenter une interface Kanban avec drag-and-drop
-- ✅ Écrire des tests d'intégration entre services
-- ✅ Ajouter des fonctionnalités de synchronisation temps réel
-- ✅ Déployer l'application multi-services
+
+- ✅ Construire un frontend React/TypeScript simple et clair
+- ✅ Implémenter une interface utilisateur pour la gestion des tâches
+- ✅ Maîtriser les hooks React (useState, useEffect)
+- ✅ Écrire des tests d'API frontend (3 tests simples)
+- ✅ Intégrer le frontend avec le backend via fetch API
+- ✅ Comprendre la séparation frontend/backend
 
 ### **Objectifs Atelier 3**
+
+- ✅ **Migrer** du stockage en mémoire vers PostgreSQL
 - ✅ Intégrer PostgreSQL avec SQLAlchemy ORM
+- ✅ Comprendre la différence entre stockage temporaire et persistant
 - ✅ Configurer les pipelines CI/CD de production avec GitHub Actions
-- ✅ Configurer les variables d'environnement et paramètres de production
+- ✅ Gérer les variables d'environnement (DATABASE_URL)
 - ✅ Ajouter des health checks et du monitoring
 - ✅ Déployer sur la plateforme cloud Render avec base de données
 
@@ -175,12 +186,12 @@ Chaque atelier suit un format de **découverte guidée** :
 À la fin de l'Atelier 3, vous aurez construit :
 
 ✅ **Application fonctionnelle de gestion de tâches**
+✅ **Compréhension de la progression : stockage en mémoire → PostgreSQL**
 ✅ **Base de données PostgreSQL en production**
 ✅ **Pipelines CI/CD automatisés**
-✅ **Capacités de déploiement en production**
-✅ **Suite de tests complète (70%+ couverture)**
-✅ **Architecture full-stack moderne**
-✅ **Déploiement cloud fonctionnel**
+✅ **Suite de tests complète (backend 96%, frontend pour API)**
+✅ **Architecture full-stack moderne et simplifiée**
+✅ **Déploiement cloud fonctionnel sur Render**
 
 ## 📚 Ressources Supplémentaires
 

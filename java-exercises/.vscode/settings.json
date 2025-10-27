@@ -1,0 +1,14 @@
+{
+    "java.project.sourcePaths": [
+        "calculator",
+        "string-utils",
+        "bank-account"
+    ],
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar"
+    ],
+    "java.test.config": {
+        "vmArgs": ["-ea"],
+        "args": []
+    }
+}

@@ -1,42 +1,47 @@
 # TaskFlow Backend
 
-FastAPI backend service with PostgreSQL database integration.
+Service backend FastAPI avec stockage progressif :
+- **Atelier 1-2** : Stockage en mémoire (dictionnaire Python simple)
+- **Atelier 3** : Migration vers PostgreSQL pour la persistance
 
-## 🚀 Quick Start
+## 🚀 Démarrage Rapide
 
-### Prerequisites
+### Prérequis
 
 - Python 3.11+
-- [UV package manager](https://docs.astral.sh/uv/)
-- PostgreSQL (optional for local development)
+- [Gestionnaire de paquets UV](https://docs.astral.sh/uv/)
+- PostgreSQL (optionnel - seulement pour Atelier 3)
 
 ### Installation
 
 ```bash
-# Install dependencies
+# Installer les dépendances
 uv sync
 
-# Copy environment variables
+# Copier les variables d'environnement (optionnel)
 cp .env.example .env
 ```
 
-### Running Locally
+### Lancement Local
 
-#### Option 1: With SQLite (Easiest)
+#### Pour Atelier 1 & 2 : Stockage en Mémoire (Le Plus Simple)
 
 ```bash
-# Start the server (uses SQLite by default)
+# Démarrer le serveur (utilise un dictionnaire Python en mémoire)
 uv run uvicorn src.app:app --reload
 ```
 
-The API will be available at:
-- **API**: http://localhost:8000
-- **Docs**: http://localhost:8000/docs
-- **Health**: http://localhost:8000/health
+L'API sera disponible sur :
 
-#### Option 2: With PostgreSQL (Production-like)
+- **API** : <http://localhost:8000>
+- **Documentation** : <http://localhost:8000/docs>
+- **Health Check** : <http://localhost:8000/health>
 
-1. **Start PostgreSQL with Docker:**
+**Important :** Les données sont **perdues** quand vous arrêtez le serveur. C'est normal pour Atelier 1-2 !
+
+#### Pour Atelier 3 : Avec PostgreSQL (Comme en Production)
+
+1. **Démarrer PostgreSQL avec Docker :**
 
 ```bash
 docker run --name taskflow-postgres \
@@ -47,83 +52,110 @@ docker run --name taskflow-postgres \
   -d postgres:15
 ```
 
-2. **Update .env:**
+2. **Modifier app.py pour utiliser la base de données :**
+
+Vous devrez modifier `src/app.py` pour utiliser `database.py` et `models.py` au lieu du stockage en mémoire. Voir le guide de migration dans l'Atelier 3.
+
+3. **Mettre à jour .env :**
 
 ```bash
 DATABASE_URL=postgresql://taskflow:dev_password@localhost:5432/taskflow_dev
 ```
 
-3. **Start the server:**
+4. **Démarrer le serveur :**
 
 ```bash
 uv run uvicorn src.app:app --reload
 ```
 
-### Database Management
+### Gestion de la Base de Données
 
-#### Initialize Database
+#### Pour Atelier 1 & 2 : Rien à Faire !
 
-The database is automatically initialized on application startup. To manually initialize:
+Le stockage en mémoire ne nécessite aucune configuration. Les données sont automatiquement nettoyées entre les tests.
+
+#### Pour Atelier 3 : Initialiser PostgreSQL
+
+La base de données sera automatiquement initialisée au démarrage de l'application. Pour initialiser manuellement :
 
 ```bash
 uv run python src/db_init.py
 ```
 
-#### Reset Database (Development Only)
+#### Réinitialiser la Base (Développement Uniquement)
 
-⚠️ **Warning**: This will delete all data!
+⚠️ **Attention** : Cela supprimera toutes les données !
 
 ```bash
 uv run python src/db_init.py --reset
 ```
 
-### Running Tests
+### Lancement des Tests
 
 ```bash
-# Run all tests
+# Lancer tous les tests
 uv run pytest
 
-# Run with coverage
+# Lancer avec couverture de code
 uv run pytest --cov=src --cov-report=html
 
-# Run specific test file
+# Lancer un fichier de test spécifique
 uv run pytest tests/test_api.py -v
 
-# Run with verbose output
+# Lancer avec sortie détaillée
 uv run pytest -vv
 ```
 
-Tests use an in-memory SQLite database, so no PostgreSQL setup is needed.
+Les tests utilisent le stockage en mémoire, donc aucune base de données n'est nécessaire pour les tests !
 
-## 📁 Project Structure
+## 📁 Structure du Projet
 
-```
+```text
 backend/
 ├── src/
-│   ├── app.py           # FastAPI application & endpoints
-│   ├── database.py      # Database configuration & session
-│   ├── models.py        # SQLAlchemy ORM models
-│   ├── db_init.py       # Database initialization scripts
+│   ├── app.py           # Application FastAPI & endpoints (stockage en mémoire)
+│   ├── database.py      # Configuration base de données (Atelier 3)
+│   ├── models.py        # Modèles SQLAlchemy ORM (Atelier 3)
+│   ├── db_init.py       # Scripts d'initialisation DB (Atelier 3)
 │   └── __init__.py
 ├── tests/
-│   ├── conftest.py      # Pytest fixtures & configuration
-│   ├── test_api.py      # API endpoint tests
+│   ├── conftest.py      # Fixtures pytest & configuration
+│   ├── test_api.py      # Tests des endpoints API (19 tests)
 │   └── __init__.py
-├── pyproject.toml       # Dependencies & configuration
-├── .env.example         # Environment variables template
+├── pyproject.toml       # Dépendances & configuration
+├── .env.example         # Template variables d'environnement
 ├── .gitignore
 └── README.md
 ```
 
-## 🗄️ Database
+**Note :** Les fichiers `database.py`, `models.py` et `db_init.py` sont prêts pour l'Atelier 3 mais **non utilisés** dans Atelier 1-2.
 
-### Schema
+## 🗄️ Stockage des Données
 
-**Table: tasks**
+### Atelier 1 & 2 : Stockage en Mémoire
 
-| Column | Type | Constraints |
+Les tâches sont stockées dans un simple dictionnaire Python :
+
+```python
+tasks_db: Dict[int, Task] = {}
+next_id = 1  # Auto-incrémentation des IDs
+```
+
+**Avantages :**
+- Simple à comprendre
+- Aucune configuration nécessaire
+- Parfait pour apprendre les tests
+
+**Inconvénient :**
+- Les données sont perdues au redémarrage (c'est intentionnel !)
+
+### Atelier 3 : Base de Données PostgreSQL
+
+**Table : tasks**
+
+| Colonne | Type | Contraintes |
 |--------|------|-------------|
-| id | String | PRIMARY KEY |
+| id | Integer | PRIMARY KEY |
 | title | String(200) | NOT NULL |
 | description | String(1000) | NULL |
 | status | Enum | NOT NULL, DEFAULT 'todo' |
@@ -133,10 +165,9 @@ backend/
 | created_at | DateTime | NOT NULL, DEFAULT now() |
 | updated_at | DateTime | NOT NULL, ON UPDATE now() |
 
-### Enums
-
-**TaskStatus**: `todo`, `in_progress`, `done`
-**TaskPriority**: `low`, `medium`, `high`
+**Enums :**
+- **TaskStatus** : `todo`, `in_progress`, `done`
+- **TaskPriority** : `low`, `medium`, `high`
 
 ## 🔧 Configuration
 

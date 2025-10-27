@@ -106,8 +106,11 @@ Ouvrez `backend/src/app.py` dans votre éditeur :
 
 - **Lignes 27-36 :** Énumérations (TaskStatus, TaskPriority)
 - **Lignes 39-68 :** Modèles Pydantic
-- **Lignes 161-181 :** Endpoint pour créer une tâche
-- **Lignes 134-158 :** Endpoint pour lister les tâches
+- **Lignes 76-77 :** Stockage en mémoire (dictionnaire simple)
+- **Lignes 180-205 :** Endpoint pour créer une tâche
+- **Lignes 144-160 :** Endpoint pour lister les tâches
+
+**Important :** Ce backend utilise un **stockage en mémoire** (un simple dictionnaire Python) pour Atelier 1 & 2. Vous apprendrez à utiliser PostgreSQL dans l'Atelier 3.
 
 ---
 
@@ -125,6 +128,13 @@ Ouvrez ces fichiers :
 Dans `conftest.py`, regardez :
 
 ```python
+@pytest.fixture(autouse=True)
+def clean_tasks():
+    """Nettoie les tâches avant et après chaque test"""
+    clear_tasks()
+    yield
+    clear_tasks()
+
 @pytest.fixture
 def client():
     """Fournit un client HTTP de test"""
@@ -134,8 +144,9 @@ def client():
 
 **Pourquoi c'est utile ?**
 
-- Vous n'avez pas à créer un client dans chaque test
-- pytest l'injecte automatiquement quand vous écrivez `def test_xxx(client):`
+- `clean_tasks` : Nettoie automatiquement le stockage en mémoire avant chaque test
+- `client` : Vous n'avez pas à créer un client dans chaque test
+- pytest les injecte automatiquement quand vous écrivez `def test_xxx(client):`
 
 ### Étape 3.3 : Lancer les Tests Existants
 
@@ -145,14 +156,15 @@ uv run pytest -v
 
 Vous devriez voir :
 
-```
+```text
 tests/test_api.py::test_root_endpoint PASSED
 tests/test_api.py::test_health_check PASSED
 tests/test_api.py::test_create_task PASSED
 tests/test_api.py::test_list_tasks PASSED
 tests/test_api.py::test_get_task_by_id PASSED
+... (19 tests au total)
 
-========== 5 passed in 0.45s ==========
+========== 19 passed in 0.45s ==========
 ```
 
 ### Étape 3.4 : Comprendre un Test
@@ -269,14 +281,16 @@ uv run pytest --cov
 
 Résultat :
 
-```
----------- coverage -----------
+```text
+---------- coverage: platform darwin, python 3.12.7 -----------
 Name                Stmts   Miss  Cover
 ---------------------------------------
-src/app.py            156     12    92%
+src/app.py            156      6    96%
 ---------------------------------------
-TOTAL                 156     12    92%
+TOTAL                 156      6    96%
 ```
+
+**Note :** La couverture est très élevée (96%) car le backend est simple avec stockage en mémoire. Dans l'Atelier 3, vous ajouterez une base de données PostgreSQL.
 
 ### Étape 5.2 : Générer un Rapport HTML
 
@@ -295,7 +309,8 @@ start htmlcov/index.html  # Windows
 
 - Quelles lignes ne sont pas testées ?
 - Est-ce important de les tester ?
-- Comment atteindre 95% de couverture ?
+- Le backend utilise un stockage en mémoire - simple et parfait pour l'apprentissage !
+- Dans l'Atelier 3, vous migrerez vers PostgreSQL pour la persistance des données
 
 ---
 
@@ -352,7 +367,7 @@ jobs:
     - name: Vérifier la couverture
       run: |
         cd backend
-        uv run pytest --cov --cov-fail-under=85
+        uv run pytest --cov --cov-fail-under=90
 ```
 
 ### Étape 6.3 : Comprendre le Workflow
@@ -369,7 +384,7 @@ jobs:
 3. Installer UV
 4. Installer les dépendances
 5. Lancer les tests
-6. Vérifier que la couverture est ≥ 85%
+6. Vérifier que la couverture est ≥ 90%
 
 ### Étape 6.4 : Pousser sur GitHub
 
@@ -403,9 +418,9 @@ Vérifiez que vous avez :
 
 - [ ] UV installé (`uv --version` fonctionne)
 - [ ] L'application qui tourne localement
-- [ ] Tous les tests originaux qui passent
-- [ ] Au moins 5 nouveaux tests écrits
-- [ ] Couverture > 85%
+- [ ] Tous les tests qui passent (19 tests)
+- [ ] Compréhension du stockage en mémoire (dictionnaire Python)
+- [ ] Couverture > 90% (actuellement 96%)
 - [ ] Fichier `.github/workflows/test.yml` créé
 - [ ] Tests qui passent sur GitHub ✅
 
