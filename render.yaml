@@ -1,0 +1,55 @@
+# Render Blueprint for TaskFlow Application
+# This file defines the infrastructure for deploying TaskFlow on Render
+# See: https://render.com/docs/blueprint-spec
+
+databases:
+  # PostgreSQL Database
+  - name: taskflow-db
+    databaseName: taskflow
+    region: frankfurt
+    plan: free
+    user: taskflow
+
+services:
+  # Backend Service - FastAPI
+  - type: web
+    name: taskflow-backend
+    runtime: python
+    region: frankfurt  # Choose closest to your users
+    plan: free
+    branch: main
+    buildCommand: "cd backend && pip install uv && uv sync"
+    startCommand: "cd backend && uv run uvicorn src.app:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: CORS_ORIGINS
+        sync: false  # Set manually in Render dashboard after frontend URL is known
+      - key: DATABASE_URL
+        fromDatabase:
+          name: taskflow-db
+          property: connectionString
+    healthCheckPath: /health
+
+  # Frontend Service - React + Vite
+  - type: web
+    name: taskflow-frontend
+    runtime: static
+    region: frankfurt
+    plan: free
+    branch: main
+    buildCommand: "cd frontend && npm ci && npm run build"
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false  # Set manually to backend URL after backend is deployed
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-XSS-Protection
+        value: 1; mode=block

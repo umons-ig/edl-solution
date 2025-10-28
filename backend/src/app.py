@@ -11,8 +11,10 @@ from typing import List, Optional, Dict
 from datetime import datetime
 from enum import Enum
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -103,6 +105,25 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# =============================================================================
+# CORS CONFIGURATION (ATELIER 3 - Production)
+# =============================================================================
+
+# Get CORS origins from environment variable
+# Default: localhost for development
+cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
+cors_origins = [origin.strip() for origin in cors_origins_str.split(",")]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,  # Allowed origins (frontend URLs)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
+logger.info(f"🌐 CORS enabled for origins: {cors_origins}")
 
 
 @app.on_event("startup")
