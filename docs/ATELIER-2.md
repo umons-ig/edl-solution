@@ -1,395 +1,121 @@
-# 🎨 Atelier 2 : Connecter Frontend React et Backend FastAPI
+# 🚀 Atelier 2 : CI/CD avec GitHub Actions
 
-**Durée estimée :** 3 heures
-**Prérequis :** Atelier 1 terminé (backend avec tests et CI/CD)
+**Durée estimée :** 2h30
+**Prérequis :** Atelier 1 terminé (backend et frontend avec tests)
 
 ## 🎯 Objectifs de l'Atelier
 
-**Objectif principal :** Connecter un frontend React à votre backend FastAPI et tester l'intégration
+**Objectif principal :** Automatiser les tests avec GitHub Actions
 
 À la fin de cet atelier, vous aurez **construit** :
 
-1. ✅ Une **connexion fonctionnelle** entre frontend et backend (proxy Vite)
-2. ✅ Des **appels API** complets (GET, POST, DELETE, PUT)
-3. ✅ Des **tests frontend** qui mockent les appels API
-4. ✅ Un **pipeline CI/CD** complet (frontend + backend)
-5. ✅ Une **application full-stack testée** automatiquement
+1. ✅ Un **workflow backend** qui teste automatiquement votre code Python
+2. ✅ Un **workflow frontend** qui teste et build votre code TypeScript
+3. ✅ Compris comment **déboguer** un workflow qui échoue
+4. ✅ Créé votre premier **pipeline CI/CD** complet
 
 ---
 
-## 📦 Architecture de l'Application
+## 📦 Qu'est-ce que CI/CD ?
 
-```
-┌─────────────────────┐         ┌─────────────────────┐
-│  Frontend (React)   │         │  Backend (FastAPI)  │
-│  localhost:3000     │ ─────▶  │  localhost:8000     │
-│                     │         │                     │
-│  Vite Proxy         │         │  API REST           │
-│  /api/* → :8000/*   │         │  /tasks, /health    │
-└─────────────────────┘         └─────────────────────┘
-```
+**CI (Continuous Integration) :**
 
-**Stack technique :**
-- React 18 + TypeScript
-- Vitest + React Testing Library
-- React Query (gestion d'état async)
-- Tailwind CSS (styling)
+- Intégration Continue
+- À chaque push, les tests s'exécutent automatiquement
+- Détecte les bugs immédiatement
 
----
+**CD (Continuous Deployment) :**
 
-## 📋 Phase 1 : Connecter Frontend et Backend (45 min)
+- Déploiement Continu (Atelier 3)
+- Si les tests passent, déploiement automatique
 
-### 1.1 - Démarrer les Deux Services
+**GitHub Actions :**
 
-**Terminal 1 - Backend :**
-```bash
-cd backend
-uv run uvicorn src.app:app --reload
-```
-
-**Terminal 2 - Frontend :**
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-**Vérification :**
-- Backend : http://localhost:8000/docs
-- Frontend : http://localhost:3000
-
-### 1.2 - Observer la Connexion en Action
-
-**🎯 EXERCICE : Comprendre le flux de données**
-
-1. Ouvrez http://localhost:3000
-2. Ouvrez DevTools (F12) → Onglet **Network**
-3. Rafraîchissez la page
-
-**Questions :**
-- Quelle requête voyez-vous ? `GET /api/tasks`
-- Quel est le statut ? `200 OK`
-- Où cette requête est-elle envoyée ? `http://localhost:3000/api/tasks`
-
-4. Maintenant **arrêtez le backend** (Ctrl+C dans Terminal 1)
-5. Rafraîchissez le frontend
-
-**Questions :**
-- Que voyez-vous dans l'UI ? "Erreur de Connexion"
-- Pourquoi ? Le backend n'est plus accessible
-
-6. **Redémarrez le backend** et rafraîchissez le frontend
-
-### 1.3 - 🎯 EXERCICE : Ajouter un Filtre par Priorité
-
-**Objectif :** Implémenter un filtre pour afficher seulement les tâches d'une certaine priorité.
-
-**Ce que vous allez construire :**
-Un menu déroulant qui filtre les tâches par priorité (high, medium, low).
-
-**Étape 1 : Ajouter le filtre dans l'API**
-
-Ouvrez `frontend/src/api/api.ts` et **modifiez** la fonction `getTasks` pour accepter un paramètre optionnel :
-
-```typescript
-async getTasks(priority?: string): Promise<Task[]> {
-  // Construire l'URL avec le paramètre priority si fourni
-  const endpoint = priority ? `/tasks?priority=${priority}` : '/tasks';
-  return apiRequest<Task[]>(endpoint);
-},
-```
-
-**Étape 2 : Ajouter l'état du filtre dans App.tsx**
-
-Ouvrez `frontend/src/App.tsx` et ajoutez un état pour le filtre (après la ligne `const [editingTask, setEditingTask] = ...`) :
-
-```typescript
-const [priorityFilter, setPriorityFilter] = useState<string>('');
-```
-
-**Étape 3 : Utiliser le filtre dans la requête**
-
-Modifiez le `useQuery` pour inclure le filtre :
-
-```typescript
-const { data: tasks = [], isLoading, error } = useQuery({
-  queryKey: ['tasks', priorityFilter],  // ← Ajoutez priorityFilter ici
-  queryFn: () => api.getTasks(priorityFilter || undefined),  // ← Passez le filtre
-});
-```
-
-**Étape 4 : Ajouter le menu déroulant**
-
-Dans `App.tsx`, trouvez la section avec le bouton "Nouvelle Tâche" (autour de la ligne 100).
-
-Juste **avant** le bouton "Nouvelle Tâche", ajoutez ce select :
-
-```typescript
-{/* Filtre par priorité */}
-<select
-  value={priorityFilter}
-  onChange={(e) => setPriorityFilter(e.target.value)}
-  className="px-4 py-2 rounded bg-white text-gray-800 border border-gray-300"
->
-  <option value="">Toutes les priorités</option>
-  <option value="high">Haute</option>
-  <option value="medium">Moyenne</option>
-  <option value="low">Basse</option>
-</select>
-```
-
-**Étape 5 : Tester**
-
-1. Sauvegardez tous les fichiers
-2. Créez plusieurs tâches avec différentes priorités
-3. Utilisez le menu déroulant pour filtrer
-4. Observez dans DevTools → Network : `GET /api/tasks?priority=high`
-
-**Vous venez d'apprendre :**
-- ✅ Comment passer des paramètres dans une URL
-- ✅ Comment gérer l'état dans React (`useState`)
-- ✅ Comment React Query refetch automatiquement quand les paramètres changent
-- ✅ L'importance de `queryKey` pour le cache
+- Service gratuit de GitHub
+- Exécute vos tests sur des serveurs GitHub
+- Vérifie chaque commit et pull request
 
 ---
 
-## 📋 Phase 2 : Écrire des Tests Frontend (60 min)
+## Phase 1 : Comprendre GitHub Actions (20 min)
 
-### 2.1 - Comprendre la Structure des Tests
+### Étape 1.1 : Anatomie d'un Workflow
 
-Les tests sont **co-localisés** avec les composants :
+Un workflow GitHub Actions est un fichier **YAML** dans `.github/workflows/`.
 
-```
-src/
-├── App.tsx
-├── App.test.tsx              ← Tests du composant principal
-├── components/
-│   ├── TaskCard.tsx
-│   ├── TaskCard.test.tsx     ← Tests de la carte
-│   ├── TaskForm.tsx
-│   └── TaskForm.test.tsx     ← Tests du formulaire
-```
-
-### 2.2 - Analyser un Test Existant
-
-Ouvrez `src/App.test.tsx` :
-
-```typescript
-it('affiche le header TaskFlow avec succès', async () => {
-  // 1. Mock de l'API
-  const mockTasks: any[] = [];
-  (globalThis as any).fetch = vi.fn(() =>
-    Promise.resolve({
-      json: () => Promise.resolve(mockTasks),
-      ok: true,
-    })
-  );
-
-  // 2. Créer un QueryClient pour React Query
-  const queryClient = createTestQueryClient();
-
-  // 3. Render le composant
-  render(
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  );
-
-  // 4. Attendre que le chargement soit terminé
-  await waitFor(() => {
-    expect(screen.getByText('TaskFlow')).toBeTruthy();
-  });
-
-  // 5. Vérifier le résultat
-  expect(screen.getByText('Gestion de tâches Kanban')).toBeTruthy();
-});
-```
-
-**Points clés :**
-- ✅ **Mock fetch** : On ne fait PAS de vrai appel API
-- ✅ **QueryClientProvider** : Nécessaire pour React Query
-- ✅ **waitFor** : Attend les opérations asynchrones
-- ✅ **screen.getByText** : Cherche un élément dans le DOM
-
-### 2.3 - 🎯 EXERCICE 1 : Implémenter le Test d'Affichage de Tâches
-
-Dans `src/App.test.tsx`, vous avez ce TODO :
-
-```typescript
-it.todo('affiche la liste des tâches retournées par l\'API');
-```
-
-**Votre mission :** Transformez ce `.todo` en test fonctionnel.
-
-**Étapes :**
-
-1. Remplacez `it.todo(...)` par `it(...)`
-
-2. Créez un mock de tâches :
-```typescript
-const mockTasks = [
-  {
-    id: '1',
-    title: 'Ma première tâche',
-    description: 'Test de connexion',
-    status: 'todo',
-    priority: 'high',
-    created_at: '2025-01-01T10:00:00Z',
-    updated_at: '2025-01-01T10:00:00Z',
-  },
-];
-```
-
-3. Mockez fetch (comme dans l'exemple au-dessus)
-
-4. Rendez le composant App
-
-5. Vérifiez que le titre de la tâche apparaît :
-```typescript
-expect(await screen.findByText('Ma première tâche')).toBeTruthy();
-```
-
-**Lancez le test :**
-```bash
-npm test
-```
-
-**Résultat attendu :** ✅ Test passe
-
-### 2.4 - 🎯 EXERCICE 2 : Tester la Suppression d'une Tâche
-
-Ouvrez `src/components/TaskCard.test.tsx`.
-
-**TODO à implémenter :**
-```typescript
-it.todo('appelle onDelete quand on clique sur supprimer et confirme');
-```
-
-**Votre mission :** Implémentez ce test.
-
-**Indices :**
-
-1. Créez un mock pour `onDelete` :
-```typescript
-const onDelete = vi.fn();
-```
-
-2. Mockez `window.confirm` pour qu'il retourne `true` :
-```typescript
-const confirmSpy = vi.spyOn(window, 'confirm');
-confirmSpy.mockReturnValue(true);
-```
-
-3. Rendez le TaskCard :
-```typescript
-render(
-  <TaskCard
-    task={mockTask}
-    onEdit={vi.fn()}
-    onDelete={onDelete}
-    onStatusChange={vi.fn()}
-  />
-);
-```
-
-4. Trouvez et cliquez sur le bouton delete :
-```typescript
-const deleteButton = screen.getByTitle('Delete task');
-fireEvent.click(deleteButton);
-```
-
-5. Vérifiez que `onDelete` a été appelé :
-```typescript
-expect(onDelete).toHaveBeenCalledTimes(1);
-```
-
-6. Nettoyez le mock :
-```typescript
-confirmSpy.mockRestore();
-```
-
-**Lancez le test :**
-```bash
-npm test
-```
-
-### 2.5 - 🎯 EXERCICE 3 : Tester le Formulaire
-
-Dans `src/components/TaskForm.test.tsx`, implémentez :
-
-```typescript
-it.todo('appelle onCancel quand on clique sur Annuler');
-```
-
-**Votre mission :** Écrivez un test qui vérifie que cliquer sur "Annuler" appelle bien `onCancel`.
-
-**Code à écrire :**
-
-```typescript
-it('appelle onCancel quand on clique sur Annuler', () => {
-  // TODO: Créez les mocks
-  const onSubmit = vi.fn();
-  const onCancel = vi.fn();
-
-  // TODO: Rendez le composant
-  render(<TaskForm onSubmit={onSubmit} onCancel={onCancel} />);
-
-  // TODO: Trouvez et cliquez sur le bouton "Annuler"
-  const cancelButton = screen.getByText('Annuler');
-  fireEvent.click(cancelButton);
-
-  // TODO: Vérifiez que onCancel a été appelé
-  expect(onCancel).toHaveBeenCalledTimes(1);
-});
-```
-
-### 2.6 - Vérifier la Couverture des Tests
-
-```bash
-npm run test:coverage
-```
-
-**Résultat attendu :**
-```
-File               | % Stmts | % Branch | % Funcs | % Lines |
--------------------|---------|----------|---------|---------|
-App.tsx            |   72.64 |    71.42 |   15.38 |   72.64 |
-TaskCard.tsx       |      88 |    66.66 |   66.66 |      88 |
-TaskForm.tsx       |     100 |    95.45 |   85.71 |     100 |
-```
-
-**Note :** On ne vise PAS 100% de couverture. L'objectif est de **comprendre comment tester**.
-
----
-
-## 📋 Phase 3 : Créer le Pipeline CI/CD (45 min)
-
-### 3.1 - Créer la Structure du Workflow
-
-**🎯 EXERCICE : Créer le fichier de workflow**
-
-1. Créez le dossier (si nécessaire) :
-```bash
-mkdir -p .github/workflows
-```
-
-2. Créez le fichier :
-```bash
-touch .github/workflows/ci.yml
-```
-
-3. Ouvrez `.github/workflows/ci.yml` dans votre éditeur
-
-### 3.2 - Implémenter le Job de Tests Frontend
-
-**🎯 EXERCICE : Écrire le workflow pour le frontend**
-
-Ajoutez ce contenu à `.github/workflows/ci.yml` :
+**Structure de base :**
 
 ```yaml
-name: TaskFlow CI/CD
+name: Mon Workflow          # 1️⃣ Nom affiché dans GitHub
 
-# Déclencher sur push et pull request vers main
+on:                         # 2️⃣ Quand s'exécute-t-il ?
+  push:
+    branches: [main]        # Sur push vers main
+  pull_request:
+    branches: [main]        # Sur pull request vers main
+
+jobs:                       # 3️⃣ Les tâches à faire
+  test:                     # Nom du job
+    runs-on: ubuntu-latest  # 4️⃣ Machine virtuelle Linux
+
+    steps:                  # 5️⃣ Les étapes du job
+      - name: Récupérer le code
+        uses: actions/checkout@v4    # ✅ Action pré-faite
+
+      - name: Lancer les tests
+        run: pytest                  # ✅ Commande shell
+```
+
+**Concepts clés :**
+
+1. **`name`** : Le nom qui apparaît sur GitHub
+2. **`on`** : Les déclencheurs (push, pull_request, schedule, etc.)
+3. **`jobs`** : Les tâches (peuvent s'exécuter en parallèle)
+4. **`runs-on`** : Le système d'exploitation (ubuntu, windows, macos)
+5. **`steps`** : Les étapes du job (séquentielles)
+
+**Deux types de steps :**
+
+- **`uses`** : Utilise une action pré-faite (ex: `actions/checkout@v4`)
+- **`run`** : Exécute une commande shell (ex: `pytest`)
+
+---
+
+### Étape 1.2 : Où Trouver les Actions ?
+
+**Actions officielles GitHub :**
+
+- `actions/checkout@v4` - Clone le repo
+- `actions/setup-python@v5` - Installe Python
+- `actions/setup-node@v4` - Installe Node.js
+
+**Marketplace :**
+
+- <https://github.com/marketplace?type=actions>
+- Des milliers d'actions pré-faites
+
+**Documentation :**
+
+- <https://docs.github.com/en/actions>
+
+---
+
+## Phase 2 : Workflow Backend (40 min)
+
+### Étape 2.1 : Créer le Fichier Workflow
+
+```bash
+mkdir -p .github/workflows
+touch .github/workflows/backend.yml
+```
+
+### Étape 2.2 : Écrire le Workflow Backend
+
+Ouvrez `.github/workflows/backend.yml` et copiez ce contenu :
+
+```yaml
+name: Backend Tests
+
 on:
   push:
     branches: [main]
@@ -397,320 +123,733 @@ on:
     branches: [main]
 
 jobs:
-  test-frontend:
-    name: Tests Frontend
+  test:
+    name: Test Backend
     runs-on: ubuntu-latest
 
-    # Tous les commandes s'exécutent dans ./frontend
-    defaults:
-      run:
-        working-directory: ./frontend
-
     steps:
-      # 1. Récupérer le code
-      - name: 📥 Checkout Code
+      # Étape 1 : Récupérer le code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      # 2. Installer Node.js
-      - name: 🔧 Setup Node.js
+      # Étape 2 : Installer Python
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Étape 3 : Installer UV
+      - name: 📦 Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      # Étape 4 : Installer les dépendances
+      - name: 📚 Install dependencies
+        run: |
+          cd backend
+          ~/.cargo/bin/uv sync
+
+      # Étape 5 : Lancer les tests
+      - name: 🧪 Run tests
+        run: |
+          cd backend
+          ~/.cargo/bin/uv run pytest -v --cov
+```
+
+### Étape 2.3 : Comprendre Chaque Ligne
+
+**Ligne par ligne :**
+
+```yaml
+name: Backend Tests           # Nom affiché dans l'onglet Actions
+```
+
+```yaml
+on:
+  push:
+    branches: [main]          # Déclenche sur push vers main
+  pull_request:
+    branches: [main]          # Déclenche sur PR vers main
+```
+
+```yaml
+jobs:
+  test:                       # ID du job
+    name: Test Backend        # Nom affiché
+    runs-on: ubuntu-latest    # Ubuntu (gratuit et rapide)
+```
+
+```yaml
+steps:
+  - name: 📥 Checkout code
+    uses: actions/checkout@v4  # Clone le repo
+```
+
+**Pourquoi `actions/checkout@v4` ?**
+
+- Sans ça, GitHub Actions ne voit pas votre code !
+- C'est toujours la première étape
+
+```yaml
+  - name: 🐍 Setup Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: '3.11'   # Version Python
+```
+
+```yaml
+  - name: 📦 Install UV
+    run: curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Note :** UV s'installe dans `~/.cargo/bin/uv`
+
+```yaml
+  - name: 📚 Install dependencies
+    run: |                     # | permet plusieurs lignes
+      cd backend
+      ~/.cargo/bin/uv sync
+```
+
+```yaml
+  - name: 🧪 Run tests
+    run: |
+      cd backend
+      ~/.cargo/bin/uv run pytest -v --cov
+```
+
+**Important :** Ce sont les **mêmes commandes** que vous exécutez localement !
+
+---
+
+### Étape 2.4 : Tester Localement Avant de Pousser
+
+Avant de pousser, vérifiez que ça marche localement :
+
+```bash
+cd backend
+uv run pytest -v --cov
+```
+
+✅ Si ça passe localement, ça devrait passer sur GitHub !
+
+---
+
+### Étape 2.5 : Pousser et Observer
+
+```bash
+git add .github/workflows/backend.yml
+git commit -m "ci: add backend workflow"
+git push origin main
+```
+
+**Observer sur GitHub :**
+
+1. Allez sur votre repo GitHub
+2. Cliquez sur l'onglet **Actions**
+3. Vous verrez votre workflow en cours d'exécution
+4. Cliquez dessus pour voir les détails
+
+**Résultat attendu :**
+
+```
+✅ Backend Tests
+  └─ Test Backend
+      ├─ 📥 Checkout code
+      ├─ 🐍 Setup Python
+      ├─ 📦 Install UV
+      ├─ 📚 Install dependencies
+      └─ 🧪 Run tests
+```
+
+---
+
+## Phase 3 : Workflow Frontend (40 min)
+
+### Étape 3.1 : Créer le Workflow Frontend
+
+```bash
+touch .github/workflows/frontend.yml
+```
+
+### Étape 3.2 : Écrire le Workflow Frontend
+
+Ouvrez `.github/workflows/frontend.yml` :
+
+```yaml
+name: Frontend Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Récupérer le code
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # Étape 2 : Installer Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
+          cache-dependency-path: frontend/package-lock.json
 
-      # 3. Installer les dépendances
-      - name: 📦 Install Dependencies
-        run: npm ci
+      # Étape 3 : Installer les dépendances
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend
+          npm ci
 
-      # 4. Lancer les tests
-      - name: 🧪 Run Tests
-        run: npm test -- --run
+      # Étape 4 : Lancer les tests
+      - name: 🧪 Run tests
+        run: |
+          cd frontend
+          npm test -- --run
 
-      # 5. Vérifier que le build fonctionne
-      - name: 🏗️ Build Check
-        run: npm run build
+      # Étape 5 : Vérifier le build
+      - name: 🏗️ Build check
+        run: |
+          cd frontend
+          npm run build
 ```
 
-**Explications :**
-- `on: push/pull_request` : Quand exécuter le workflow
-- `runs-on: ubuntu-latest` : Machine virtuelle Linux
-- `working-directory` : Tous les `run` s'exécutent dans `./frontend`
-- `npm ci` : Installation rapide et déterministe (vs `npm install`)
-- `npm test -- --run` : Lance les tests sans mode watch
+### Étape 3.3 : Comprendre les Différences avec le Backend
 
-### 3.3 - Ajouter le Job de Tests Backend
-
-**🎯 EXERCICE : Ajouter le backend au workflow**
-
-Dans le même fichier `.github/workflows/ci.yml`, ajoutez un second job **AVANT** le job frontend :
+**`npm ci` vs `npm install` :**
 
 ```yaml
-jobs:
-  test-backend:
-    name: Tests Backend
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./backend
-
-    steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
-
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: 📦 Setup UV
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "latest"
-
-      - name: 📚 Install Dependencies
-        run: uv sync
-
-      - name: 🧪 Run Tests
-        run: |
-          uv run pytest \
-            --cov=src \
-            --cov-report=term-missing \
-            --cov-fail-under=90 \
-            -v
-
-  test-frontend:
-    # ... (le job frontend que vous avez écrit au-dessus)
+- name: 📦 Install dependencies
+  run: npm ci    # ✅ Plus rapide et déterministe (pour CI)
 ```
 
-**Note :** Maintenant vous avez **2 jobs** qui s'exécutent en **parallèle** !
+- `npm ci` : Installe exactement ce qui est dans `package-lock.json`
+- `npm install` : Peut mettre à jour les versions (moins fiable)
 
-### 3.4 - Tester le Workflow Localement
+**Cache npm :**
 
-**Avant de pusher, vérifiez que tout fonctionne :**
-
-```bash
-# Backend
-cd backend
-uv run pytest
-# ✅ Doit passer
-
-# Frontend
-cd frontend
-npm test -- --run
-# ✅ Doit passer
-
-npm run build
-# ✅ Doit construire sans erreur
+```yaml
+- name: 🟢 Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    cache: 'npm'   # ✅ Met en cache node_modules
 ```
 
-### 3.5 - Pousser et Voir le CI/CD en Action
+Accélère les builds (évite de re-télécharger chaque fois).
 
-**🎯 EXERCICE : Déclencher le workflow**
+**Tests en mode "run once" :**
 
-1. Committez vos changements :
+```yaml
+npm test -- --run   # ✅ Lance les tests une fois (pas en mode watch)
+```
+
+**Build check :**
+
+```yaml
+npm run build   # ✅ Vérifie que le build fonctionne (détecte les erreurs TypeScript)
+```
+
+---
+
+### Étape 3.4 : Pousser et Observer
+
 ```bash
-git add .
-git commit -m "feat: add CI/CD workflow for frontend and backend"
+git add .github/workflows/frontend.yml
+git commit -m "ci: add frontend workflow"
 git push origin main
 ```
 
-2. Allez sur GitHub → Actions
-   - URL : `https://github.com/VOTRE_USERNAME/edl-starter/actions`
+**Vous verrez maintenant 2 workflows en parallèle :**
 
-3. Observez le workflow s'exécuter :
-   - ✅ test-backend (Python, pytest)
-   - ✅ test-frontend (Node.js, vitest, build)
-
-**Résultat attendu :**
 ```
-✅ test-backend   ✓ Completed in 45s
-✅ test-frontend  ✓ Completed in 1m 12s
+✅ Backend Tests
+✅ Frontend Tests
 ```
 
-### 3.6 - 🎯 EXERCICE BONUS : Ajouter un Job d'Intégration
+**Les deux s'exécutent en même temps !** 🚀
 
-**Pour les plus rapides :** Ajoutez un 3ème job qui vérifie que le backend et le frontend peuvent communiquer.
+---
 
-Ajoutez après les deux premiers jobs :
+## Phase 4 : Déboguer un Échec Volontaire (30 min)
 
-```yaml
-  integration-check:
-    name: Test d'Intégration
-    runs-on: ubuntu-latest
-    needs: [test-backend, test-frontend]  # Attend que les deux passent
+### Étape 4.1 : Pourquoi Apprendre à Déboguer ?
 
-    steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
+**Dans la vraie vie :**
 
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+- ❌ Les workflows échouent souvent
+- 🔍 Il faut savoir lire les logs
+- 🐛 Reproduire localement pour corriger
 
-      - name: 📦 Setup UV
-        uses: astral-sh/setup-uv@v3
+**Apprenons en cassant quelque chose exprès !**
 
-      - name: 🔗 Basic Integration Test
-        run: |
-          cd backend
-          uv sync
+---
 
-          # Démarrer le backend en arrière-plan
-          uv run uvicorn src.app:app --host 0.0.0.0 --port 8000 &
-          BACKEND_PID=$!
+### ✍️ Exercice : Introduire un Bug (10 min)
 
-          # Attendre que le backend démarre
-          sleep 3
+**Objectif :** Modifier un test pour qu'il échoue volontairement.
 
-          # Tester l'API
-          curl -f http://localhost:8000/health || exit 1
-          curl -f http://localhost:8000/tasks || exit 1
+Ouvrez `backend/tests/test_api.py` et **modifiez** le test `test_health_check` :
 
-          echo "✅ Integration test passed!"
+```python
+def test_health_check(client):
+    """The health endpoint should confirm the API is running."""
+    response = client.get("/health")
 
-          # Arrêter le backend
-          kill $BACKEND_PID
+    assert response.status_code == 200
+    assert response.json()["status"] == "BROKEN"  # ❌ Volontairement faux !
+```
+
+**Pourquoi "BROKEN" ?**
+
+- Le vrai statut est `"healthy"`
+- Ce test va échouer !
+
+**Pousser le bug :**
+
+```bash
+git add backend/tests/test_api.py
+git commit -m "test: intentional failure for learning"
+git push origin main
 ```
 
 ---
 
-## 📋 Phase 4 : Intégration Complète (30 min)
+### Étape 4.2 : Observer l'Échec (5 min)
 
-### 4.1 - Vérifier le Système Complet
+**Sur GitHub Actions :**
 
-**🎯 CHECKLIST FINALE :**
+1. Allez dans l'onglet **Actions**
+2. Vous verrez ❌ **Backend Tests** en rouge
+3. Cliquez dessus
 
-Dans votre terminal local :
+**Vous verrez :**
 
-- [ ] Backend démarre sans erreur : `uv run uvicorn src.app:app --reload`
-- [ ] Frontend démarre sans erreur : `npm run dev`
-- [ ] Vous pouvez créer une tâche via l'interface
-- [ ] Les tests backend passent : `cd backend && uv run pytest`
-- [ ] Les tests frontend passent : `cd frontend && npm test -- --run`
-- [ ] Le build frontend réussit : `cd frontend && npm run build`
+```
+❌ Backend Tests
+  └─ Test Backend
+      ├─ ✅ 📥 Checkout code
+      ├─ ✅ 🐍 Setup Python
+      ├─ ✅ 📦 Install UV
+      ├─ ✅ 📚 Install dependencies
+      └─ ❌ 🧪 Run tests  ← ICI LE PROBLÈME
+```
 
-Sur GitHub Actions :
+---
 
-- [ ] Le workflow CI s'exécute automatiquement sur push
-- [ ] Les tests backend passent ✅
-- [ ] Les tests frontend passent ✅
-- [ ] Le build frontend réussit ✅
+### Étape 4.3 : Analyser les Logs (10 min)
 
-### 4.2 - Déboguer les Problèmes Courants
+**Cliquez sur l'étape "🧪 Run tests".**
 
-#### ❌ "Connection Error" dans le frontend
+**Vous verrez les logs :**
 
-**Cause :** Backend pas lancé
+```
+tests/test_api.py::test_health_check FAILED
 
-**Solution :**
+================================ FAILURES ================================
+_________________________ test_health_check __________________________
+
+client = <starlette.testclient.TestClient object at 0x...>
+
+    def test_health_check(client):
+        response = client.get("/health")
+        assert response.status_code == 200
+>       assert response.json()["status"] == "BROKEN"
+E       AssertionError: assert 'healthy' == 'BROKEN'
+E         - BROKEN
+E         + healthy
+
+tests/test_api.py:20: AssertionError
+======================== short test summary info ========================
+FAILED tests/test_api.py::test_health_check - AssertionError: ...
+======================== 1 failed, 18 passed in 0.52s ====================
+```
+
+**Questions à se poser :**
+
+1. **Quel test échoue ?** → `test_health_check`
+2. **Quelle ligne ?** → `tests/test_api.py:20`
+3. **Quelle est l'erreur ?** → Attend "BROKEN", reçoit "healthy"
+4. **Comment reproduire localement ?**
+
+---
+
+### Étape 4.4 : Reproduire Localement (5 min)
+
+**Même commande que dans le workflow :**
+
 ```bash
 cd backend
-uv run uvicorn src.app:app --reload
+uv run pytest tests/test_api.py::test_health_check -v
 ```
 
-#### ❌ Tests échouent dans GitHub Actions
+**Vous verrez la même erreur !**
 
-**Cause :** Tests qui passent en local mais échouent sur GitHub
+```
+FAILED tests/test_api.py::test_health_check - AssertionError: assert 'healthy' == 'BROKEN'
+```
 
-**Solution :**
-1. Vérifiez les logs dans GitHub Actions
-2. Reproduisez exactement la même commande en local :
+**Maintenant corrigez :**
+
+```python
+def test_health_check(client):
+    """The health endpoint should confirm the API is running."""
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "healthy"  # ✅ Correct !
+```
+
+**Vérifiez localement :**
+
 ```bash
-cd frontend
-npm ci  # Pas npm install !
-npm test -- --run
+uv run pytest tests/test_api.py::test_health_check -v
 ```
 
-#### ❌ Build frontend échoue
-
-**Cause :** Erreurs TypeScript ou imports manquants
-
-**Solution :**
-```bash
-cd frontend
-npm run build
-# Lire les erreurs et les corriger
-```
-
-### 4.3 - Améliorer Votre Application (Exercices Optionnels)
-
-**Pour aller plus loin :**
-
-1. **Ajoutez un filtre par statut**
-   - Dans `App.tsx`, ajoutez un `<select>` pour filtrer par "todo", "in_progress", "done"
-   - Modifiez `api.getTasks()` pour accepter un paramètre `?status=todo`
-
-2. **Ajoutez un test pour le filtre**
-   - Testez que le filtre appelle l'API avec le bon paramètre
-
-3. **Améliorez le workflow CI/CD**
-   - Ajoutez l'upload des rapports de couverture
-   - Ajoutez un job de lint (ESLint)
+✅ **Le test passe !**
 
 ---
 
-## ✅ Checklist de Fin d'Atelier
+### Étape 4.5 : Pousser la Correction (5 min)
 
-Avant de considérer l'atelier comme terminé :
+```bash
+git add backend/tests/test_api.py
+git commit -m "fix: correct health check assertion"
+git push origin main
+```
 
-### Fonctionnalités
-- [ ] Le backend et le frontend communiquent correctement
-- [ ] Vous pouvez créer, modifier, supprimer des tâches via l'interface
-- [ ] Les erreurs de connexion sont bien gérées (backend down)
+**Sur GitHub Actions :**
 
-### Tests
-- [ ] Au moins 3 tests frontend fonctionnent (que vous avez implémentés)
-- [ ] Tous les tests passent localement (`npm test`)
-- [ ] La couverture est > 60%
-
-### CI/CD
-- [ ] Fichier `.github/workflows/ci.yml` créé
-- [ ] Job de tests backend configuré
-- [ ] Job de tests frontend configuré
-- [ ] Le workflow s'exécute automatiquement sur GitHub
-- [ ] Tous les jobs passent ✅
-
-### Compréhension
-- [ ] Vous comprenez le rôle du proxy Vite
-- [ ] Vous savez comment mocker des appels API dans les tests
-- [ ] Vous comprenez la différence entre `npm install` et `npm ci`
-- [ ] Vous savez lire les logs de GitHub Actions
+```
+✅ Backend Tests  ← De nouveau vert !
+```
 
 ---
 
-## 🎯 Ce que Vous Avez Appris
+### Étape 4.6 : Leçons Apprises
 
-Félicitations ! 🎉 Vous avez maintenant :
+**Ce que vous avez appris :**
 
-✅ **Connecté un frontend React à un backend FastAPI**
-✅ **Écrit des tests frontend** qui mockent les appels API
-✅ **Créé un pipeline CI/CD complet** qui teste automatiquement votre code
-✅ **Compris l'architecture client-serveur** et le rôle du proxy
-✅ **Pratiqué le développement full-stack** moderne
+1. ✅ Lire les logs GitHub Actions
+2. ✅ Identifier la ligne qui échoue
+3. ✅ Reproduire l'erreur localement
+4. ✅ Corriger et vérifier
+5. ✅ Re-pousser
 
-### Prochaine Étape : Atelier 3
+**Principe clé : Si ça passe localement, ça passera sur GitHub !**
 
-Dans l'Atelier 3, vous allez **déployer votre application en production** sur le cloud avec :
-- Déploiement sur Render
-- Configuration des variables d'environnement
-- Gestion CORS pour la production
-- Monitoring et health checks
+---
+
+## Phase 5 : Vérification Finale (20 min)
+
+### Étape 5.1 : Créer une Pull Request (10 min)
+
+**Pourquoi une PR ?**
+
+Les workflows s'exécutent aussi sur les Pull Requests !
+
+**Créer une branche :**
+
+```bash
+git checkout -b feature/test-pr
+```
+
+**Faire un petit changement :**
+
+```python
+# Dans backend/src/app.py
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to TaskFlow API v2.0",  # Changé !
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+```
+
+**Pousser la branche :**
+
+```bash
+git add backend/src/app.py
+git commit -m "feat: update welcome message"
+git push origin feature/test-pr
+```
+
+**Créer la PR sur GitHub :**
+
+1. Allez sur votre repo GitHub
+2. Cliquez sur **"Compare & pull request"**
+3. Créez la PR
+
+**Vous verrez les checks s'exécuter :**
+
+```
+⏳ Backend Tests — In progress
+⏳ Frontend Tests — In progress
+```
+
+Puis :
+
+```
+✅ Backend Tests — Passed
+✅ Frontend Tests — Passed
+✅ All checks have passed
+```
+
+**Vous pouvez maintenant merger en toute confiance !**
+
+---
+
+## 🎁 BONUS : Workflow Java (Optionnel - 30 min)
+
+**Pour les étudiants qui ont terminé les 5 phases principales.**
+
+### Objectif
+
+Appliquer les concepts CI/CD sur les exercices Java de l'Atelier 1.
+
+---
+
+### Étape Bonus 1 : Rappel des Exercices Java
+
+Si vous avez fait les exercices BONUS de l'Atelier 1, vous avez 3 projets Java :
+
+```
+java-exercises/
+├── calculator/        # Calculatrice avec opérations de base
+├── string-utils/      # Manipulation de chaînes
+└── bank-account/      # Gestion de compte bancaire
+```
+
+---
+
+### Étape Bonus 2 : Créer le Workflow Java
+
+Créez `.github/workflows/java.yml` :
+
+```yaml
+name: Java Tests (Optional)
+
+# Workflow optionnel pour les exercices bonus Java
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'java-exercises/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'java-exercises/**'
+  workflow_dispatch:  # Permet lancement manuel
+
+jobs:
+  test:
+    name: Test Java Exercises
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Récupérer le code
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # Étape 2 : Installer Java
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Étape 3 : Tester Calculator
+      - name: 🧮 Test Calculator
+        run: |
+          cd java-exercises/calculator
+          javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
+          java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore CalculatorTest
+
+      # Étape 4 : Tester String Utils
+      - name: 📝 Test String Utils
+        run: |
+          cd java-exercises/string-utils
+          javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
+          java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore StringUtilsTest
+
+      # Étape 5 : Tester Bank Account
+      - name: 🏦 Test Bank Account
+        run: |
+          cd java-exercises/bank-account
+          javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
+          java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore BankAccountTest
+```
+
+---
+
+### Étape Bonus 3 : Comprendre les Différences
+
+**`paths:` - Déclenchement Conditionnel**
+
+```yaml
+on:
+  push:
+    paths:
+      - 'java-exercises/**'
+```
+
+➡️ Le workflow ne s'exécute **que** si vous modifiez des fichiers dans `java-exercises/`
+
+**`workflow_dispatch:` - Lancement Manuel**
+
+```yaml
+on:
+  workflow_dispatch:
+```
+
+➡️ Vous pouvez lancer le workflow manuellement depuis l'onglet **Actions** sur GitHub
+
+**`javac` et `java` - Compilation et Exécution**
+
+```bash
+javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
+java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore CalculatorTest
+```
+
+- `-cp` : Classpath (où trouver JUnit)
+- `*.java` : Compile tous les fichiers Java
+- `JUnitCore` : Lance les tests JUnit
+
+---
+
+### Étape Bonus 4 : Tester le Workflow
+
+**Option 1 : Push un changement Java**
+
+```bash
+# Modifier un fichier Java
+echo "// Test CI" >> java-exercises/calculator/Calculator.java
+
+git add java-exercises/
+git commit -m "test: trigger Java workflow"
+git push
+```
+
+**Option 2 : Lancement Manuel**
+
+1. Allez sur **Actions** dans GitHub
+2. Cliquez sur **Java Tests (Optional)**
+3. Cliquez sur **Run workflow**
+4. Sélectionnez la branche `main`
+5. Cliquez sur **Run workflow**
+
+---
+
+### Étape Bonus 5 : Voir les Résultats
+
+Vous devriez voir dans les logs :
+
+```
+🧮 Test Calculator
+  Compiling...
+  Running tests...
+  JUnit version 4.13.2
+  ..........
+  Time: 0.012
+  OK (10 tests)
+
+📝 Test String Utils
+  ...
+
+🏦 Test Bank Account
+  ...
+```
+
+✅ **Tous vos exercices Java sont testés automatiquement !**
+
+---
+
+### 🤔 Exercice de Réflexion
+
+**Pourquoi 3 workflows séparés (backend, frontend, java) plutôt qu'un seul ?**
+
+<details>
+<summary>Cliquez pour voir la réponse</summary>
+
+**Avantages :**
+
+1. ✅ **Parallélisation** : Les 3 workflows s'exécutent en parallèle → plus rapide
+2. ✅ **Débogage** : Si backend échoue, vous savez immédiatement où chercher
+3. ✅ **Optionnel** : Java ne s'exécute que si `java-exercises/` est modifié
+4. ✅ **Lisibilité** : Chaque workflow est simple et focalisé
+
+**Inconvénient :**
+
+1. ❌ Plus de fichiers à gérer (mais seulement 3)
+
+**En production, on préfère souvent plusieurs workflows ciblés plutôt qu'un seul monolithique.**
+
+</details>
+
+---
+
+## 🐛 Erreurs Fréquentes
+
+### ❌ Workflow ne se déclenche pas
+
+**Cause :** Fichier mal placé ou syntaxe YAML invalide
+
+**Solution :** Vérifiez :
+
+- Le fichier est dans `.github/workflows/`
+- L'extension est `.yml` ou `.yaml`
+- Pas d'erreurs de syntaxe (indentation !)
+
+### ❌ `uv: command not found`
+
+**Cause :** UV n'est pas dans le PATH après installation
+
+**Solution :** Utilisez `~/.cargo/bin/uv` (chemin complet)
+
+### ❌ `actions/checkout@v4` ne fonctionne pas
+
+**Cause :** Problème de permissions GitHub
+
+**Solution :** Ajoutez l'étape `actions/setup-node@v4`
+
+### ❌ Tests qui passent localement mais échouent sur GitHub
+
+**Causes possibles :**
+
+1. Variable d'environnement manquante
+2. Dépendance système manquante
+3. Timezone différente
+
+**Déboguer :** Reproduisez exactement les mêmes commandes localement
+
+---
+
+## 📚 Ressources
+
+- [Documentation GitHub Actions](https://docs.github.com/en/actions)
+- [Marketplace Actions](https://github.com/marketplace?type=actions)
+- [YAML Syntax](https://yaml.org/)
+- [Actions Workflow Syntax](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions)
+
+---
+
+## 🚀 Prochaine Étape : Atelier 3
+
+Dans l'Atelier 3, vous allez **déployer votre application** :
+
+- Migrer vers PostgreSQL (base de données réelle)
+- Déployer sur Render (production)
+- Configurer le CD (Continuous Deployment)
 
 **Prêt pour la production ? 🚀**
 
 ---
 
-## 📚 Ressources Supplémentaires
-
-- [Vitest Documentation](https://vitest.dev/)
-- [React Testing Library](https://testing-library.com/react)
-- [React Query Documentation](https://tanstack.com/query/latest)
-- [Vite Proxy Configuration](https://vitejs.dev/config/server-options.html#server-proxy)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-
----
-
-**Version 2.0** - Atelier 2 Révisé avec Focus sur l'Implémentation 🚀
+**Version 2.0** - Atelier 2 CI/CD Simplifié
