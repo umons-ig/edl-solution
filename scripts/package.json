@@ -6,7 +6,8 @@
     "generate-pdf": "node generate-pdf.js",
     "generate-pdf-atelier1": "node generate-pdf.js",
     "generate-pdf-atelier2": "node generate-pdf-atelier2.js",
-    "generate-all-pdfs": "npm run generate-pdf-atelier1 && npm run generate-pdf-atelier2"
+    "generate-pdf-atelier3": "node generate-pdf-atelier3.js",
+    "generate-all-pdfs": "npm run generate-pdf-atelier1 && npm run generate-pdf-atelier2 && npm run generate-pdf-atelier3"
   },
   "dependencies": {
     "puppeteer": "^22.0.0",
