@@ -1,0 +1,44 @@
+name: Frontend Tests
+
+# Déclenché sur push vers main et sur les pull requests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Récupérer le code du repository
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # Étape 2 : Installer Node.js 18
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      # Étape 3 : Installer les dépendances avec npm ci
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      # Étape 4 : Lancer les tests
+      - name: 🧪 Run tests
+        run: |
+          cd frontend
+          npm test -- --run
+
+      # Étape 5 : Vérifier que le build fonctionne
+      - name: 🏗️ Build check
+        run: |
+          cd frontend
+          npm run build

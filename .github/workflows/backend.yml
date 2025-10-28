@@ -1,0 +1,40 @@
+name: Backend Tests
+
+# Déclenché sur push vers main et sur les pull requests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Récupérer le code du repository
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # Étape 2 : Installer Python 3.11
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Étape 3 : Installer UV (gestionnaire de packages Python moderne)
+      - name: 📦 Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      # Étape 4 : Installer les dépendances du projet
+      - name: 📚 Install dependencies
+        run: |
+          cd backend
+          ~/.cargo/bin/uv sync
+
+      # Étape 5 : Lancer les tests
+      - name: 🧪 Run tests
+        run: |
+          cd backend
+          ~/.cargo/bin/uv run pytest -v --cov
