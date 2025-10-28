@@ -140,19 +140,21 @@ jobs:
 
       # Étape 3 : Installer UV
       - name: 📦 Install UV
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       # Étape 4 : Installer les dépendances
       - name: 📚 Install dependencies
         run: |
           cd backend
-          ~/.cargo/bin/uv sync
+          uv sync
 
       # Étape 5 : Lancer les tests
       - name: 🧪 Run tests
         run: |
           cd backend
-          ~/.cargo/bin/uv run pytest -v --cov
+          uv run pytest -v --cov
 ```
 
 ### Étape 2.3 : Comprendre Chaque Ligne
@@ -198,23 +200,29 @@ steps:
 
 ```yaml
   - name: 📦 Install UV
-    run: curl -LsSf https://astral.sh/uv/install.sh | sh
+    run: |
+      curl -LsSf https://astral.sh/uv/install.sh | sh
+      echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 ```
 
-**Note :** UV s'installe dans `~/.cargo/bin/uv`
+**Explication :**
+
+- `curl -LsSf ... | sh` : Télécharge et installe UV
+- `echo "$HOME/.cargo/bin" >> $GITHUB_PATH` : Ajoute UV au PATH pour les étapes suivantes
+- Sans cette ligne, `uv` ne serait pas trouvé dans les étapes suivantes
 
 ```yaml
   - name: 📚 Install dependencies
     run: |                     # | permet plusieurs lignes
       cd backend
-      ~/.cargo/bin/uv sync
+      uv sync
 ```
 
 ```yaml
   - name: 🧪 Run tests
     run: |
       cd backend
-      ~/.cargo/bin/uv run pytest -v --cov
+      uv run pytest -v --cov
 ```
 
 **Important :** Ce sont les **mêmes commandes** que vous exécutez localement !
@@ -811,7 +819,7 @@ Vous devriez voir dans les logs :
 
 **Cause :** UV n'est pas dans le PATH après installation
 
-**Solution :** Utilisez `~/.cargo/bin/uv` (chemin complet)
+**Solution :** Ajoutez `echo "$HOME/.cargo/bin" >> $GITHUB_PATH` après l'installation de UV
 
 ### ❌ `actions/checkout@v4` ne fonctionne pas
 

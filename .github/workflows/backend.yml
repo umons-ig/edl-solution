@@ -25,16 +25,18 @@ jobs:
 
       # Étape 3 : Installer UV (gestionnaire de packages Python moderne)
       - name: 📦 Install UV
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       # Étape 4 : Installer les dépendances du projet
       - name: 📚 Install dependencies
         run: |
           cd backend
-          ~/.cargo/bin/uv sync
+          uv sync
 
       # Étape 5 : Lancer les tests
       - name: 🧪 Run tests
         run: |
           cd backend
-          ~/.cargo/bin/uv run pytest -v --cov
+          uv run pytest -v --cov
