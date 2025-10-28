@@ -675,22 +675,22 @@ jobs:
 
       # Étape 3 : Tester Calculator
       - name: 🧮 Test Calculator
+        working-directory: java-exercises/calculator
         run: |
-          cd java-exercises/calculator
           javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
           java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore CalculatorTest
 
       # Étape 4 : Tester String Utils
       - name: 📝 Test String Utils
+        working-directory: java-exercises/string-utils
         run: |
-          cd java-exercises/string-utils
           javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
           java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore StringUtilsTest
 
       # Étape 5 : Tester Bank Account
       - name: 🏦 Test Bank Account
+        working-directory: java-exercises/bank-account
         run: |
-          cd java-exercises/bank-account
           javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
           java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore BankAccountTest
 ```
@@ -719,6 +719,23 @@ on:
 
 ➡️ Vous pouvez lancer le workflow manuellement depuis l'onglet **Actions** sur GitHub
 
+**`working-directory:` - Répertoire de Travail**
+
+```yaml
+- name: 🧮 Test Calculator
+  working-directory: java-exercises/calculator
+  run: |
+    javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
+```
+
+➡️ Définit le répertoire de travail pour toutes les commandes `run` de cette étape
+
+**Pourquoi `working-directory` au lieu de `cd` ?**
+
+- ✅ Plus propre et plus clair
+- ✅ Fonctionne mieux avec les chemins relatifs
+- ✅ Standard GitHub Actions
+
 **`javac` et `java` - Compilation et Exécution**
 
 ```bash
@@ -727,6 +744,7 @@ java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner
 ```
 
 - `-cp` : Classpath (où trouver JUnit)
+- `.:../lib/...` : Dossier actuel + JARs dans ../lib
 - `*.java` : Compile tous les fichiers Java
 - `JUnitCore` : Lance les tests JUnit
 
