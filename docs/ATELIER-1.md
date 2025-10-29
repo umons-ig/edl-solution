@@ -428,10 +428,18 @@ frontend/
 
 **Important :** On teste **uniquement l'API** (pas les composants React) pour rester simple.
 
-### Étape 6.2 : Lancer les Tests Frontend
+### Étape 6.2 : Installer les Dépendances Frontend
 
 ```bash
 cd frontend
+npm install
+```
+
+Cela va installer toutes les dépendances définies dans `package.json`.
+
+### Étape 6.3 : Lancer les Tests Frontend
+
+```bash
 npm test
 ```
 
@@ -447,7 +455,7 @@ Test Files  1 passed (1)
      Tests  3 passed (3)
 ```
 
-### Étape 6.3 : Analyser les Tests
+### Étape 6.4 : Analyser les Tests
 
 Ouvrez `frontend/src/api/api.test.ts` :
 
@@ -477,7 +485,7 @@ describe('API Module', () => {
 - **async/await** : Tests asynchrones
 - **expect()** : Assertions Vitest (similaire à pytest)
 
-### Étape 6.4 : Couverture Frontend
+### Étape 6.5 : Couverture Frontend
 
 ```bash
 npm run test:coverage
@@ -493,7 +501,7 @@ api.ts     |   68.42 |    55.55 |      50 |   68.42 |
 
 **Note :** On teste uniquement l'API (pas les composants React).
 
-### Étape 6.5 : Comprendre un Test Existant
+### Étape 6.6 : Comprendre un Test Existant
 
 Avant d'écrire votre test, analysons comment fonctionne le test `creates a new task` :
 
@@ -596,7 +604,7 @@ npm test
 
 ---
 
-### Étape 6.7 : Couverture Frontend
+### Étape 6.7 : Vérifier la Couverture
 
 ```bash
 npm run test:coverage
@@ -610,7 +618,7 @@ File       | % Stmts | % Branch | % Funcs | % Lines |
 api.ts     |   84.21 |    66.67 |   71.43 |   84.21 |
 ```
 
-La couverture a augmenté grâce à vos 2 tests ! 🎉
+La couverture a augmenté grâce à vos tests ! 🎉
 
 ### Étape 6.8 : Lancer l'Application Complète
 
@@ -625,6 +633,7 @@ uv run uvicorn src.app:app --reload
 
 ```bash
 cd frontend
+npm install  # Si pas déjà fait
 npm run dev
 ```
 
