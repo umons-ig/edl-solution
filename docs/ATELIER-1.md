@@ -10,6 +10,9 @@
 
 1. Allez sur `https://github.com/umons-ig/edl-starter`
 2. Cliquez sur **"Fork"**
+
+   ![Fork Button](../img/fork.png)
+
 3. Clonez votre fork :
 
    ```bash

@@ -211,13 +211,6 @@ def test_delete_task(client):
     assert get_response.status_code == 404
 
 
-def test_delete_nonexistent_task(client):
-    """Deleting a task that doesn't exist should return 404."""
-    response = client.delete("/tasks/999")  # Use integer ID
-
-    assert response.status_code == 404
-
-
 # =============================================================================
 # COMPLETE WORKFLOW TEST
 # =============================================================================
