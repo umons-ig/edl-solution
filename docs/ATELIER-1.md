@@ -941,25 +941,13 @@ npm run dev
 
 ---
 
-## 🎁 Exercices Java
+## 🎁 Exercices Bonus : Java avec JUnit
 
 **Objectif :** Voir que les principes de TDD s'appliquent à tous les langages !
 
 Les exercices Java sont dans le dossier [`java-exercises/`](../java-exercises/).
 
-### Exercices Disponibles
-
-**3 exercices progressifs avec JUnit :**
-
-1. **Calculator** - Opérations arithmétiques simples
-2. **StringUtils** - Manipulation de chaînes de caractères
-3. **BankAccount** - Gestion de compte avec validation
-
-**Chaque exercice contient :**
-
-- ✅ Un test d'exemple (déjà implémenté)
-- ❌ Des tests à compléter (marqués `@Test`)
-- 🎯 Du code à implémenter (marqué `// TODO`)
+---
 
 ### Prérequis : Installer Java
 
@@ -974,50 +962,313 @@ java -version    # Devrait afficher Java 17+
 - **Linux :** `sudo apt install openjdk-17-jdk`
 - **Windows :** Installer depuis [adoptium.net](https://adoptium.net/)
 
-### Lancer les Tests Java
+**Commandes de base :**
 
-**Avec Makefile (Simple et Rapide) :**
+Chaque exercice utilise un Makefile pour simplifier la compilation et l'exécution :
 
 ```bash
-cd java-exercises/calculator
+make test     # Compiler + Exécuter les tests + Nettoyer
+make compile  # Compiler uniquement
+make clean    # Supprimer les fichiers .class
+```
+
+---
+
+### ✍️ Exercice 1 : Calculs Géométriques (Composition de Fonctions)
+
+**🎯 Objectif :** Implémenter des opérations mathématiques en composant des fonctions simples
+
+Ouvrez le dossier `edl-starter/java-exercises/calculs-geo/`
+
+**Fichiers du projet :**
+
+- `Addition.java` : Classe d'exemple déjà implémentée
+- `Produit.java` : À compléter (multiplication)
+- `Surface.java` : À compléter (surface rectangle)
+- `Perimetre.java` : À compléter (périmètre)
+- Tests : `AdditionTest.java`, `ProduitTest.java`, `SurfaceTest.java`, `PerimetreTest.java`
+
+**Votre mission - Partie 1 : Implémenter `Produit.mult()`**
+
+Ouvrez `Produit.java` et complétez la méthode :
+
+```java
+public class Produit {
+    public static int mult(int a, int b) {
+        // TODO: Retourner le produit de a et b
+        return 0;
+    }
+}
+```
+
+**Test correspondant** (`ProduitTest.java`) :
+
+```java
+@Test
+public void testMult() {
+    assertEquals(6, Produit.mult(2, 3));
+    assertEquals(0, Produit.mult(0, 5));
+    assertEquals(-6, Produit.mult(-2, 3));
+}
+```
+
+**Indice :** Utilisez l'opérateur `*` pour multiplier deux nombres.
+
+**Vérifier votre code :**
+
+```bash
+cd edl-starter/java-exercises/calculs-geo
 make test
 ```
 
-**Avec VSCode (Recommandé pour déboguer) :**
+**Résultat attendu après implémentation :**
 
-1. Installer les extensions Java (voir README)
-2. Ouvrir `calculator/CalculatorTest.java`
-3. Cliquer sur ▶️ à côté de `@Test`
+```
+JUnit version 4.13.2
+..E.E
+Time: 0.006
+There were 2 failures:
+...
+Tests run: 4,  Failures: 2
+```
+
+Le test `ProduitTest` devrait maintenant passer !
+
+---
+
+**Votre mission - Partie 2 : Implémenter `Surface.surf()`**
+
+Ouvrez `Surface.java` et complétez la méthode :
+
+```java
+public class Surface {
+    public static int surf(int a, int b) {
+        // TODO: Utiliser Produit.mult() pour calculer la surface d'un rectangle
+        return 0;
+    }
+}
+```
+
+**Test correspondant** (`SurfaceTest.java`) :
+
+```java
+@Test
+public void testSurf() {
+    assertEquals(6, Surface.surf(2, 3));
+    assertEquals(0, Surface.surf(0, 5));
+    assertEquals(12, Surface.surf(3, 4));
+}
+```
+
+**Indice :** La surface d'un rectangle = longueur × largeur. Réutilisez la fonction `Produit.mult()` que vous venez d'écrire.
+
+**Exemple de solution :**
+
+```java
+return Produit.mult(a, b);
+```
+
+**Vérifier :**
+
+```bash
+make test
+```
+
+Maintenant 2 tests sur 4 devraient passer.
+
+---
+
+**Votre mission - Partie 3 : Implémenter `Perimetre.perim()`**
+
+Ouvrez `Perimetre.java` et complétez la méthode :
+
+```java
+public class Perimetre {
+    public static int perim(int a, int b, int c) {
+        // TODO: Calculer (a+b)*c en utilisant Addition.add() et Produit.mult()
+        return 0;
+    }
+}
+```
+
+**Test correspondant** (`PerimetreTest.java`) :
+
+```java
+@Test
+public void testPerim() {
+    assertEquals(10, Perimetre.perim(2, 3, 2));  // (2+3)*2 = 10
+    assertEquals(0, Perimetre.perim(0, 0, 5));
+    assertEquals(14, Perimetre.perim(3, 4, 2));  // (3+4)*2 = 14
+}
+```
+
+**Indice :**
+
+1. Commencez par additionner `a` et `b` avec `Addition.add(a, b)`
+2. Multipliez le résultat par `c` avec `Produit.mult()`
+
+**Exemple de solution :**
+
+```java
+int somme = Addition.add(a, b);
+return Produit.mult(somme, c);
+```
+
+**Vérifier :**
+
+```bash
+make test
+```
+
+**Résultat final attendu :**
+
+```
+JUnit version 4.13.2
+....
+Time: 0.006
+
+OK (4 tests)
+```
+
+Tous les tests passent ? Bravo ! Passez à l'exercice suivant.
+
+---
+
+### ✍️ Exercice 2 : Money - Addition avec Validation de Devises
+
+**🎯 Objectif :** Implémenter une méthode d'addition qui valide que deux montants ont la même devise
+
+Ouvrez le dossier `edl-starter/java-exercises/money/`
+
+**Fichiers du projet :**
+
+- `Money.java` : Classe avec méthode `add()` à implémenter
+- `MoneyTest.java` : Tests JUnit (certains avec TODOs à compléter)
+
+**Votre mission :**
+
+Ouvrez `Money.java` et implémentez la méthode `add()` :
+
+```java
+public Money add(Money m) throws Exception {
+    // TODO: Vérifier si this.currency().equals(m.currency())
+    // TODO: Si oui, retourner new Money(this.amount() + m.amount(), this.currency())
+    // TODO: Si non, throw new Exception("Not Same currency")
+    return null;
+}
+```
+
+**Règles métier :**
+
+- On peut additionner deux montants de même devise : `12 EUR + 5 EUR = 17 EUR`
+- On ne peut PAS additionner deux montants de devises différentes : `12 EUR + 5 USD` → Exception
+
+**Tests correspondants** (`MoneyTest.java`) :
+
+```java
+@Test
+public void testSimpleAdd() throws Exception {
+    Money m12EUR = new Money(12, "EUR");
+    Money m14EUR = new Money(14, "EUR");
+    Money expected = new Money(26, "EUR");
+    assertEquals(expected, m12EUR.add(m14EUR));
+}
+
+@Test(expected = Exception.class)
+public void testAddDifferentCurrency() throws Exception {
+    Money m12EUR = new Money(12, "EUR");
+    Money m5USD = new Money(5, "USD");
+    m12EUR.add(m5USD);  // Doit lever une exception
+}
+```
+
+**Indices :**
+
+1. Utilisez `this.currency()` pour obtenir la devise de l'objet courant
+2. Utilisez `m.currency()` pour obtenir la devise du paramètre
+3. Comparez avec `.equals()` (pas `==`)
+4. Si les devises sont identiques, créez un nouveau `Money` avec la somme des montants
+5. Si les devises sont différentes, lancez une exception avec `throw new Exception("Not Same currency")`
+
+**Exemple de solution :**
+
+```java
+public Money add(Money m) throws Exception {
+    if (this.currency().equals(m.currency())) {
+        return new Money(this.amount() + m.amount(), this.currency());
+    }
+    throw new Exception("Not Same currency");
+}
+```
+
+**Vérifier votre code :**
+
+```bash
+cd edl-starter/java-exercises/money
+make test
+```
 
 **Résultat attendu :**
 
-```text
+```
 JUnit version 4.13.2
-.E.E.E
-Time: 0.011
-There were 3 failures:
-...
-FAILURES!!!
-Tests run: 5,  Failures: 3
+....
+Time: 0.007
+
+OK (4 tests)
 ```
 
-❌ Les tests **échouent** car vous devez implémenter le code !
+Tous les tests passent ? Félicitations !
 
-### Les 2 Exercices Java
+---
 
-| Exercice | Objectif | À implémenter | Commande |
-|----------|----------|---------------|----------|
-| **I. Calculs Géométriques** | Addition, Produit, Surface, Périmètre | `Produit.mult()`, `Surface.surf()`, `Perimetre.perim()` | `cd calculs-geo && make test` |
-| **II. Money** | Gestion de monnaie et devise | `Money.add(Money m)` | `cd money && make test` |
+### 📚 Comprendre JUnit 4 - Les Bases
 
-**Pour chaque exercice :**
+**Structure d'un test JUnit :**
 
-1. Aller dans le dossier (ex: `cd calculs-geo`)
-2. Ouvrir les fichiers avec TODOs
-3. Implémenter le code en suivant les indices
-4. Lancer `make test`
-5. ✅ Tous les tests passent ? Bravo ! Exercice suivant !
+```java
+import org.junit.Test;
+import static org.junit.Assert.*;
 
-### 💡 Voir Plus de Détails
+public class ExampleTest {
 
-Consultez [`edl-starter/java-exercises/README.md`](../edl-starter/java-exercises/README.md) pour les instructions complètes.
+    @Test
+    public void testMethodName() {
+        // Arrange : Préparer les données
+        int a = 2;
+        int b = 3;
+
+        // Act : Exécuter la méthode à tester
+        int result = MyClass.add(a, b);
+
+        // Assert : Vérifier le résultat
+        assertEquals(5, result);
+    }
+}
+```
+
+**Annotations JUnit :**
+
+- `@Test` : Indique qu'une méthode est un test
+- `@Test(expected = Exception.class)` : Le test passe si l'exception est levée
+
+**Méthodes d'assertion principales :**
+
+```java
+assertEquals(expected, actual);     // Vérifie que deux valeurs sont égales
+assertTrue(condition);              // Vérifie qu'une condition est vraie
+assertFalse(condition);             // Vérifie qu'une condition est fausse
+assertNull(object);                 // Vérifie qu'un objet est null
+assertNotNull(object);              // Vérifie qu'un objet n'est pas null
+```
+
+**Exemple de test d'exception :**
+
+```java
+@Test(expected = Exception.class)
+public void testInvalidOperation() throws Exception {
+    Money m1 = new Money(12, "EUR");
+    Money m2 = new Money(5, "USD");
+    m1.add(m2);  // Cette ligne doit lever une Exception
+}
+```
