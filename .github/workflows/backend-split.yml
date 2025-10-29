@@ -1,0 +1,92 @@
+name: Backend Tests (Split)
+
+# Sépare les tests rapides (unitaires) des tests lents (E2E)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Job 1 : Tests unitaires rapides (toujours)
+  unit-tests:
+    name: Unit Tests (Fast)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: 💾 Cache UV dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('backend/pyproject.toml', 'backend/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: 📚 Install dependencies
+        run: |
+          cd backend
+          uv sync
+
+      - name: 🧪 Run unit tests only
+        run: |
+          cd backend
+          uv run pytest -v -m "not e2e"
+
+  # Job 2 : Tests E2E lents (seulement sur main)
+  e2e-tests:
+    name: E2E Tests (Slow)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'    # SEULEMENT sur main
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: 💾 Cache UV dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('backend/pyproject.toml', 'backend/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: 📚 Install dependencies
+        run: |
+          cd backend
+          uv sync
+
+      - name: 🧪 Run E2E tests only
+        run: |
+          cd backend
+          uv run pytest -v -m "e2e"

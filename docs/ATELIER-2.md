@@ -371,7 +371,273 @@ git push origin main
 
 ---
 
-## Phase 4 : Déboguer un Échec Volontaire (30 min)
+## Phase 4 : Vue d'Ensemble avec Reusable Workflows (30 min)
+
+### Problématique
+
+**Actuellement :**
+
+Vous avez 2 workflows séparés (backend et frontend) qui tournent en parallèle. C'est bien, mais :
+
+- Ils apparaissent dans 2 onglets différents sur GitHub Actions
+- Difficile d'avoir une **vue d'ensemble** en un coup d'œil
+- Il faut 2 badges dans le README
+
+**Question :** Peut-on avoir un workflow "principal" qui orchestre backend + frontend ?
+
+**Réponse : Oui, avec les Reusable Workflows !**
+
+---
+
+### ✍️ Exercice : Créer un Workflow Full Stack avec Reusable Workflows (30 min)
+
+**🎯 Objectif :** Créer un workflow "CI Pipeline" qui appelle backend et frontend en parallèle
+
+**Étape 1 : Rendre les workflows existants réutilisables**
+
+Modifiez `.github/workflows/backend.yml` :
+
+```yaml
+name: Backend Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:    # ✅ NOUVEAU : Permet d'appeler ce workflow depuis un autre
+
+jobs:
+  test:
+    name: Test Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      # ... (reste du workflow inchangé)
+```
+
+**Ajoutez `workflow_call:` dans la section `on:`**
+
+Modifiez `.github/workflows/frontend.yml` de la même façon :
+
+```yaml
+name: Frontend Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:    # ✅ NOUVEAU : Permet d'appeler ce workflow depuis un autre
+
+jobs:
+  test:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      # ... (reste du workflow inchangé)
+```
+
+**Comprendre `workflow_call:` :**
+
+```yaml
+on:
+  push:
+    # ... déclenche sur push comme avant
+  workflow_call:    # Permet à d'autres workflows d'appeler celui-ci
+```
+
+Le workflow peut maintenant être déclenché de **2 façons** :
+1. Par un push/PR (comme avant)
+2. **Par un autre workflow** (nouveau !)
+
+---
+
+**Étape 2 : Créer le workflow orchestrateur**
+
+Créez `.github/workflows/ci-pipeline.yml` :
+
+```yaml
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Job 1 : Appeler le workflow Backend
+  backend:
+    name: Backend Tests
+    uses: ./.github/workflows/backend.yml    # ✅ Appelle backend.yml
+
+  # Job 2 : Appeler le workflow Frontend (en parallèle)
+  frontend:
+    name: Frontend Tests
+    uses: ./.github/workflows/frontend.yml   # ✅ Appelle frontend.yml
+
+  # Job 3 : Résumé final
+  summary:
+    name: All Tests Passed
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]    # ✅ Attend que les DEUX réussissent
+
+    steps:
+      - name: ✅ Success
+        run: |
+          echo "🎉 Tous les tests sont passés !"
+          echo "✅ Backend : OK"
+          echo "✅ Frontend : OK"
+```
+
+**Comprendre `uses:` :**
+
+```yaml
+backend:
+  uses: ./.github/workflows/backend.yml
+```
+
+- `uses:` appelle un autre workflow (comme une fonction !)
+- Le chemin commence par `./` (relatif au repo)
+- Le workflow appelé doit avoir `workflow_call` dans ses déclencheurs
+
+**Comprendre `needs: [backend, frontend]` :**
+
+```yaml
+summary:
+  needs: [backend, frontend]
+```
+
+- Ce job attend que **backend ET frontend** réussissent
+- Si l'un des deux échoue → `summary` ne s'exécute pas
+
+---
+
+**Étape 3 : Tester le workflow**
+
+```bash
+git add .github/workflows/
+git commit -m "ci: add CI pipeline with reusable workflows"
+git push origin main
+```
+
+**Sur GitHub Actions, vous verrez maintenant :**
+
+```
+CI Pipeline
+  ├─ 🔵 Backend Tests
+  │   └─ ✅ Test Backend (20s)
+  ├─ 🔵 Frontend Tests
+  │   └─ ✅ Test Frontend (25s)
+  └─ ✅ All Tests Passed (2s)
+```
+
+**Et aussi (workflows individuels toujours actifs) :**
+
+```
+Backend Tests
+  └─ ✅ Test Backend (20s)
+
+Frontend Tests
+  └─ ✅ Test Frontend (25s)
+```
+
+**Avantages de cette approche :**
+
+1. ✅ **Vue d'ensemble** : Tout regroupé dans "CI Pipeline"
+2. ✅ **Workflows séparés** : Backend et Frontend restent indépendants
+3. ✅ **Parallélisation** : Les deux tournent en même temps
+4. ✅ **Pas de duplication** : Pas besoin de copier-coller le code
+5. ✅ **Job de résumé** : Confirmation visuelle que tout est OK
+
+---
+
+**Étape 4 : Modifier le README avec un seul badge principal**
+
+Modifiez `README.md` :
+
+```markdown
+# 🚀 TaskFlow - Application de Gestion de Tâches
+
+![CI Pipeline](https://github.com/VOTRE_USERNAME/edl-starter/workflows/CI%20Pipeline/badge.svg)
+
+> Application full-stack pour gérer vos tâches avec FastAPI et React + CI/CD automatisé
+
+## 📊 Status CI/CD
+
+- ✅ **CI Pipeline** : Tests backend + frontend en parallèle
+- ✅ **Protection de branche** : Merge bloqué si tests échouent
+
+<details>
+<summary>Voir les workflows individuels</summary>
+
+![Backend Tests](https://github.com/VOTRE_USERNAME/edl-starter/workflows/Backend%20Tests/badge.svg)
+![Frontend Tests](https://github.com/VOTRE_USERNAME/edl-starter/workflows/Frontend%20Tests/badge.svg)
+
+</details>
+```
+
+**Résultat :**
+
+Un **seul badge principal** en haut qui montre l'état global. Les badges individuels sont dans un accordéon dépliable (`<details>`) !
+
+---
+
+### Comparaison : Avant vs Après
+
+**Avant (workflows séparés uniquement) :**
+
+```
+❌ Dispersé : 2 onglets à surveiller
+✅ Débogage : Facile de voir quelle partie échoue
+✅ Simple : Facile à comprendre
+```
+
+**Après (avec CI Pipeline) :**
+
+```
+✅ Vue d'ensemble : Tout en un endroit
+✅ Débogage : On voit toujours les détails
+✅ Professional : C'est ce qu'on fait en production
+✅ Les workflows individuels fonctionnent toujours séparément
+```
+
+**Le meilleur des deux mondes !**
+
+---
+
+### 💡 Cas d'Usage Réels
+
+**Quand utiliser les Reusable Workflows :**
+
+- ✅ Monorepos (backend, frontend, mobile dans un repo)
+- ✅ Workflows complexes (lint → test → build → deploy)
+- ✅ Plusieurs environnements (dev, staging, prod)
+- ✅ Vue d'ensemble pour les Pull Requests
+
+**Exemple d'une grande entreprise :**
+
+```yaml
+name: Production Deploy
+
+jobs:
+  backend:
+    uses: ./.github/workflows/backend.yml
+  frontend:
+    uses: ./.github/workflows/frontend.yml
+  mobile:
+    uses: ./.github/workflows/mobile.yml
+
+  deploy:
+    needs: [backend, frontend, mobile]
+    uses: ./.github/workflows/deploy.yml
+```
+
+---
+
+## Phase 5 : Déboguer un Échec Volontaire (30 min)
 
 ### Étape 4.1 : Pourquoi Apprendre à Déboguer ?
 
@@ -840,6 +1106,869 @@ Vous devriez voir dans les logs :
 3. Timezone différente
 
 **Déboguer :** Reproduisez exactement les mêmes commandes localement
+
+---
+
+## Phase 6 : Séparer Tests Rapides et Lents (45 min)
+
+### Problématique
+
+**Dans un projet réel :**
+
+- Tests unitaires : Très rapides (5-10 secondes)
+- Tests d'intégration : Moyens (30 secondes - 1 minute)
+- Tests E2E (End-to-End) : Très lents (5-10 minutes)
+
+**Problème actuel :**
+
+Tous les tests s'exécutent à chaque commit → on attend 10 minutes pour savoir si un simple changement fonctionne !
+
+**Solution :**
+
+Séparer les tests en plusieurs jobs avec des déclencheurs différents.
+
+---
+
+### ✍️ Exercice 1 : Créer des Tests E2E (15 min)
+
+**🎯 Objectif :** Marquer certains tests comme "lents" pour pouvoir les séparer
+
+**Étape 1 : Configurer pytest pour supporter les markers**
+
+Ouvrez `backend/tests/conftest.py` et ajoutez :
+
+```python
+import pytest
+
+def pytest_configure(config):
+    """Configure custom pytest markers."""
+    config.addinivalue_line(
+        "markers",
+        "e2e: mark test as end-to-end test (slow, integration test)"
+    )
+```
+
+**Étape 2 : Créer un test E2E**
+
+Ajoutez ce test dans `backend/tests/test_api.py` :
+
+```python
+import pytest
+
+@pytest.mark.e2e
+def test_full_task_workflow(client):
+    """Test E2E : Workflow complet CRUD d'une tâche."""
+    # 1. Créer une tâche
+    response = client.post("/tasks", json={
+        "title": "Test E2E Workflow",
+        "priority": "high"
+    })
+    assert response.status_code == 201
+    task_id = response.json()["id"]
+
+    # 2. Lire la tâche créée
+    response = client.get(f"/tasks/{task_id}")
+    assert response.status_code == 200
+    assert response.json()["title"] == "Test E2E Workflow"
+
+    # 3. Modifier la tâche
+    response = client.put(f"/tasks/{task_id}", json={
+        "title": "Modified Task",
+        "status": "done"
+    })
+    assert response.status_code == 200
+    assert response.json()["status"] == "done"
+
+    # 4. Supprimer la tâche
+    response = client.delete(f"/tasks/{task_id}")
+    assert response.status_code == 204
+
+    # 5. Vérifier qu'elle n'existe plus
+    response = client.get(f"/tasks/{task_id}")
+    assert response.status_code == 404
+```
+
+**Étape 3 : Tester localement**
+
+```bash
+cd backend
+
+# Lancer SEULEMENT les tests rapides (sans E2E)
+uv run pytest -v -m "not e2e"
+
+# Lancer SEULEMENT les tests E2E
+uv run pytest -v -m "e2e"
+
+# Lancer tous les tests
+uv run pytest -v
+```
+
+**Résultat attendu :**
+
+```bash
+# Tests rapides (sans E2E)
+$ uv run pytest -v -m "not e2e"
+==================== 18 passed in 2.15s ====================
+
+# Tests E2E uniquement
+$ uv run pytest -v -m "e2e"
+==================== 1 passed in 0.52s ====================
+```
+
+---
+
+### ✍️ Exercice 2 : Workflow avec Tests Séparés (30 min)
+
+**🎯 Objectif :** Créer un workflow où les tests rapides tournent sur chaque PR, mais les tests E2E seulement sur main
+
+**Créer `.github/workflows/backend-split.yml` :**
+
+```yaml
+name: Backend Tests (Split)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+
+jobs:
+  # Job 1 : Tests unitaires rapides (toujours)
+  unit-tests:
+    name: Unit Tests (Fast)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: 📚 Install dependencies
+        run: |
+          cd backend
+          uv sync
+
+      - name: 🧪 Run unit tests only
+        run: |
+          cd backend
+          uv run pytest -v -m "not e2e"
+
+  # Job 2 : Tests E2E lents (seulement sur main)
+  e2e-tests:
+    name: E2E Tests (Slow)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'    # ✅ CONDITION : seulement sur main
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: 📚 Install dependencies
+        run: |
+          cd backend
+          uv sync
+
+      - name: 🧪 Run E2E tests only
+        run: |
+          cd backend
+          uv run pytest -v -m "e2e"
+```
+
+**Comprendre la condition `if:` :**
+
+```yaml
+e2e-tests:
+  if: github.ref == 'refs/heads/main'
+```
+
+- `github.ref` contient la référence Git complète
+- Sur la branche `main` : `refs/heads/main`
+- Sur une PR : `refs/pull/123/merge`
+- **Résultat :** Les tests E2E ne tournent PAS sur les PRs !
+
+**Tester le workflow :**
+
+```bash
+git add .
+git commit -m "ci: add split tests workflow"
+git push origin main
+```
+
+**Sur GitHub Actions, vous verrez :**
+
+**Pour une Pull Request :**
+```
+Backend Tests (Split)
+  └─ ✅ Unit Tests (Fast) — 15s
+```
+
+**Pour un push sur main :**
+```
+Backend Tests (Split)
+  ├─ ✅ Unit Tests (Fast) — 15s
+  └─ ✅ E2E Tests (Slow) — 45s
+```
+
+**Avantages :**
+
+- Les développeurs obtiennent un feedback rapide sur les PRs (15s)
+- La branche main est testée complètement avant déploiement (60s)
+- Économise des minutes GitHub Actions
+
+---
+
+## Phase 7 : Protection de Branche et Pull Requests (40 min)
+
+### ✍️ Exercice 3 : Activer la Protection de Branche (15 min)
+
+**🎯 Objectif :** Empêcher les merges si les tests échouent
+
+**Étape 1 : Configurer la protection sur GitHub**
+
+1. Allez sur votre repo GitHub
+2. Cliquez sur **Settings** → **Branches**
+3. Cliquez sur **Add rule** (ou **Add branch protection rule**)
+4. Dans "Branch name pattern", tapez : `main`
+5. Cochez les options suivantes :
+   - ✅ **Require a pull request before merging**
+   - ✅ **Require status checks to pass before merging**
+6. Dans la barre de recherche "Status checks", tapez et sélectionnez :
+   - `Unit Tests (Fast)` (du workflow backend-split.yml)
+   - `Test Backend` (du workflow backend.yml)
+   - `Test Frontend` (du workflow frontend.yml)
+7. Cliquez sur **Create** ou **Save changes**
+
+**Note importante :** Cherchez le **nom du job**, pas le nom du workflow !
+
+**Étape 2 : Tester la protection avec un test cassé**
+
+Créez une nouvelle branche :
+
+```bash
+git checkout -b test/broken-check
+```
+
+Cassez volontairement un test dans `backend/tests/test_api.py` :
+
+```python
+def test_health_check(client):
+    """The health endpoint should confirm the API is running."""
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "INTENTIONALLY_BROKEN"  # ❌ Faux !
+```
+
+Poussez la branche :
+
+```bash
+git add backend/tests/test_api.py
+git commit -m "test: intentionally break health check"
+git push origin test/broken-check
+```
+
+**Étape 3 : Créer une Pull Request**
+
+1. Allez sur GitHub
+2. Cliquez sur **Compare & pull request**
+3. Créez la PR
+
+**Résultat attendu :**
+
+Vous verrez dans la PR :
+
+```
+❌ Some checks were not successful
+   1 failing check
+
+   Unit Tests (Fast) — Failed
+
+⚠️ Merging is blocked
+   Required status checks must pass before merging
+```
+
+Le bouton **Merge pull request** sera **grisé** et **non cliquable** !
+
+**Étape 4 : Corriger et merger**
+
+Corrigez le test :
+
+```python
+def test_health_check(client):
+    """The health endpoint should confirm the API is running."""
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "healthy"  # ✅ Correct !
+```
+
+```bash
+git add backend/tests/test_api.py
+git commit -m "fix: restore correct health check"
+git push origin test/broken-check
+```
+
+Maintenant sur la PR :
+
+```
+✅ All checks have passed
+   3 successful checks
+
+   Unit Tests (Fast) — Passed
+   Test Backend — Passed
+   Test Frontend — Passed
+```
+
+Le bouton **Merge pull request** est maintenant **vert** et **cliquable** !
+
+---
+
+### ✍️ Exercice 4 : Jobs avec Dépendances (needs) (25 min)
+
+**🎯 Objectif :** Créer une chaîne de jobs : Lint → Test → Build
+
+**Créer `.github/workflows/frontend-chain.yml` :**
+
+```yaml
+name: Frontend Chain
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  # Job 1 : Linting du code
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🔍 Run ESLint
+        run: |
+          cd frontend
+          npm run lint
+
+  # Job 2 : Tests (dépend de lint)
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: lint    # ✅ Attend que 'lint' réussisse
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🧪 Run tests
+        run: |
+          cd frontend
+          npm test -- --run
+
+  # Job 3 : Build (dépend de test)
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: test    # ✅ Attend que 'test' réussisse
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🏗️ Build
+        run: |
+          cd frontend
+          npm run build
+
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+```
+
+**Comprendre `needs:` :**
+
+```yaml
+test:
+  needs: lint    # Ce job attend que 'lint' réussisse
+
+build:
+  needs: test    # Ce job attend que 'test' réussisse
+```
+
+**Chaîne de dépendances :**
+
+```
+lint → test → build
+```
+
+- Si `lint` échoue → `test` et `build` ne s'exécutent PAS
+- Si `test` échoue → `build` ne s'exécute PAS
+- **Économise du temps et des ressources !**
+
+**Comprendre `actions/upload-artifact` :**
+
+```yaml
+- name: 📤 Upload build artifacts
+  uses: actions/upload-artifact@v4
+  with:
+    name: frontend-dist
+    path: frontend/dist/
+    retention-days: 7
+```
+
+- Sauvegarde le dossier `dist/` (résultat du build)
+- Disponible pendant 7 jours
+- Téléchargeable depuis l'interface GitHub Actions
+
+**Tester le workflow :**
+
+```bash
+git add .github/workflows/frontend-chain.yml
+git commit -m "ci: add frontend chain workflow"
+git push origin main
+```
+
+**Sur GitHub Actions, vous verrez :**
+
+```
+Frontend Chain
+  ├─ 🔍 Lint Code (1/3) → Running...
+  └─ ⏳ Run Tests (2/3) → Waiting...
+  └─ ⏳ Build Application (3/3) → Waiting...
+```
+
+Puis :
+
+```
+Frontend Chain
+  ├─ ✅ Lint Code (15s)
+  ├─ ✅ Run Tests (20s)
+  └─ ✅ Build Application (25s)
+```
+
+**Pour télécharger l'artifact :**
+
+1. Cliquez sur le workflow terminé
+2. Scrollez jusqu'à "Artifacts"
+3. Cliquez sur `frontend-dist` pour télécharger le ZIP
+
+---
+
+## Phase 8 : Optimisation avec Cache (25 min)
+
+### Problème : Réinstaller les Dépendances à Chaque Fois
+
+**Actuellement :**
+
+- Chaque workflow réinstalle toutes les dépendances
+- Backend : `uv sync` prend 30-60 secondes
+- Frontend : `npm ci` prend 20-40 secondes
+
+**Solution : Utiliser le cache !**
+
+---
+
+### ✍️ Exercice 5 : Ajouter du Cache pour UV (25 min)
+
+**🎯 Objectif :** Réduire le temps d'installation des dépendances avec `actions/cache`
+
+**Modifier `.github/workflows/backend.yml` :**
+
+```yaml
+name: Backend Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      # ✅ NOUVEAU : Cache pour les dépendances UV
+      - name: 💾 Cache UV dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('backend/pyproject.toml', 'backend/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: 📚 Install dependencies
+        run: |
+          cd backend
+          uv sync
+
+      - name: 🧪 Run tests
+        run: |
+          cd backend
+          uv run pytest -v --cov
+```
+
+**Comprendre `actions/cache@v4` :**
+
+```yaml
+- uses: actions/cache@v4
+  with:
+    path: ~/.cache/uv
+    key: ${{ runner.os }}-uv-${{ hashFiles('backend/pyproject.toml', 'backend/uv.lock') }}
+    restore-keys: |
+      ${{ runner.os }}-uv-
+```
+
+**Paramètres :**
+
+1. **`path:`** - Dossier à mettre en cache
+   - `~/.cache/uv` : Cache UV des packages Python
+
+2. **`key:`** - Identifiant unique du cache
+   - `${{ runner.os }}` : OS (ubuntu, macos, windows)
+   - `${{ hashFiles(...) }}` : Hash des fichiers de dépendances
+   - Si `pyproject.toml` change → Nouveau hash → Nouveau cache
+
+3. **`restore-keys:`** - Clés de fallback
+   - Si pas de correspondance exacte, cherche `ubuntu-latest-uv-*`
+   - Utile si seulement `uv.lock` a changé légèrement
+
+**Comment ça fonctionne :**
+
+```
+1ère exécution :
+  ├─ Cache miss (pas de cache trouvé)
+  ├─ uv sync (télécharge tout) → 60s
+  └─ Sauvegarde le cache
+
+2ème exécution (même pyproject.toml) :
+  ├─ Cache hit (cache trouvé !)
+  ├─ Restaure le cache → 5s
+  └─ uv sync (vérifie, rien à faire) → 5s
+  Total : 10s au lieu de 60s !
+
+Si pyproject.toml change :
+  ├─ Cache miss (hash différent)
+  ├─ uv sync (télécharge nouveaux packages) → 60s
+  └─ Sauvegarde le nouveau cache
+```
+
+**Tester le cache :**
+
+```bash
+git add .github/workflows/backend.yml
+git commit -m "ci: add cache for backend dependencies"
+git push origin main
+```
+
+Lancez le workflow **2 fois** et comparez les temps dans les logs !
+
+**Résultat attendu :**
+
+- **1ère exécution :** `Cache not found` → 60 secondes
+- **2ème exécution :** `Cache restored` → 10 secondes
+
+**Économie : 50 secondes par workflow ! 🚀**
+
+---
+
+**Note pour le frontend :**
+
+Le cache est déjà activé automatiquement avec :
+
+```yaml
+- name: 🟢 Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    cache: 'npm'    # ✅ Cache automatique pour npm !
+```
+
+Pas besoin d'ajouter `actions/cache` manuellement pour npm/yarn/pnpm.
+
+---
+
+## Phase 9 : Contrôle de Concurrence (15 min)
+
+### Problème : Workflows qui s'accumulent
+
+**Scénario :**
+
+Vous pushez 3 commits rapides sur une PR :
+
+```
+Commit 1 → Workflow démarre (durée : 2 min)
+Commit 2 → Workflow démarre (durée : 2 min)
+Commit 3 → Workflow démarre (durée : 2 min)
+```
+
+Les 3 workflows tournent en parallèle, mais seul le dernier compte !
+
+**Solution : Annuler les workflows obsolètes**
+
+---
+
+### ✍️ Exercice 6 : Ajouter le Contrôle de Concurrence (15 min)
+
+**🎯 Objectif :** Annuler les anciennes exécutions quand un nouveau commit arrive
+
+**Modifier `.github/workflows/backend.yml` :**
+
+```yaml
+name: Backend Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# ✅ NOUVEAU : Contrôle de concurrence
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      # ... (reste du workflow inchangé)
+```
+
+**Comprendre `concurrency:` :**
+
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+- **`group:`** - Identifiant du groupe de concurrence
+  - `${{ github.workflow }}` : Nom du workflow (ex: "Backend Tests")
+  - `${{ github.ref }}` : Référence (ex: "refs/pull/123/merge")
+  - Groupe = "Backend Tests-refs/pull/123/merge"
+
+- **`cancel-in-progress: true`** - Annule les exécutions en cours
+
+**Comportement :**
+
+```
+Commit 1 → Workflow A démarre
+Commit 2 → Workflow A annulé, Workflow B démarre
+Commit 3 → Workflow B annulé, Workflow C démarre
+```
+
+Seul le dernier workflow tourne → **économise des minutes GitHub Actions !**
+
+**Appliquer à tous les workflows :**
+
+Ajoutez le même bloc `concurrency:` à :
+- `.github/workflows/frontend.yml`
+- `.github/workflows/backend-split.yml`
+- `.github/workflows/frontend-chain.yml`
+
+**Tester :**
+
+1. Créez une branche et une PR
+2. Faites 3 commits rapides (moins de 30s entre chaque)
+3. Observez sur GitHub Actions
+
+Vous verrez les anciennes exécutions **annulées** automatiquement !
+
+---
+
+## Phase 10 : Badges et Documentation (15 min)
+
+### ✍️ Exercice 7 : Ajouter des Badges de Status (15 min)
+
+**🎯 Objectif :** Afficher l'état des workflows directement dans le README
+
+**Les badges montrent visuellement l'état :**
+
+- ✅ **Vert** = Tous les tests passent
+- ❌ **Rouge** = Tests échouent
+- 🟡 **Jaune** = En cours d'exécution
+
+**Format du badge :**
+
+```
+https://github.com/OWNER/REPO/workflows/WORKFLOW_NAME/badge.svg
+```
+
+**Exemple concret :**
+
+Si votre repo est `github.com/tanguyvans/edl-starter` et votre workflow s'appelle "Backend Tests" :
+
+```
+https://github.com/tanguyvans/edl-starter/workflows/Backend%20Tests/badge.svg
+```
+
+**Note :** Remplacez les espaces par `%20`
+
+**Modifier `README.md` :**
+
+Ajoutez en haut du fichier :
+
+```markdown
+# 🚀 TaskFlow - Application de Gestion de Tâches
+
+![Backend Tests](https://github.com/VOTRE_USERNAME/edl-starter/workflows/Backend%20Tests/badge.svg)
+![Frontend Tests](https://github.com/VOTRE_USERNAME/edl-starter/workflows/Frontend%20Tests/badge.svg)
+![Java Tests](https://github.com/VOTRE_USERNAME/edl-starter/workflows/Java%20Tests%20(Optional)/badge.svg)
+
+> Application full-stack pour gérer vos tâches avec FastAPI et React + CI/CD automatisé
+
+## 📊 Status CI/CD
+
+- ✅ **Backend** : Tests unitaires et d'intégration avec pytest
+- ✅ **Frontend** : Tests Vitest avec couverture de code
+- ✅ **CI/CD** : GitHub Actions avec protection de branche
+- ✅ **Cache** : Dépendances cachées pour builds rapides
+```
+
+**Badges cliquables (optionnel) :**
+
+```markdown
+[![Backend Tests](https://github.com/VOTRE_USERNAME/edl-starter/workflows/Backend%20Tests/badge.svg)](https://github.com/VOTRE_USERNAME/edl-starter/actions)
+```
+
+**Tester :**
+
+```bash
+git add README.md
+git commit -m "docs: add CI/CD status badges"
+git push origin main
+```
+
+Rafraîchissez votre repo GitHub → Les badges s'affichent en haut du README !
+
+**Autres badges utiles (shields.io) :**
+
+```markdown
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![Node.js](https://img.shields.io/badge/node-18-green)
+![License](https://img.shields.io/badge/license-MIT-orange)
+```
+
+---
+
+## 🎓 Récapitulatif de l'Atelier 2
+
+**Ce que vous avez appris :**
+
+### Phase 1-2 : Bases
+- ✅ Créer des workflows GitHub Actions
+- ✅ Déclencher sur push et pull_request
+- ✅ Installer dépendances (Python, Node.js)
+
+### Phase 3-5 : Tests et Débogage
+- ✅ Lancer tests backend et frontend
+- ✅ Déboguer les échecs de workflow
+- ✅ Créer et tester des Pull Requests
+
+### Phase 6 : Tests Séparés
+- ✅ Séparer tests unitaires (rapides) et E2E (lents)
+- ✅ Utiliser `if: github.ref == 'refs/heads/main'`
+- ✅ Économiser du temps sur les PRs
+
+### Phase 7 : Protection et Dépendances
+- ✅ Activer la protection de branche
+- ✅ Bloquer les merges si tests échouent
+- ✅ Créer des chaînes de jobs avec `needs:`
+- ✅ Uploader des artifacts
+
+### Phase 8-9 : Optimisation
+- ✅ Ajouter du cache pour accélérer les builds
+- ✅ Contrôle de concurrence pour annuler workflows obsolètes
+
+### Phase 10 : Documentation
+- ✅ Ajouter des badges de status dans le README
+
+**Temps total : ~4-5 heures**
 
 ---
 

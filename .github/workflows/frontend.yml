@@ -6,6 +6,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_call:    # Permet d'appeler ce workflow depuis un autre (reusable)
+
+# Contrôle de concurrence : annule les exécutions précédentes si nouveau commit
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:

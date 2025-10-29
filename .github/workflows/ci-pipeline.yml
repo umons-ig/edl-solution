@@ -1,0 +1,32 @@
+name: CI Pipeline
+
+# Workflow orchestrateur qui appelle backend et frontend en parallèle
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Job 1 : Appeler le workflow Backend
+  backend:
+    name: Backend Tests
+    uses: ./.github/workflows/backend.yml    # Appelle backend.yml
+
+  # Job 2 : Appeler le workflow Frontend (en parallèle)
+  frontend:
+    name: Frontend Tests
+    uses: ./.github/workflows/frontend.yml   # Appelle frontend.yml
+
+  # Job 3 : Résumé final (attend que les deux réussissent)
+  summary:
+    name: All Tests Passed
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]    # Attend que backend ET frontend réussissent
+
+    steps:
+      - name: ✅ Success
+        run: |
+          echo "🎉 Tous les tests sont passés !"
+          echo "✅ Backend : OK"
+          echo "✅ Frontend : OK"

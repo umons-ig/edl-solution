@@ -222,6 +222,7 @@ def test_delete_nonexistent_task(client):
 # COMPLETE WORKFLOW TEST
 # =============================================================================
 
+@pytest.mark.e2e
 def test_complete_task_lifecycle(client):
     """Test creating, reading, updating, and deleting a task."""
     # 1. Create a task
