@@ -1770,98 +1770,7 @@ Pas besoin d'ajouter `actions/cache` manuellement pour npm/yarn/pnpm.
 
 ---
 
-## Phase 9 : Contrôle de Concurrence (15 min)
-
-### Problème : Workflows qui s'accumulent
-
-**Scénario :**
-
-Vous pushez 3 commits rapides sur une PR :
-
-```
-Commit 1 → Workflow démarre (durée : 2 min)
-Commit 2 → Workflow démarre (durée : 2 min)
-Commit 3 → Workflow démarre (durée : 2 min)
-```
-
-Les 3 workflows tournent en parallèle, mais seul le dernier compte !
-
-**Solution : Annuler les workflows obsolètes**
-
----
-
-### ✍️ Exercice 6 : Ajouter le Contrôle de Concurrence (15 min)
-
-**🎯 Objectif :** Annuler les anciennes exécutions quand un nouveau commit arrive
-
-**Modifier `.github/workflows/backend.yml` :**
-
-```yaml
-name: Backend Tests
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-# ✅ NOUVEAU : Contrôle de concurrence
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  test:
-    name: Test Backend
-    runs-on: ubuntu-latest
-
-    steps:
-      # ... (reste du workflow inchangé)
-```
-
-**Comprendre `concurrency:` :**
-
-```yaml
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-```
-
-- **`group:`** - Identifiant du groupe de concurrence
-  - `${{ github.workflow }}` : Nom du workflow (ex: "Backend Tests")
-  - `${{ github.ref }}` : Référence (ex: "refs/pull/123/merge")
-  - Groupe = "Backend Tests-refs/pull/123/merge"
-
-- **`cancel-in-progress: true`** - Annule les exécutions en cours
-
-**Comportement :**
-
-```
-Commit 1 → Workflow A démarre
-Commit 2 → Workflow A annulé, Workflow B démarre
-Commit 3 → Workflow B annulé, Workflow C démarre
-```
-
-Seul le dernier workflow tourne → **économise des minutes GitHub Actions !**
-
-**Appliquer à tous les workflows :**
-
-Ajoutez le même bloc `concurrency:` à :
-- `.github/workflows/frontend.yml`
-- `.github/workflows/backend-split.yml`
-- `.github/workflows/frontend-chain.yml`
-
-**Tester :**
-
-1. Créez une branche et une PR
-2. Faites 3 commits rapides (moins de 30s entre chaque)
-3. Observez sur GitHub Actions
-
-Vous verrez les anciennes exécutions **annulées** automatiquement !
-
----
-
-## Phase 10 : Badges et Documentation (15 min)
+## Phase 9 : Badges et Documentation (15 min)
 
 ### ✍️ Exercice 7 : Ajouter des Badges de Status (15 min)
 
@@ -1961,11 +1870,10 @@ Rafraîchissez votre repo GitHub → Les badges s'affichent en haut du README !
 - ✅ Créer des chaînes de jobs avec `needs:`
 - ✅ Uploader des artifacts
 
-### Phase 8-9 : Optimisation
+### Phase 8 : Optimisation
 - ✅ Ajouter du cache pour accélérer les builds
-- ✅ Contrôle de concurrence pour annuler workflows obsolètes
 
-### Phase 10 : Documentation
+### Phase 9 : Documentation
 - ✅ Ajouter des badges de status dans le README
 
 **Temps total : ~4-5 heures**
