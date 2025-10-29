@@ -61,6 +61,7 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
 ---
 
 **Dans le reste de l'atelier :**
@@ -940,30 +941,19 @@ npm run dev
 
 ---
 
-## 🎁 BONUS : Exercices Java
+## 🎁 Exercices Java
 
 **Objectif :** Voir que les principes de TDD s'appliquent à tous les langages !
 
 Les exercices Java sont dans le dossier [`java-exercises/`](../java-exercises/).
 
-### Pourquoi Java en Bonus ?
-
-Dans ce cours, on utilise **Python** pour le backend, mais les concepts de tests unitaires sont **universels** :
-
-- Pattern **Arrange-Act-Assert**
-- **Fixtures** (setup/teardown)
-- **Assertions**
-- **Couverture de code**
-
-Les exercices Java vous montrent que ces principes fonctionnent de la même manière dans **tous les langages** !
-
 ### Exercices Disponibles
 
 **3 exercices progressifs avec JUnit :**
 
-1. **Calculator** (15 min) - Opérations arithmétiques simples
-2. **StringUtils** (15 min) - Manipulation de chaînes de caractères
-3. **BankAccount** (15 min) - Gestion de compte avec validation
+1. **Calculator** - Opérations arithmétiques simples
+2. **StringUtils** - Manipulation de chaînes de caractères
+3. **BankAccount** - Gestion de compte avec validation
 
 **Chaque exercice contient :**
 
@@ -971,33 +961,63 @@ Les exercices Java vous montrent que ces principes fonctionnent de la même mani
 - ❌ Des tests à compléter (marqués `@Test`)
 - 🎯 Du code à implémenter (marqué `// TODO`)
 
-### Configuration VSCode (5 min)
-
-**Extensions requises :**
-
-1. **Language Support for Java(TM) by Red Hat**
-2. **Extension Pack for Java** (Microsoft)
-
-Installez-les depuis VSCode : `Cmd+Shift+X` → Recherchez "Java"
-
-**Voir le README complet :** [`java-exercises/README.md`](../java-exercises/README.md)
-
-### Commencer les Exercices
+### Prérequis : Installer Java
 
 ```bash
-# 1. Ouvrir le dossier dans VSCode
-cd java-exercises
-code .
-
-# 2. Attendre que VSCode détecte les fichiers Java
-
-# 3. Cliquer sur l'icône ▶️ à côté des tests
+# Vérifier si déjà installé
+java -version    # Devrait afficher Java 17+
 ```
 
-**Alternative (terminal) :**
+**Si pas installé :**
+
+- **macOS :** `brew install openjdk@17`
+- **Linux :** `sudo apt install openjdk-17-jdk`
+- **Windows :** Installer depuis [adoptium.net](https://adoptium.net/)
+
+### Lancer les Tests Java
+
+**Avec Makefile (Simple et Rapide) :**
 
 ```bash
 cd java-exercises/calculator
-javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
-java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore CalculatorTest
+make test
 ```
+
+**Avec VSCode (Recommandé pour déboguer) :**
+
+1. Installer les extensions Java (voir README)
+2. Ouvrir `calculator/CalculatorTest.java`
+3. Cliquer sur ▶️ à côté de `@Test`
+
+**Résultat attendu :**
+
+```text
+JUnit version 4.13.2
+.E.E.E
+Time: 0.011
+There were 3 failures:
+...
+FAILURES!!!
+Tests run: 5,  Failures: 3
+```
+
+❌ Les tests **échouent** car vous devez implémenter le code !
+
+### Les 2 Exercices Java
+
+| Exercice | Objectif | À implémenter | Commande |
+|----------|----------|---------------|----------|
+| **I. Calculs Géométriques** | Addition, Produit, Surface, Périmètre | `Produit.mult()`, `Surface.surf()`, `Perimetre.perim()` | `cd calculs-geo && make test` |
+| **II. Money** | Gestion de monnaie et devise | `Money.add(Money m)` | `cd money && make test` |
+
+**Pour chaque exercice :**
+
+1. Aller dans le dossier (ex: `cd calculs-geo`)
+2. Ouvrir les fichiers avec TODOs
+3. Implémenter le code en suivant les indices
+4. Lancer `make test`
+5. ✅ Tous les tests passent ? Bravo ! Exercice suivant !
+
+### 💡 Voir Plus de Détails
+
+Consultez [`edl-starter/java-exercises/README.md`](../edl-starter/java-exercises/README.md) pour les instructions complètes.

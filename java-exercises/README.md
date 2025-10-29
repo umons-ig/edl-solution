@@ -1,8 +1,10 @@
-# Exercices Java - Tests Unitaires avec JUnit
+# Exercices Java - SOLUTIONS COMPLÈTES
 
-## 📝 Objectif Général
+**⚠️ Ceci contient les solutions. Les étudiants doivent utiliser `edl-starter/java-exercises/`**
 
-Apprendre les fondamentaux des tests unitaires en Java avec JUnit 4, en parallèle des concepts appris avec Python/pytest dans l'Atelier 1.
+## 📝 Objectif
+
+Solutions complètes des exercices basés sur Workshop-1.pdf
 
 ## 🎯 Concepts Couverts
 

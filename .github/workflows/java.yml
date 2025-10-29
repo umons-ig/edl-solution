@@ -30,23 +30,16 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # Étape 3 : Tester Calculator
-      - name: 🧮 Test Calculator
-        working-directory: java-exercises/calculator
+      # Étape 3 : Tester Calculs Géométriques
+      - name: 📐 Test Calculs Géométriques
+        working-directory: java-exercises/calculs-geo
         run: |
           javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
-          java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore CalculatorTest
+          java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore AdditionTest ProduitTest SurfaceTest PerimetreTest
 
-      # Étape 4 : Tester String Utils
-      - name: 📝 Test String Utils
-        working-directory: java-exercises/string-utils
+      # Étape 4 : Tester Money
+      - name: 💰 Test Money
+        working-directory: java-exercises/money
         run: |
           javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
-          java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore StringUtilsTest
-
-      # Étape 5 : Tester Bank Account
-      - name: 🏦 Test Bank Account
-        working-directory: java-exercises/bank-account
-        run: |
-          javac -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar *.java
-          java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore BankAccountTest
+          java -cp .:../lib/junit-4.13.2.jar:../lib/hamcrest-core-1.3.jar org.junit.runner.JUnitCore MoneyTest
