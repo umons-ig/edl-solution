@@ -1,6 +1,5 @@
 # 🎓 Atelier 1 : Tests Unitaires Backend & Frontend
 
-**Durée :** 3 heures
 **Objectif :** Apprendre les tests unitaires avec Python (pytest) et TypeScript (Vitest)
 
 ---
@@ -59,13 +58,6 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
-
-**⚠️ Note :** Avec pip, vous devrez créer un fichier `requirements.txt` depuis `pyproject.toml` :
-
-```bash
-pip install -e .
-```
-
 ---
 
 **Dans le reste de l'atelier :**
@@ -75,7 +67,7 @@ pip install -e .
 
 ---
 
-## Phase 2 : Explorer l'Application (15 min)
+## Phase 2 : Explorer l'Application
 
 ### Étape 2.1 : Lancer le Serveur
 
@@ -122,7 +114,7 @@ Ouvrez `backend/src/app.py` dans votre éditeur :
 
 ---
 
-## Phase 3 : Comprendre les Tests (20 min)
+## Phase 3 : Comprendre les Tests
 
 ### Étape 3.1 : Explorer les Fichiers de Test
 
@@ -409,7 +401,7 @@ start htmlcov/index.html  # Windows
 
 ---
 
-## Phase 6 : Tests Frontend (55 min)
+## Phase 6 : Tests Frontend
 
 ### Étape 6.1 : Comprendre le Frontend
 
@@ -496,9 +488,9 @@ File       | % Stmts | % Branch | % Funcs | % Lines |
 api.ts     |   68.42 |    55.55 |      50 |   68.42 |
 ```
 
-**Note :** On teste uniquement l'API (pas les composants React) pour Atelier 1. C'est suffisant !
+**Note :** On teste uniquement l'API (pas les composants React).
 
-### Étape 6.4 : Comprendre un Test Existant (5 min)
+### Étape 6.5 : Comprendre un Test Existant
 
 Avant d'écrire votre test, analysons comment fonctionne le test `creates a new task` :
 
@@ -601,7 +593,7 @@ npm test
 
 ---
 
-### Étape 6.7 : Couverture Frontend (5 min)
+### Étape 6.7 : Couverture Frontend
 
 ```bash
 npm run test:coverage
@@ -617,7 +609,7 @@ api.ts     |   84.21 |    66.67 |   71.43 |   84.21 |
 
 La couverture a augmenté grâce à vos 2 tests ! 🎉
 
-### Étape 6.8 : Lancer l'Application Complète (10 min)
+### Étape 6.8 : Lancer l'Application Complète
 
 **Terminal 1 - Backend :**
 
@@ -635,7 +627,7 @@ npm run dev
 
 ---
 
-## 🎁 BONUS : Exercices Java (Optionnel - 45 min)
+## 🎁 BONUS : Exercices Java
 
 **Objectif :** Voir que les principes de TDD s'appliquent à tous les langages !
 
