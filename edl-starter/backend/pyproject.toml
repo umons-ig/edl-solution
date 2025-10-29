@@ -1,0 +1,56 @@
+[project]
+name = "taskflow-backend"
+version = "0.1.0"
+description = "TaskFlow backend - FastAPI task management service"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.104.1",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.5.0",
+    "httpx>=0.25.2", # For external API calls
+    # sqlalchemy and psycopg2-binary will be added in Atelier 3
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.3",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.1",
+    "responses>=0.24.1",  # Mock HTTP responses
+    "faker>=20.1.0",     # Generate fake test data
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=70",  # Lowered from 90 due to database integration
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    # Files to omit will be added in Atelier 3
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]

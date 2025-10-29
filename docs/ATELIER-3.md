@@ -1,586 +1,77 @@
-# 🚀 Atelier 3 : Déploiement en Production
+# 🚀 Atelier 3 : Base de Données et Déploiement en Production
 
-**Durée estimée :** 3 heures
-**Prérequis :** Ateliers 1 & 2 terminés (application full-stack avec CI/CD)
+**Durée estimée :** 3h00
+**Prérequis :** Ateliers 1 & 2 terminés + compte GitHub
 
 ## 🎯 Objectifs de l'Atelier
 
-**Objectif principal :** Déployer votre application full-stack en production sur le cloud
+À la fin de cet atelier, vous aurez :
 
-À la fin de cet atelier, vous aurez **déployé** :
-
-1. ✅ Un **backend FastAPI en production** sur Render
-2. ✅ Un **frontend React en production** sur Render
-3. ✅ Une **configuration CORS** pour connecter frontend et backend en production
-4. ✅ Des **variables d'environnement** pour gérer les différents environnements
-5. ✅ Un **monitoring actif** avec health checks
+1. ✅ Migré vers **PostgreSQL** avec SQLAlchemy ORM
+2. ✅ Déployé automatiquement avec **render.yaml** (Infrastructure as Code)
+3. ✅ Ajouté de **nouvelles fonctionnalités** (filtrage, recherche, statistiques)
+4. ✅ Vérifié le **déploiement automatique** (Continuous Deployment)
 
 ---
 
 ## 📦 Architecture Cible
 
-**Avant (Local) :**
-
-```text
-Frontend (localhost:3000) → Vite Proxy → Backend (localhost:8000)
+**Avant (Local - Stockage en mémoire) :**
+```
+Frontend (localhost:5173) ← → Backend (localhost:8000)
+                                  ↓
+                            Liste Python (RAM)
+                            ❌ Données perdues au redémarrage
 ```
 
-**Après (Production) :**
-
-```text
-Frontend (Render)                  Backend (Render)
-taskflow-frontend-XXX.onrender.com → taskflow-backend-XXX.onrender.com
-     HTTPS                              HTTPS + CORS
+**Après (Production avec PostgreSQL) :**
+```
+Frontend (Render)                Backend (Render)              Database (Render)
+taskflow-frontend.onrender.com → taskflow-backend.onrender.com → PostgreSQL
+         HTTPS                            HTTPS + CORS                256 MB
+                                                                  ✅ Données persistantes
 ```
 
 ---
 
-## 📋 Phase 1 : Préparation pour la Production (30 min)
+## Phase 1 : Migration vers PostgreSQL (60 min)
 
-### 1.1 - Créer un Compte Render
+### 🎯 Pourquoi PostgreSQL ?
 
-**🎯 EXERCICE : S'inscrire sur Render**
-
-1. Allez sur <https://render.com>
-2. Cliquez sur **"Get Started"**
-3. Inscrivez-vous avec votre compte GitHub
-4. Autorisez Render à accéder à vos repositories
-
-**Niveau gratuit :** 750 heures/mois gratuites (suffisant pour ce workshop)
-
-### 1.2 - Préparer le Backend pour la Production
-
-**🎯 EXERCICE : Configurer CORS pour la production**
-
-Ouvrez `backend/src/app.py` et vérifiez la configuration CORS :
-
-```python
-import os
-from fastapi.middleware.cors import CORSMiddleware
-
-# Configuration CORS
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,  # Origines autorisées
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-**Pourquoi c'est important ?**
-
-- En **développement** : CORS permet `localhost:3000`
-- En **production** : CORS doit permettre votre URL Render frontend
-
-**Variables d'environnement** :
-
-- `CORS_ORIGINS` : Liste des origines autorisées (séparées par des virgules)
-
-### 1.3 - Préparer le Frontend pour la Production
-
-**🎯 EXERCICE : Configurer l'URL du backend**
-
-Le frontend doit savoir où trouver le backend en production.
-
-Ouvrez `frontend/src/api/api.ts` :
-
-```typescript
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
-```
-
-**Comment ça marche ?**
-
-- **Développement** : `VITE_API_URL` n'est pas défini → utilise `/api` (proxy Vite)
-- **Production** : `VITE_API_URL` = URL du backend Render → appels directs
-
-**Créez `frontend/.env.example` :**
-
-```bash
-# URL du backend en production
-# Exemple : VITE_API_URL=https://taskflow-backend-XXXX.onrender.com
-VITE_API_URL=
-```
-
-### 1.4 - Vérifier le Health Check
-
-**🎯 EXERCICE : Tester le endpoint de santé**
-
-Le backend doit avoir un endpoint `/health` pour le monitoring :
-
-```python
-@app.get("/health")
-async def health_check():
-    """Health check endpoint pour Render."""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
-        "environment": os.getenv("ENVIRONMENT", "development"),
-        "version": "1.0.0"
-    }
-```
-
-**Testez localement :**
-
-```bash
-cd backend
-uv run uvicorn src.app:app --reload
-
-# Dans un autre terminal
-curl http://localhost:8000/health
-```
-
-**Réponse attendue :**
-
-```json
-{
-  "status": "healthy",
-  "timestamp": "2025-01-21T10:00:00",
-  "environment": "development",
-  "version": "1.0.0"
-}
-```
-
-### 1.5 - Configurer le Routing Client-Side
-
-**🎯 EXERCICE : Créer le fichier de redirects**
-
-React Router a besoin de ce fichier pour fonctionner correctement sur Render.
-
-Créez `frontend/public/_redirects` :
-
-```text
-/*    /index.html   200
-```
-
-**Que fait ce fichier ?**
-
-- Redirige toutes les routes vers `index.html`
-- Permet au routing React de gérer les URLs (au lieu de Render)
-
----
-
-## 📋 Phase 2 : Déployer le Backend (45 min)
-
-### 2.1 - Créer le Service Backend sur Render
-
-**🎯 EXERCICE : Configurer le backend**
-
-1. Connectez-vous à <https://dashboard.render.com>
-2. Cliquez sur **"New +"** → **"Web Service"**
-3. Connectez votre repository GitHub
-
-**Configuration :**
-
-```yaml
-Name: taskflow-backend
-Branch: main
-Region: Frankfurt (ou votre région préférée)
-Root Directory: backend
-Runtime: Python 3
-
-Build Command: pip install uv && uv sync
-Start Command: uv run uvicorn src.app:app --host 0.0.0.0 --port $PORT
-
-Instance Type: Free
-```
-
-**Important :**
-
-- `$PORT` : Variable fournie par Render (ne pas changer)
-- `--host 0.0.0.0` : Écoute sur toutes les interfaces (requis pour Render)
-
-### 2.2 - Configurer les Variables d'Environnement
-
-**🎯 EXERCICE : Ajouter les variables d'environnement**
-
-Dans la page de configuration Render, section **"Environment"** :
-
-```bash
-ENVIRONMENT=production
-CORS_ORIGINS=*
-PYTHON_VERSION=3.11
-```
-
-**Explications :**
-
-- `ENVIRONMENT=production` : Mode production
-- `CORS_ORIGINS=*` : Permet toutes les origines (à restreindre en vrai production)
-- `PYTHON_VERSION=3.11` : Version Python à utiliser
-
-**Note :** En production réelle, remplacez `*` par l'URL exacte du frontend :
-
-```bash
-CORS_ORIGINS=https://taskflow-frontend-XXXX.onrender.com
-```
-
-### 2.3 - Configurer les Build Filters (Monorepo)
-
-**🎯 EXERCICE : Optimiser les déploiements**
-
-Pour éviter de rebuilder quand seul le frontend change :
-
-**Included Paths :**
-
-```text
-backend/**
-.github/workflows/**
-```
-
-**Ignored Paths :**
-
-```text
-frontend/**
-docs/**
-*.md
-```
-
-### 2.4 - Configurer le Health Check
-
-**🎯 EXERCICE : Activer le monitoring**
-
-Dans **"Settings"** → **"Health & Alerts"** :
-
-```yaml
-Health Check Path: /health
-```
-
-Render vérifiera automatiquement que votre backend répond.
-
-### 2.5 - Déclencher le Premier Déploiement
-
-**🎯 EXERCICE : Déployer le backend**
-
-1. Cliquez sur **"Create Web Service"**
-2. Render va :
-   - Cloner votre repository
-   - Installer les dépendances (`uv sync`)
-   - Démarrer le serveur
-   - Vérifier le health check
-
-**Observez les logs en temps réel** dans la console Render.
-
-**Temps de déploiement** : 2-5 minutes
-
-### 2.6 - Vérifier le Déploiement
-
-**🎯 EXERCICE : Tester le backend en production**
-
-Une fois le déploiement terminé, vous aurez une URL :
-
-```text
-https://taskflow-backend-XXXX.onrender.com
-```
-
-**Testez dans votre terminal :**
-
-```bash
-# Health check
-curl https://taskflow-backend-XXXX.onrender.com/health
-
-# Liste des tâches (vide au début)
-curl https://taskflow-backend-XXXX.onrender.com/tasks
-
-# Documentation API
-# Ouvrez dans le navigateur :
-# https://taskflow-backend-XXXX.onrender.com/docs
-```
-
-**✅ Checkpoint :** Le backend doit répondre à tous ces endpoints.
-
----
-
-## 📋 Phase 3 : Déployer le Frontend (45 min)
-
-### 3.1 - Créer le Site Statique sur Render
-
-**🎯 EXERCICE : Configurer le frontend**
-
-1. Sur Render Dashboard, cliquez **"New +"** → **"Static Site"**
-2. Sélectionnez le même repository GitHub
-
-**Configuration :**
-
-```yaml
-Name: taskflow-frontend
-Branch: main
-Root Directory: frontend
-
-Build Command: npm install && npm run build
-Publish Directory: dist
-
-Instance Type: Free
-```
-
-### 3.2 - Configurer les Variables d'Environnement
-
-**🎯 EXERCICE : Pointer vers le backend**
-
-Dans **"Environment Variables"** :
-
-```bash
-VITE_API_URL=https://taskflow-backend-XXXX.onrender.com
-```
-
-**⚠️ IMPORTANT :** Remplacez `XXXX` par l'ID de votre backend Render !
-
-**Comment trouver l'URL du backend ?**
-
-- Allez sur votre service backend Render
-- Copiez l'URL en haut de la page
-
-### 3.3 - Configurer les Build Filters
-
-**🎯 EXERCICE : Optimiser les rebuilds**
-
-**Included Paths :**
-
-```text
-frontend/**
-.github/workflows/**
-```
-
-**Ignored Paths :**
-
-```text
-backend/**
-docs/**
-*.md
-```
-
-### 3.4 - Déclencher le Déploiement Frontend
-
-**🎯 EXERCICE : Déployer le frontend**
-
-1. Cliquez sur **"Create Static Site"**
-2. Render va :
-   - Installer les dépendances (`npm install`)
-   - Builder le projet (`npm run build`)
-   - Publier les fichiers statiques du dossier `dist/`
-
-**Temps de déploiement** : 3-7 minutes
-
-### 3.5 - Vérifier le Déploiement
-
-**🎯 EXERCICE : Tester l'application complète**
-
-Votre frontend sera disponible à :
-
-```text
-https://taskflow-frontend-XXXX.onrender.com
-```
-
-**Tests à faire :**
-
-1. **Ouvrez l'URL dans votre navigateur**
-2. **Ouvrez DevTools (F12)** → Onglet Network
-3. **Créez une tâche** :
-   - Cliquez sur "Nouvelle Tâche"
-   - Remplissez le formulaire
-   - Soumettez
-
-**Dans Network tab :**
-
-- Vous devez voir : `POST https://taskflow-backend-XXXX.onrender.com/tasks`
-- Statut : `201 Created`
-
-4. **Rafraîchissez la page** :
-   - La tâche doit toujours être là
-   - Requête : `GET https://taskflow-backend-XXXX.onrender.com/tasks`
-
-**✅ Checkpoint :** Votre application full-stack fonctionne en production !
-
----
-
-## 📋 Phase 4 : Configuration Avancée (30 min)
-
-### 4.1 - Activer le Déploiement Automatique
-
-**🎯 EXERCICE : Auto-deploy sur GitHub push**
-
-Par défaut, Render redéploie automatiquement quand vous pushez sur `main`.
-
-**Vérifiez dans Settings → Build & Deploy :**
-
-```yaml
-Auto-Deploy: Yes
-```
-
-**Test :**
-
-1. Faites un petit changement (ex: titre de l'app)
-2. Committez et pushez :
-
-```bash
-git add .
-git commit -m "test: verify auto-deploy"
-git push origin main
-```
-
-3. Observez dans Render Dashboard :
-   - ✅ GitHub Actions exécute les tests
-   - ✅ Render détecte le push
-   - ✅ Nouveau déploiement automatique
-
-### 4.2 - Configurer CORS Restreint (Production Réelle)
-
-**🎯 EXERCICE : Sécuriser le backend**
-
-Pour une vraie production, ne laissez pas `CORS_ORIGINS=*`.
-
-**Dans Render Backend → Environment :**
-
-```bash
-CORS_ORIGINS=https://taskflow-frontend-XXXX.onrender.com
-```
-
-**Pour plusieurs domaines :**
-
-```bash
-CORS_ORIGINS=https://taskflow-frontend-XXXX.onrender.com,https://www.votredomaine.com
-```
-
-**Redéployez manuellement** : Cliquez sur "Manual Deploy" → "Deploy latest commit"
-
-### 4.3 - Surveiller les Logs
-
-**🎯 EXERCICE : Déboguer en production**
-
-**Backend logs :**
-
-1. Allez sur votre service backend
-2. Cliquez sur l'onglet **"Logs"**
-3. Vous verrez toutes les requêtes en temps réel
-
-**Frontend logs :**
-
-1. Les logs de build sont dans l'onglet "Logs"
-2. Les erreurs runtime sont dans DevTools du navigateur (F12 → Console)
-
-**Commandes utiles :**
-
-```bash
-# Voir les logs backend en live
-# (dans le dashboard Render, onglet Logs)
-
-# Chercher une erreur
-# Utilisez Ctrl+F dans les logs
-```
-
-### 4.4 - Optimiser les Performances
-
-**🎯 EXERCICE : Configuration production**
-
-**Backend (`backend/src/app.py`) :**
-
-```python
-# En production, ajoutez :
-import logging
-
-logging.basicConfig(
-    level=logging.INFO if os.getenv("DEBUG") != "true" else logging.DEBUG
-)
-```
-
-**Frontend (déjà optimisé par Vite) :**
-
-- Minification automatique
-- Tree-shaking
-- Code splitting
-- Compression gzip
-
----
-
-## 📋 Phase 5 : Migration vers PostgreSQL (Optionnel - 90 min)
-
-⚠️ **IMPORTANT** : Cette phase est **optionnelle** et permet d'ajouter une vraie base de données PostgreSQL. Les phases 1-4 utilisent le stockage en mémoire (les données sont perdues au redémarrage). Si vous voulez que vos données persistent, suivez cette phase !
-
-### 5.0 - Pourquoi Ajouter une Base de Données ?
-
-**Avec le stockage en mémoire (Phases 1-4) :**
-- ❌ Les tâches disparaissent quand vous redémarrez le backend
-- ❌ Chaque redéploiement efface toutes les données
+**Problème actuel :** Les données sont stockées dans une liste Python en mémoire
+- ❌ Données perdues à chaque redémarrage
 - ❌ Impossible de scaler (plusieurs instances)
+- ❌ Pas de requêtes complexes
 
 **Avec PostgreSQL :**
-- ✅ Les données persistent entre les redémarrages
-- ✅ Déploiements sans perte de données
+- ✅ Données persistantes
+- ✅ Requêtes SQL puissantes
 - ✅ Base de données professionnelle
-- ✅ Requêtes complexes et relations
+- ✅ Gratuit sur Render
 
-### 5.1 - Vue d'Ensemble de la Migration
+---
 
-Vous allez transformer votre backend pour utiliser PostgreSQL au lieu de la liste Python en mémoire.
-
-**Ce que vous allez faire :**
-1. Créer une base de données PostgreSQL sur Render (gratuit)
-2. Créer 2 nouveaux fichiers : `database.py` et `models.py`
-3. **Supprimer** le code de stockage en mémoire de `app.py`
-4. **Remplacer** par des appels à la base de données
-5. Adapter les tests
-6. Déployer avec la base de données
-
-**Durée estimée :** 60-90 minutes
-
-### 5.2 - Créer la Base de Données sur Render
-
-**🎯 EXERCICE : Provisionner PostgreSQL**
-
-1. Allez sur <https://dashboard.render.com>
-2. Cliquez **"New +"** → **"PostgreSQL"**
-3. Configuration :
-
-```yaml
-Name: taskflow-db
-Region: Frankfurt (même région que votre backend)
-PostgreSQL Version: 16
-Instance Type: Free
-```
-
-4. Cliquez **"Create Database"**
-5. **Attendez 2-3 minutes** que la base soit provisionnée
-
-6. Une fois prête, cliquez sur votre database → **"Info"**
-7. Copiez **"Internal Database URL"** (commence par `postgresql://`)
-
-**Exemple d'URL :**
-```
-postgresql://taskflow_db_user:mot_de_passe_tres_long@dpg-xxxxx-a/taskflow_db
-```
-
-⚠️ **Gardez cette URL** - vous en aurez besoin plus tard !
-
-### 5.3 - Ajouter les Dépendances Python
-
-**🎯 EXERCICE : Installer SQLAlchemy et psycopg2**
-
-Utilisez `uv add` pour ajouter les dépendances nécessaires :
+### Étape 1.1 : Installer les Dépendances
 
 ```bash
 cd backend
 uv add sqlalchemy psycopg2-binary
 ```
 
-**Ce que fait cette commande :**
-- Ajoute `sqlalchemy` et `psycopg2-binary` au fichier `pyproject.toml`
-- Installe automatiquement les packages
-- Met à jour le fichier de lock (`uv.lock`)
+**Ce que font ces packages :**
+- `sqlalchemy` : ORM (Object-Relational Mapping) pour Python
+- `psycopg2-binary` : Driver PostgreSQL
 
-**Vérifiez l'installation :**
-
+Vérifiez l'installation :
 ```bash
 uv run python -c "import sqlalchemy; print(f'SQLAlchemy {sqlalchemy.__version__}')"
 ```
 
-Vous devriez voir : `SQLAlchemy 2.0.x`
+---
 
-### 5.4 - Créer le Fichier `database.py`
+### Étape 1.2 : Créer `backend/src/database.py`
 
-**🎯 EXERCICE : Configuration de la base de données**
-
-Créez le fichier `backend/src/database.py` :
+Ce fichier configure la connexion à la base de données.
 
 ```python
 import os
@@ -591,7 +82,7 @@ import logging
 
 logger = logging.getLogger("taskflow")
 
-# Lire l'URL de la base de données depuis les variables d'environnement
+# Lire l'URL de la base de données depuis l'environnement
 # Par défaut : SQLite pour le développement local
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./taskflow.db")
 
@@ -634,22 +125,22 @@ def get_db() -> Generator[Session, None, None]:
 
 def init_db() -> None:
     """Initialise la base de données en créant toutes les tables."""
-    logger.info("Initializing database tables...")
+    logger.info("🗄️  Initializing database tables...")
     Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created successfully!")
+    logger.info("✅ Database tables created successfully!")
 ```
 
 **Ce que fait ce fichier :**
-- Configure la connexion à PostgreSQL (ou SQLite en local)
-- Crée le moteur SQLAlchemy avec une pool de connexions
-- Fournit `get_db()` pour les dépendances FastAPI
+- Supporte SQLite (local) et PostgreSQL (production)
+- Configure une pool de connexions pour PostgreSQL
+- Fournit `get_db()` pour FastAPI Depends
 - Fournit `init_db()` pour créer les tables
 
-### 5.5 - Créer le Fichier `models.py`
+---
 
-**🎯 EXERCICE : Définir le modèle ORM**
+### Étape 1.3 : Créer `backend/src/models.py`
 
-Créez le fichier `backend/src/models.py` :
+Ce fichier définit le schéma de la table `tasks`.
 
 ```python
 from sqlalchemy import Column, String, DateTime, Enum as SQLEnum
@@ -694,53 +185,45 @@ class TaskModel(Base):
 ```
 
 **Ce que fait ce fichier :**
-- Définit le schéma de la table `tasks` en base de données
-- Chaque `Column` correspond à une colonne SQL
-- Les enums `TaskStatus` et `TaskPriority` seront déplacés ici
+- Définit la structure de la table `tasks`
+- Chaque `Column` = une colonne SQL
+- Les `Enum` définissent les valeurs valides
+- `created_at` et `updated_at` automatiques
 
-### 5.6 - Modifier `app.py` : Supprimer le Stockage en Mémoire
+---
 
-**🎯 EXERCICE : Migration du code**
+### Étape 1.4 : Migrer `backend/src/app.py`
 
-⚠️ **ATTENTION** : Vous allez **supprimer** et **remplacer** du code dans `app.py`. Suivez attentivement !
+**Modifications à apporter :**
 
-#### **Étape 1 : Ajouter les imports en haut du fichier**
+#### **1. Importer les nouveaux modules**
 
-**Après les imports existants**, ajoutez :
-
+Ajoutez en haut du fichier :
 ```python
+from sqlalchemy.orm import Session
+from sqlalchemy import text
 from .database import get_db, init_db
 from .models import TaskModel, TaskStatus, TaskPriority
-from sqlalchemy.orm import Session
 ```
 
-#### **Étape 2 : SUPPRIMER les anciennes définitions**
+#### **2. Supprimer l'ancien code**
 
-**❌ SUPPRIMEZ ces lignes (dans `app.py`) :**
-
+**❌ SUPPRIMEZ ces lignes :**
 ```python
-# SUPPRIMEZ cette classe (TaskStatus)
+# SUPPRIMEZ les définitions d'Enum (maintenant dans models.py)
 class TaskStatus(str, Enum):
-    TODO = "todo"
-    IN_PROGRESS = "in_progress"
-    DONE = "done"
+    ...
 
-# SUPPRIMEZ cette classe (TaskPriority)
 class TaskPriority(str, Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
+    ...
 
-# SUPPRIMEZ cette ligne (tasks_storage)
+# SUPPRIMEZ le stockage en mémoire
 tasks_storage: List[Task] = []
 ```
 
-**Pourquoi ?** Ces éléments sont maintenant dans `models.py` !
+#### **3. Modifier la fonction lifespan**
 
-#### **Étape 3 : Modifier la fonction lifespan**
-
-**❌ REMPLACEZ cette section :**
-
+**Remplacez :**
 ```python
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -750,8 +233,7 @@ async def lifespan(app: FastAPI):
     logger.info("👋 Shutting down TaskFlow backend...")
 ```
 
-**✅ PAR ce nouveau code :**
-
+**Par :**
 ```python
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -759,33 +241,15 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Starting TaskFlow backend...")
 
     # Initialiser la base de données (créer les tables)
-    if not app.dependency_overrides:  # Seulement en production
-        init_db()
-    else:
-        logger.info("Test mode - skipping database initialization")
+    init_db()
 
     yield
     logger.info("👋 Shutting down TaskFlow backend...")
 ```
 
-#### **Étape 4 : Modifier TOUS les endpoints**
+#### **4. Modifier tous les endpoints**
 
-Chaque endpoint doit maintenant utiliser la base de données au lieu de `tasks_storage`.
-
-**🔹 Endpoint GET /tasks**
-
-**❌ REMPLACEZ :**
-
-```python
-@app.get("/tasks", response_model=list[Task])
-async def get_tasks():
-    """Get all tasks."""
-    logger.info("Fetching all tasks")
-    return tasks_storage
-```
-
-**✅ PAR :**
-
+**GET /tasks :**
 ```python
 @app.get("/tasks", response_model=list[Task])
 async def get_tasks(db: Session = Depends(get_db)):
@@ -795,27 +259,7 @@ async def get_tasks(db: Session = Depends(get_db)):
     return db_tasks
 ```
 
-**🔹 Endpoint POST /tasks**
-
-**❌ REMPLACEZ :**
-
-```python
-@app.post("/tasks", response_model=Task, status_code=201)
-async def create_task(task_data: TaskCreate):
-    logger.info(f"Creating task: {task_data.title}")
-
-    task = Task(
-        id=str(uuid4()),
-        **task_data.model_dump()
-    )
-    tasks_storage.append(task)
-
-    logger.info(f"Task created successfully: {task.id}")
-    return task
-```
-
-**✅ PAR :**
-
+**POST /tasks :**
 ```python
 @app.post("/tasks", response_model=Task, status_code=201)
 async def create_task(task_data: TaskCreate, db: Session = Depends(get_db)):
@@ -834,24 +278,7 @@ async def create_task(task_data: TaskCreate, db: Session = Depends(get_db)):
     return db_task
 ```
 
-**🔹 Endpoint GET /tasks/{task_id}**
-
-**❌ REMPLACEZ :**
-
-```python
-@app.get("/tasks/{task_id}", response_model=Task)
-async def get_task(task_id: str):
-    logger.info(f"Fetching task: {task_id}")
-
-    task = next((t for t in tasks_storage if t.id == task_id), None)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    return task
-```
-
-**✅ PAR :**
-
+**GET /tasks/{task_id} :**
 ```python
 @app.get("/tasks/{task_id}", response_model=Task)
 async def get_task(task_id: str, db: Session = Depends(get_db)):
@@ -864,29 +291,7 @@ async def get_task(task_id: str, db: Session = Depends(get_db)):
     return db_task
 ```
 
-**🔹 Endpoint PUT /tasks/{task_id}**
-
-**❌ REMPLACEZ :**
-
-```python
-@app.put("/tasks/{task_id}", response_model=Task)
-async def update_task(task_id: str, task_update: TaskUpdate):
-    logger.info(f"Updating task: {task_id}")
-
-    task = next((t for t in tasks_storage if t.id == task_id), None)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    update_data = task_update.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(task, field, value)
-
-    logger.info(f"Task updated: {task_id}")
-    return task
-```
-
-**✅ PAR :**
-
+**PUT /tasks/{task_id} :**
 ```python
 @app.put("/tasks/{task_id}", response_model=Task)
 async def update_task(task_id: str, task_update: TaskUpdate, db: Session = Depends(get_db)):
@@ -907,25 +312,7 @@ async def update_task(task_id: str, task_update: TaskUpdate, db: Session = Depen
     return db_task
 ```
 
-**🔹 Endpoint DELETE /tasks/{task_id}**
-
-**❌ REMPLACEZ :**
-
-```python
-@app.delete("/tasks/{task_id}", status_code=204)
-async def delete_task(task_id: str):
-    logger.info(f"Deleting task: {task_id}")
-
-    task = next((t for t in tasks_storage if t.id == task_id), None)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    tasks_storage.remove(task)
-    logger.info(f"Task deleted: {task_id}")
-```
-
-**✅ PAR :**
-
+**DELETE /tasks/{task_id} :**
 ```python
 @app.delete("/tasks/{task_id}", status_code=204)
 async def delete_task(task_id: str, db: Session = Depends(get_db)):
@@ -940,27 +327,9 @@ async def delete_task(task_id: str, db: Session = Depends(get_db)):
     logger.info(f"Task deleted: {task_id}")
 ```
 
-#### **Étape 5 : Modifier le Health Check**
-
-**❌ REMPLACEZ :**
+#### **5. Améliorer le Health Check**
 
 ```python
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
-        "environment": os.getenv("ENVIRONMENT", "development"),
-        "version": "1.0.0"
-    }
-```
-
-**✅ PAR :**
-
-```python
-from sqlalchemy import text
-
 @app.get("/health")
 async def health_check(db: Session = Depends(get_db)):
     """Health check endpoint with database connectivity test."""
@@ -968,24 +337,29 @@ async def health_check(db: Session = Depends(get_db)):
         # Tester la connexion à la base de données
         db.execute(text("SELECT 1"))
         db_status = "connected"
+
+        # Compter les tâches
+        tasks_count = db.query(TaskModel).count()
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
         db_status = "disconnected"
+        tasks_count = 0
 
     return {
         "status": "healthy",
         "database": db_status,
+        "tasks_count": tasks_count,
         "timestamp": datetime.utcnow().isoformat(),
         "environment": os.getenv("ENVIRONMENT", "development"),
         "version": "1.0.0"
     }
 ```
 
-### 5.7 - Adapter les Tests
+---
 
-**🎯 EXERCICE : Configurer les tests avec la base de données**
+### Étape 1.5 : Adapter les Tests
 
-Ouvrez `backend/tests/conftest.py` et **remplacez tout le contenu** par :
+Modifiez `backend/tests/conftest.py` :
 
 ```python
 import pytest
@@ -1050,25 +424,20 @@ def client():
         app.dependency_overrides.clear()
 ```
 
-**Ce que fait ce code :**
-- Crée une base SQLite temporaire pour les tests
-- Nettoie les données entre chaque test
-- Override `get_db()` pour utiliser la DB de test
+---
 
-### 5.8 - Tester Localement
-
-**🎯 EXERCICE : Vérifier que tout fonctionne**
+### Étape 1.6 : Tester Localement
 
 ```bash
 cd backend
 
 # Lancer les tests
-uv run pytest
+uv run pytest -v
 
 # Lancer le serveur
 uv run uvicorn src.app:app --reload
 
-# Dans un autre terminal, tester l'API
+# Dans un autre terminal, tester
 curl http://localhost:8000/health
 curl http://localhost:8000/tasks
 
@@ -1076,40 +445,121 @@ curl http://localhost:8000/tasks
 curl -X POST http://localhost:8000/tasks \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Test database",
-    "description": "Vérifier PostgreSQL",
+    "title": "Test PostgreSQL",
     "status": "todo",
     "priority": "high"
   }'
 ```
 
-**✅ Checkpoint :** Les tests doivent passer et l'API doit fonctionner !
+✅ **Checkpoint :** Vous devriez voir un fichier `taskflow.db` créé dans `backend/`
 
-En local, SQLite est utilisé automatiquement (`taskflow.db` créé dans `backend/`).
+---
 
-### 5.9 - Connecter PostgreSQL sur Render
+## Phase 2 : Déploiement avec render.yaml (45 min)
 
-**🎯 EXERCICE : Lier la base de données au backend**
+### Étape 2.1 : Créer un Compte Render
 
-1. Allez sur <https://dashboard.render.com>
-2. Cliquez sur votre service **taskflow-backend**
-3. Allez dans **"Environment"** (menu de gauche)
-4. Cliquez **"Add Environment Variable"**
-5. Ajoutez :
+1. Allez sur https://render.com
+2. Cliquez **"Get Started"**
+3. Inscrivez-vous avec votre compte **GitHub**
+4. Autorisez Render à accéder à vos repositories
 
-```bash
-Key: DATABASE_URL
-Value: postgresql://taskflow_db_user:mot_de_passe@dpg-xxxxx-a/taskflow_db
+---
+
+### Étape 2.2 : Comprendre render.yaml
+
+Le fichier `render.yaml` à la racine définit toute l'infrastructure :
+
+```yaml
+databases:
+  # PostgreSQL Database
+  - name: taskflow-db
+    databaseName: taskflow
+    region: frankfurt
+    plan: free
+    user: taskflow
+
+services:
+  # Backend Service - FastAPI
+  - type: web
+    name: taskflow-backend
+    runtime: python
+    region: frankfurt
+    plan: free
+    branch: main
+    buildCommand: "cd backend && pip install uv && uv sync"
+    startCommand: "cd backend && uv run uvicorn src.app:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: ENVIRONMENT
+        value: "production"
+      - key: CORS_ORIGINS
+        sync: false  # À configurer manuellement
+      - key: DATABASE_URL
+        fromDatabase:
+          name: taskflow-db
+          property: connectionString  # ✅ Connexion automatique !
+    healthCheckPath: /health
+
+  # Frontend Service - React + Vite
+  - type: web
+    name: taskflow-frontend
+    runtime: static
+    region: frankfurt
+    plan: free
+    branch: main
+    buildCommand: "cd frontend && npm ci && npm run build"
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false  # À configurer manuellement
 ```
 
-**⚠️ Utilisez l'URL "Internal Database URL"** que vous avez copiée en 5.2 !
+**Ce que Render fait automatiquement :**
+- ✅ Crée la base PostgreSQL
+- ✅ Injecte `DATABASE_URL` dans le backend
+- ✅ Build et déploie backend + frontend
+- ✅ Configure HTTPS partout
+- ✅ Active health checks
 
-6. Cliquez **"Save Changes"**
-7. Render va automatiquement redéployer le backend
+---
 
-### 5.10 - Vérifier le Déploiement avec PostgreSQL
+### Étape 2.3 : Déployer avec Blueprint
 
-**🎯 EXERCICE : Tester en production**
+1. Dashboard Render : https://dashboard.render.com
+2. Cliquez **"New +"** → **"Blueprint"**
+3. Sélectionnez votre repository **"edl-tp-1"**
+4. Render détecte `render.yaml`
+5. Cliquez **"Apply"**
+
+⏳ **Attendez 5-7 minutes** pour le déploiement complet.
+
+**Notez les URLs :**
+```
+Backend:  https://taskflow-backend-XXXX.onrender.com
+Frontend: https://taskflow-frontend-YYYY.onrender.com
+```
+
+---
+
+### Étape 2.4 : Configurer CORS et URLs
+
+**Backend → Environment :**
+```
+CORS_ORIGINS = https://taskflow-frontend-YYYY.onrender.com
+```
+
+**Frontend → Environment :**
+```
+VITE_API_URL = https://taskflow-backend-XXXX.onrender.com
+```
+
+Attendez les redéploiements automatiques (2-3 min chacun).
+
+---
+
+### Étape 2.5 : Vérifier le Déploiement
 
 ```bash
 # Health check (doit montrer "database": "connected")
@@ -1119,259 +569,397 @@ curl https://taskflow-backend-XXXX.onrender.com/health
 curl -X POST https://taskflow-backend-XXXX.onrender.com/tasks \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Production database test",
+    "title": "Production test",
     "status": "todo",
     "priority": "high"
   }'
 
-# Voir les tâches
+# Lister les tâches
 curl https://taskflow-backend-XXXX.onrender.com/tasks
 ```
 
-**Test final :**
+Testez aussi depuis le frontend : `https://taskflow-frontend-YYYY.onrender.com`
 
-1. Créez une tâche depuis le frontend en production
-2. Dans Render Dashboard, allez dans le backend → **"Manual Deploy"** → **"Deploy latest commit"**
-3. Attendez le redéploiement (2-3 minutes)
-4. **Rafraîchissez le frontend** → La tâche doit toujours être là ! 🎉
-
-**✅ Félicitations !** Vos données persistent maintenant entre les redémarrages !
-
-### 5.11 - Checklist de Migration Complète
-
-**Fichiers créés :**
-- [ ] `backend/src/database.py`
-- [ ] `backend/src/models.py`
-
-**Fichiers modifiés :**
-- [ ] `backend/pyproject.toml` (dépendances ajoutées)
-- [ ] `backend/src/app.py` (migration vers DB)
-- [ ] `backend/tests/conftest.py` (tests adaptés)
-
-**Déploiement :**
-- [ ] Base de données PostgreSQL créée sur Render
-- [ ] Variable `DATABASE_URL` configurée sur le backend
-- [ ] Backend redéployé avec succès
-- [ ] Health check montre `"database": "connected"`
-- [ ] Les tâches persistent après redéploiement
+✅ **Checkpoint :** L'application fonctionne en production avec PostgreSQL !
 
 ---
 
-## 📋 Phase 6 : Test et Validation (30 min)
+## Phase 3 : Vérification et Tests (30 min)
 
-### 6.1 - Checklist de Déploiement
+### Étape 3.1 : Tester l'API Directement
 
-**🎯 EXERCICE : Vérifier que tout fonctionne**
+Une fois déployé, testez tous les endpoints de l'API :
 
-**Backend :**
+**Health Check :**
+```bash
+curl https://taskflow-backend-XXXX.onrender.com/health
+```
 
-- [ ] URL accessible : `https://taskflow-backend-XXXX.onrender.com`
-- [ ] Health check : `/health` retourne `{"status":"healthy"}`
-- [ ] API Docs : `/docs` fonctionne
-- [ ] Endpoints API : `/tasks` répond
-- [ ] CORS configuré : Requêtes du frontend acceptées
+Vous devriez voir :
+```json
+{
+  "status": "healthy",
+  "database": "connected",
+  "tasks_count": 0,
+  "timestamp": "2025-01-21T10:00:00",
+  "environment": "production",
+  "version": "1.0.0"
+}
+```
 
-**Frontend :**
+**Créer une tâche :**
+```bash
+curl -X POST https://taskflow-backend-XXXX.onrender.com/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Première tâche en production",
+    "description": "Test du déploiement",
+    "status": "todo",
+    "priority": "high"
+  }'
+```
 
-- [ ] URL accessible : `https://taskflow-frontend-XXXX.onrender.com`
-- [ ] Page se charge sans erreur
-- [ ] Connexion au backend fonctionne
-- [ ] Création de tâches fonctionne
-- [ ] Suppression de tâches fonctionne
-- [ ] Modification de tâches fonctionne
+**Lister les tâches :**
+```bash
+curl https://taskflow-backend-XXXX.onrender.com/tasks
+```
 
-**CI/CD :**
+**Récupérer une tâche par ID :**
+```bash
+curl https://taskflow-backend-XXXX.onrender.com/tasks/{TASK_ID}
+```
 
-- [ ] GitHub Actions passe tous les tests
-- [ ] Auto-deploy activé
-- [ ] Push sur main déclenche un redéploiement
+---
 
-### 6.2 - Tester les Scénarios Réels
+### Étape 3.2 : Tester le Frontend en Production
 
-**🎯 EXERCICE : Cas d'utilisation complets**
+1. Ouvrez `https://taskflow-frontend-YYYY.onrender.com`
+2. **Créez plusieurs tâches** avec différents statuts et priorités
+3. **Modifiez une tâche** (changez son statut)
+4. **Supprimez une tâche**
 
-**Scénario 1 : Créer une tâche**
+✅ **Tout doit fonctionner !**
 
-1. Ouvrez votre frontend en production
-2. Créez une tâche "Déploiement réussi !"
-3. Priorité : High
-4. Vérifiez qu'elle apparaît dans la colonne "À Faire"
+---
 
-**Scénario 2 : Modifier une tâche**
+### Étape 3.3 : Vérifier la Persistence des Données
 
-1. Cliquez sur "✏️" pour éditer
-2. Changez le statut en "En Cours"
-3. Vérifiez qu'elle se déplace dans la bonne colonne
+**Test de persistance PostgreSQL :**
 
-**Scénario 3 : Partager avec un collègue**
+1. Créez 3-4 tâches depuis le frontend
+2. Allez sur Render Dashboard → **taskflow-backend**
+3. Cliquez **Manual Deploy** → **Deploy latest commit**
+4. Attendez le redéploiement (2-3 minutes)
+5. Rafraîchissez votre frontend
 
-1. Copiez l'URL de votre frontend
-2. Envoyez-la à un collègue
-3. Il doit voir les mêmes tâches !
+✅ **Les tâches sont toujours là !** PostgreSQL conserve les données entre les redémarrages.
 
-**Scénario 4 : Tester sur mobile**
+---
 
-1. Ouvrez l'URL sur votre téléphone
-2. L'interface doit être responsive
+### Étape 3.4 : Explorer la Base de Données PostgreSQL
 
-### 6.3 - Déboguer les Problèmes Courants
+Allez voir directement dans la base de données :
 
-#### ❌ "Connection Error" dans le frontend
+1. Dashboard → **taskflow-db** → **Shell**
+2. Dans le shell PostgreSQL :
 
-**Cause :** `VITE_API_URL` mal configuré
+```sql
+-- Voir toutes les tables
+\dt
 
-**Solution :**
+-- Voir les colonnes de la table tasks
+\d tasks
 
-1. Vérifiez dans Render Frontend → Environment
-2. La variable doit être : `VITE_API_URL=https://taskflow-backend-XXXX.onrender.com`
-3. Redéployez
+-- Voir toutes les tâches
+SELECT id, title, status, priority, created_at FROM tasks;
 
-#### ❌ CORS Error
+-- Compter les tâches par statut
+SELECT status, COUNT(*) FROM tasks GROUP BY status;
+```
 
-**Cause :** Backend ne permet pas l'origine du frontend
+✅ **Vous voyez vos données !** Elles sont bien stockées dans PostgreSQL.
 
-**Solution :**
+---
+
+### Étape 3.5 : Vérifier les Logs
+
+**Backend logs :**
+
+1. Dashboard → **taskflow-backend** → **Logs**
+2. Vous devriez voir :
+   ```
+   🚀 Starting TaskFlow backend...
+   🗄️  Initializing database tables...
+   ✅ Database tables created successfully!
+   🌐 CORS enabled for origins: ['https://taskflow-frontend-YYYY.onrender.com']
+   INFO:     Application startup complete.
+   ```
+
+3. Créez une tâche depuis le frontend
+4. Observez les logs en temps réel :
+   ```
+   INFO: Creating task: Première tâche
+   INFO: Task created successfully: abc-123-def
+   ```
+
+✅ **Checkpoint :** Le déploiement fonctionne parfaitement !
+
+---
+
+## Phase 4 : Ajouter une Fonctionnalité + Auto-Deploy (45 min)
+
+Maintenant, ajoutons une petite fonctionnalité simple pour démontrer le déploiement automatique.
+
+### Étape 4.1 : Ajouter un Endpoint Simple de Comptage
+
+Ajoutez un endpoint simple dans `backend/src/app.py` (avant les autres endpoints) :
+
+```python
+@app.get("/tasks/count")
+async def count_tasks(db: Session = Depends(get_db)):
+    """Count total number of tasks."""
+    logger.info("Counting tasks")
+    total = db.query(TaskModel).count()
+    return {"total": total}
+```
+
+**Testez localement :**
+```bash
+# Dans un terminal, lancez le serveur
+cd backend
+uv run uvicorn src.app:app --reload
+
+# Dans un autre terminal
+curl http://localhost:8000/tasks/count
+```
+
+Vous devriez voir :
+```json
+{"total": 0}
+```
+
+---
+
+### Étape 4.2 : Ajouter un Test Simple
+
+Créez `backend/tests/test_count.py` :
+
+```python
+def test_count_tasks(client):
+    """Test counting tasks."""
+    # Au début, 0 tâches
+    response = client.get("/tasks/count")
+    assert response.status_code == 200
+    assert response.json()["total"] == 0
+
+    # Créer 3 tâches
+    for i in range(3):
+        client.post("/tasks", json={
+            "title": f"Task {i+1}",
+            "status": "todo",
+            "priority": "medium"
+        })
+
+    # Maintenant, 3 tâches
+    response = client.get("/tasks/count")
+    assert response.status_code == 200
+    assert response.json()["total"] == 3
+```
+
+**Lancez les tests :**
+```bash
+cd backend
+uv run pytest -v
+```
+
+✅ **Tous les tests doivent passer !**
+
+---
+
+### Étape 4.3 : Commit et Push vers GitHub
 
 ```bash
-# Dans Render Backend → Environment
-CORS_ORIGINS=https://taskflow-frontend-XXXX.onrender.com
-```
+git add .
+git commit -m "feat: add task count endpoint
 
-#### ❌ Backend "Service Unavailable"
+- Add GET /tasks/count endpoint
+- Add test for count endpoint
+- Returns total number of tasks in database
 
-**Cause :** Health check échoue
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-**Solution :**
+Co-Authored-By: Claude <noreply@anthropic.com>"
 
-1. Vérifiez les logs backend
-2. Assurez-vous que `/health` répond
-3. Vérifiez que le port est `$PORT` (fourni par Render)
-
-#### ❌ Frontend montre du code au lieu de l'app
-
-**Cause :** Publish Directory incorrect
-
-**Solution :**
-
-```yaml
-Publish Directory: dist  # PAS frontend/dist !
+git push origin main
 ```
 
 ---
 
-## ✅ Checklist de Fin d'Atelier
+### Étape 4.4 : Observer le Pipeline CI/CD
 
-**Services Déployés :**
+**1. GitHub Actions (1-2 min) :**
+- Allez sur GitHub → **Actions**
+- Un nouveau workflow démarre automatiquement
+- Observez :
+  - ✅ Backend tests (pytest)
+  - ✅ Frontend tests (vitest)
 
-- [ ] Backend en production et accessible
-- [ ] Frontend en production et accessible
-- [ ] Communication frontend ↔ backend fonctionne
-- [ ] Health checks configurés
+**2. Render Auto-Deploy (3-5 min) :**
+- Allez sur Render Dashboard
+- Cliquez sur **taskflow-backend**
+- Vous verrez "Deploying..." en haut
+- Observez les logs en temps réel :
 
-**Configuration :**
-
-- [ ] Variables d'environnement configurées
-- [ ] CORS correctement configuré
-- [ ] Build filters optimisés (monorepo)
-- [ ] Auto-deploy activé
-
-**Tests :**
-
-- [ ] Création de tâches fonctionne
-- [ ] Modification de tâches fonctionne
-- [ ] Suppression de tâches fonctionne
-- [ ] Application accessible depuis n'importe où
-
-**Documentation :**
-
-- [ ] URLs notées quelque part :
-  - Backend : `https://taskflow-backend-XXXX.onrender.com`
-  - Frontend : `https://taskflow-frontend-XXXX.onrender.com`
+```log
+==> Cloning from https://github.com/...
+==> Checking out commit abc123...
+==> Running build command 'cd backend && pip install uv && uv sync'...
+==> Installing dependencies...
+==> Build successful!
+==> Starting server...
+🚀 Starting TaskFlow backend...
+🗄️  Initializing database tables...
+✅ Database tables created successfully!
+```
 
 ---
 
-## 🎯 Ce que Vous Avez Appris
+### Étape 4.5 : Vérifier la Nouvelle Fonctionnalité en Production
 
-Félicitations ! 🎉 Vous avez maintenant :
+Une fois le déploiement terminé (indicateur vert ✅) :
 
-✅ **Déployé une application full-stack en production**
-✅ **Configuré CORS pour la production**
-✅ **Utilisé des variables d'environnement**
-✅ **Mis en place un monitoring avec health checks**
-✅ **Configuré un déploiement automatique (CI/CD complet)**
+**Tester le nouveau endpoint :**
+```bash
+curl https://taskflow-backend-XXXX.onrender.com/tasks/count
+```
 
-**Votre application est accessible partout dans le monde ! 🌍**
+**Vérifier dans la documentation Swagger :**
+1. Ouvrez : `https://taskflow-backend-XXXX.onrender.com/docs`
+2. Vous devriez voir le nouveau endpoint `GET /tasks/count`
+3. Cliquez sur **"Try it out"** → **"Execute"**
+4. Vous verrez le nombre total de tâches
+
+✅ **La nouvelle fonctionnalité est déployée automatiquement !**
+
+---
+
+### Étape 4.6 : Comprendre le Workflow Complet
+
+**Ce qui s'est passé automatiquement :**
+
+```
+1. git push origin main
+   ↓
+2. GitHub Actions démarre
+   ├─ Backend: uv run pytest ✅
+   ├─ Frontend: npm test ✅
+   └─ Les tests passent
+   ↓
+3. Render détecte le push
+   ↓
+4. Render clone le nouveau code
+   ↓
+5. Render rebuild le backend
+   ├─ pip install uv
+   ├─ uv sync (install dependencies)
+   └─ uv run uvicorn (start server)
+   ↓
+6. Health check: /health ✅
+   ↓
+7. 🎉 Nouvelle version LIVE !
+
+Temps total: ~5-7 minutes
+```
+
+**Zero configuration nécessaire !** Tout est automatique grâce à :
+- `.github/workflows/backend.yml` (tests)
+- `render.yaml` (déploiement)
+
+---
+
+## 📊 Ce que Vous Avez Appris
+
+✅ **SQLAlchemy ORM** - Modèles Python ↔ Tables SQL
+✅ **PostgreSQL** - Base de données relationnelle professionnelle
+✅ **Infrastructure as Code** - render.yaml pour définir l'infra
+✅ **Continuous Deployment** - Push → Tests → Deploy automatique
+✅ **API REST** - Nouveaux endpoints avec tests
+✅ **Production monitoring** - Logs, health checks, database status
+✅ **Data persistence** - Les données survivent aux redémarrages
 
 ---
 
 ## 🚀 Pour Aller Plus Loin
 
-**Améliorations possibles :**
+### Fonctionnalités Simples (30 min chacune)
 
-1. **Base de données persistante PostgreSQL** ⭐ **DISPONIBLE MAINTENANT !**
-   - 📚 **[Guide complet : Intégration PostgreSQL](workshop-3-database.md)**
-   - Remplacer le stockage en mémoire par une vraie base de données
-   - Déployer PostgreSQL sur Render
-   - Utiliser SQLAlchemy ORM
-   - **Durée** : 60-90 minutes
-   - **Prérequis** : Avoir complété les phases 1-5 de cet atelier
+1. **Endpoint de recherche** : `GET /tasks/search?q=query`
+2. **Endpoint de filtrage** : `GET /tasks/filter/{status}`
+3. **Endpoint de statistiques** : `GET /tasks/stats` (compte par statut/priorité)
+4. **Afficher le count dans le frontend** : Badge avec nombre total de tâches
 
-2. **Domaine personnalisé**
-   - Acheter un nom de domaine
-   - Le connecter à Render
+### Fonctionnalités Avancées (1-2h chacune)
 
-3. **Authentification**
-   - Ajouter un login/signup
-   - Protéger les routes
+1. **Pagination** : Ajouter `skip` et `limit` aux endpoints
+2. **Authentification** : JWT tokens avec FastAPI Security
+3. **Filtrage UI** : Boutons pour filtrer par statut dans le frontend
+4. **Dashboard de stats** : Graphiques avec Chart.js
 
-4. **Monitoring avancé**
-   - Intégrer Sentry pour les erreurs
-   - Ajouter des metrics avec Prometheus
+### DevOps Avancé
 
-5. **Tests E2E**
-   - Playwright ou Cypress
-   - Tests automatisés sur l'environnement de production
+1. **Monitoring** : Intégrer Sentry pour error tracking
+2. **Staging Environment** : Environnement de pré-production
+3. **Database Migrations** : Alembic pour migrations SQL
+4. **Custom Domain** : Utiliser votre propre nom de domaine
 
 ---
 
 ## 📚 Ressources
 
-**Atelier 3 - Extensions :**
+**Documentation Technique :**
+- [SQLAlchemy Docs](https://docs.sqlalchemy.org/)
+- [FastAPI Database Guide](https://fastapi.tiangolo.com/tutorial/sql-databases/)
+- [Render Blueprint Spec](https://render.com/docs/blueprint-spec)
+- [PostgreSQL Docs](https://www.postgresql.org/docs/)
 
-- **[Guide PostgreSQL Database](workshop-3-database.md)** - Intégration base de données (Partie 5)
-- **[Migration Checklist](MIGRATION_CHECKLIST.md)** - Guide visuel de migration
-- **[Backend README](../backend/README.md)** - Documentation technique complète
-
-**Documentation Externe :**
-
-- [Render Documentation](https://render.com/docs)
-- [FastAPI Deployment Guide](https://fastapi.tiangolo.com/deployment/)
-- [Vite Production Build](https://vitejs.dev/guide/build.html)
-- [Managing Environment Variables](https://render.com/docs/environment-variables)
-- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/) (pour la base de données)
+**Atelier Extensions :**
+- [Backend README](../backend/README.md) - Documentation complète du backend
+- [DEPLOYMENT.md](../DEPLOYMENT.md) - Guide de déploiement détaillé
 
 ---
 
-## 📝 Notes Finales
+## ✅ Checklist de Fin d'Atelier
 
-**Limitations du plan gratuit Render :**
+**Migration PostgreSQL :**
+- [ ] `database.py` créé avec configuration SQLAlchemy
+- [ ] `models.py` créé avec `TaskModel`
+- [ ] `app.py` migré pour utiliser la DB
+- [ ] Tests adaptés avec base de test temporaire
+- [ ] Tests locaux passent avec SQLite
 
-- Services s'endorment après 15 min d'inactivité
-- Réveil = 30-60 secondes de latence
-- Pour éviter ça : Plan payant ou service de "keep-alive"
+**Déploiement :**
+- [ ] Compte Render créé et connecté à GitHub
+- [ ] `render.yaml` compris et expliqué
+- [ ] Blueprint déployé avec succès
+- [ ] Backend accessible via HTTPS
+- [ ] Frontend accessible via HTTPS
+- [ ] CORS configuré correctement
+- [ ] PostgreSQL connectée (health check montre "connected")
 
-**Coûts (si vous passez au payant) :**
+**Nouvelle Fonctionnalité :**
+- [ ] Endpoint `/tasks/count` implémenté et testé
+- [ ] Test unitaire pour le comptage
+- [ ] Documentation Swagger affiche le nouvel endpoint
 
-- Starter plan : ~7$/mois par service
-- Adapté pour petits projets personnels
+**Continuous Deployment :**
+- [ ] Push vers main déclenche GitHub Actions
+- [ ] Tests passent automatiquement
+- [ ] Render auto-deploy fonctionne
+- [ ] Nouvelles fonctionnalités visibles en production
+- [ ] Données persistent après redéploiement
 
-**Alternatives à Render :**
-
-- Vercel (frontend)
-- Railway (full-stack)
-- Fly.io (backend)
-- Heroku (full-stack, plus cher)
+**Si tout est coché : Bravo, vous maîtrisez le cycle complet ! 🎉🚀**
 
 ---
 
-**Version 1.0** - Atelier 3 : Déploiement en Production 🚀
+**Version 4.0** - Atelier 3 : Base de Données et Déploiement en Production (3h)
