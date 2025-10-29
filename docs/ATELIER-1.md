@@ -296,23 +296,29 @@ uv run pytest tests/test_api.py::test_delete_nonexistent_task_returns_404 -v
 
 ### ✍️ Exercice 4 : Écrire un Test de Validation (10 min)
 
-**🎯 Objectif :** Tester qu'on ne peut pas mettre à jour une tâche avec un titre vide
+**🎯 Objectif :** Tester qu'on ne peut pas mettre à jour une tâche avec une priorité invalide
 
-Ouvrez `backend/tests/test_api.py` et ajoutez ce test :
+Ouvrez `backend/tests/test_api.py` et trouvez la fonction `test_update_task_with_invalid_priority`.
+
+**Votre mission :**
+
+Implémentez ce test en suivant les étapes dans les commentaires :
 
 ```python
-def test_update_task_with_empty_title(client):
-    """Updating a task with an empty title should fail."""
+def test_update_task_with_invalid_priority(client):
+    """Updating a task with an invalid priority should fail."""
     # TODO: Votre code ici
-    # 1. Créer une tâche
-    # 2. Essayer de la mettre à jour avec title=""
-    # 3. Vérifier que ça retourne 422
+    # 1. Créer une tâche valide
+    # 2. Essayer de la mettre à jour avec priority="urgent" (invalide)
+    # 3. Vérifier que ça retourne 422 (Erreur de Validation)
 ```
+
+**Rappel :** Les priorités valides sont `"low"`, `"medium"`, `"high"` (voir `TaskPriority` dans `app.py`)
 
 **Vérifier :**
 
 ```bash
-uv run pytest tests/test_api.py::test_update_task_with_empty_title -v
+uv run pytest tests/test_api.py::test_update_task_with_invalid_priority -v
 ```
 
 ---
