@@ -83,7 +83,7 @@ describe('API Module', () => {
 
     // Vérifier que fetch a été appelé avec la bonne URL et méthode
     expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:8000/tasks/1',
+      '/api/tasks/1',
       expect.objectContaining({
         method: 'DELETE',
       })
@@ -113,7 +113,7 @@ describe('API Module', () => {
 
     // Vérifier que fetch a été appelé avec la bonne URL, méthode et body
     expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:8000/tasks/1',
+      '/api/tasks/1',
       expect.objectContaining({
         method: 'PUT',
         headers: expect.objectContaining({
