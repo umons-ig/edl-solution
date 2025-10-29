@@ -2,19 +2,19 @@ import { describe, it, expect, vi } from 'vitest';
 import { api } from './api';
 
 /**
- * Simple Frontend API Tests
+ * Tests Frontend API Simples
  *
- * These tests demonstrate basic testing concepts without overwhelming complexity.
- * For Atelier 1, focus on backend tests. These are here as examples.
+ * Ces tests démontrent les concepts de base sans complexité excessive.
+ * Pour l'Atelier 1, concentrez-vous sur les tests backend. Ceux-ci sont des exemples.
  */
 
 describe('API Module', () => {
   /**
-   * Test 1: Verify API can fetch tasks
-   * This is the most basic test - does the API call work?
+   * Test 1 : Vérifier que l'API peut récupérer les tâches
+   * C'est le test le plus basique - est-ce que l'appel API fonctionne ?
    */
   it('fetches tasks from the backend', async () => {
-    // Mock fetch to return fake data
+    // Mocker fetch pour retourner des données fictives
     (globalThis as any).fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
@@ -31,8 +31,8 @@ describe('API Module', () => {
   });
 
   /**
-   * Test 2: Verify API can create tasks
-   * Shows how to test POST requests
+   * Test 2 : Vérifier que l'API peut créer des tâches
+   * Montre comment tester les requêtes POST
    */
   it('creates a new task', async () => {
     const newTask = { title: 'New Task', status: 'todo' as const };
@@ -51,8 +51,8 @@ describe('API Module', () => {
   });
 
   /**
-   * Test 3: Verify API handles errors
-   * Important to test error cases!
+   * Test 3 : Vérifier que l'API gère les erreurs
+   * Important de tester les cas d'erreur !
    */
   it('throws error when API fails', async () => {
     (globalThis as any).fetch = vi.fn(() =>
@@ -67,26 +67,60 @@ describe('API Module', () => {
   });
 
   /**
-   * TODO (Atelier 1 - Exercice 6): Implémenter ce test
-   *
-   * Test 4: Verify API can delete tasks
+   * Test 4 : Vérifier que l'API peut supprimer des tâches
    */
-  it.todo('deletes a task', async () => {
-    // TODO: Votre code ici
-    // 1. Mocker fetch pour retourner { ok: true, status: 204 }
-    // 2. Appeler await api.deleteTask(1)
-    // 3. Vérifier que fetch a été appelé avec '/tasks/1' et method: 'DELETE'
+  it('deletes a task', async () => {
+    // Mocker fetch pour retourner une suppression réussie (204 No Content)
+    const mockFetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        status: 204,
+      })
+    );
+    (globalThis as any).fetch = mockFetch;
+
+    await api.deleteTask(1);
+
+    // Vérifier que fetch a été appelé avec la bonne URL et méthode
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:8000/tasks/1',
+      expect.objectContaining({
+        method: 'DELETE',
+      })
+    );
   });
 
   /**
-   * TODO (Atelier 1 - Exercice 7): Implémenter ce test
-   *
-   * Test 5: Verify API can update tasks
+   * Test 5 : Vérifier que l'API peut mettre à jour des tâches
    */
-  it.todo('updates a task', async () => {
-    // TODO: Votre code ici
-    // 1. Mocker fetch pour retourner { ok: true, json: () => Promise.resolve({ id: 1, title: 'Updated', ... }) }
-    // 2. Appeler await api.updateTask(1, { title: 'Updated Title' })
-    // 3. Vérifier que fetch a été appelé avec '/tasks/1', method: 'PUT'
+  it('updates a task', async () => {
+    const updatedTask = { id: 1, title: 'Updated Title', status: 'done' as const };
+
+    // Mocker fetch pour retourner la tâche mise à jour
+    const mockFetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(updatedTask),
+      })
+    );
+    (globalThis as any).fetch = mockFetch;
+
+    const result = await api.updateTask(1, { title: 'Updated Title' });
+
+    // Vérifier le résultat
+    expect(result.id).toBe(1);
+    expect(result.title).toBe('Updated Title');
+
+    // Vérifier que fetch a été appelé avec la bonne URL, méthode et body
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:8000/tasks/1',
+      expect.objectContaining({
+        method: 'PUT',
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+        }),
+        body: JSON.stringify({ title: 'Updated Title' }),
+      })
+    );
   });
 });

@@ -412,7 +412,7 @@ start htmlcov/index.html  # Windows
 
 ## Phase 6 : Tests Frontend
 
-### Étape 6.1 : Comprendre le Frontend
+### Étape 6.1 : Comprendre le Frontend et Pourquoi Tester
 
 Le frontend est une application **React + TypeScript** simple qui communique avec le backend.
 
@@ -431,6 +431,235 @@ frontend/
 │       └── TaskForm.tsx
 └── package.json
 ```
+
+#### 🤔 Pourquoi Tester le Frontend ?
+
+**1. Vérifier la Communication avec le Backend**
+
+Les tests frontend vérifient que votre code JavaScript/TypeScript communique correctement avec l'API backend :
+
+- ✅ Les requêtes HTTP sont-elles correctement formées ? (bonne URL, bonne méthode, bon format)
+- ✅ Les données sont-elles correctement envoyées ? (body JSON valide)
+- ✅ Les réponses sont-elles correctement traitées ? (parsing JSON, extraction des données)
+- ✅ Les erreurs sont-elles gérées ? (404, 500, network errors)
+
+**2. Tester Sans Dépendre du Backend**
+
+Grâce au **mocking**, on peut tester le frontend même si :
+
+- ❌ Le backend n'est pas encore développé
+- ❌ Le backend est en panne
+- ❌ On n'a pas de connexion Internet
+- ❌ On veut tester des cas d'erreur difficiles à reproduire
+
+**Exemple :** Comment tester une erreur 500 sans crasher votre vrai backend ? → Avec un mock !
+
+**3. Tests Rapides et Fiables**
+
+- ⚡ **Rapides** : Pas besoin de lancer un vrai serveur
+- 🔒 **Isolés** : Pas d'effets de bord entre les tests
+- 🎯 **Précis** : On teste uniquement la logique frontend
+
+#### 📦 Qu'est-ce qu'on Teste ?
+
+Dans cet atelier, on teste **uniquement le module API** (`api.ts`), pas les composants React.
+
+**Pourquoi ne pas tester les composants React ?**
+
+- Les tests de composants React nécessitent des outils supplémentaires (React Testing Library)
+- C'est plus complexe (gestion du DOM, événements, état)
+- Pour l'Atelier 1, on se concentre sur les **concepts de base des tests**
+
+**Ce qu'on teste dans `api.ts` :**
+
+| Fonction | Ce qu'elle fait | Ce qu'on vérifie |
+|----------|-----------------|------------------|
+| `getTasks()` | Récupère la liste des tâches | Retourne un tableau de tâches |
+| `createTask()` | Crée une nouvelle tâche | Envoie les bonnes données en POST |
+| `deleteTask()` | Supprime une tâche | Appelle DELETE avec le bon ID |
+| `updateTask()` | Met à jour une tâche | Envoie PUT avec les modifications |
+
+#### 🎭 Le Concept de Mocking
+
+**Problème :** Comment tester du code qui appelle une API externe ?
+
+**Solution :** On **simule** (mock) la fonction `fetch()` pour qu'elle retourne ce qu'on veut !
+
+```typescript
+// Au lieu d'appeler le vrai backend...
+fetch('http://localhost:8000/tasks')
+
+// ...on remplace fetch par une fausse version qui retourne ce qu'on veut
+(globalThis as any).fetch = vi.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve([{ id: 1, title: 'Test' }])
+  })
+);
+```
+
+**Avantages :**
+
+- ✅ Pas besoin du vrai backend
+- ✅ Contrôle total sur les réponses (succès, erreurs, cas limites)
+- ✅ Tests ultra-rapides
+
+#### 🔬 Décorticage Ligne par Ligne du Mock
+
+Analysons en détail ce code de mocking qui peut sembler complexe au premier abord :
+
+```typescript
+(globalThis as any).fetch = vi.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve([
+      { id: 1, title: 'Test Task', status: 'todo' }
+    ]),
+  })
+);
+```
+
+**Ligne 1 : Remplacer la vraie fonction `fetch()`**
+
+```typescript
+(globalThis as any).fetch = vi.fn(...)
+```
+
+| Élément | Explication |
+|---------|-------------|
+| `globalThis` | Objet JavaScript global (équivalent de `window` dans le navigateur) |
+| `.fetch` | La vraie fonction qui fait les requêtes HTTP |
+| `vi.fn(...)` | Crée une fonction "espion" (mock) de Vitest |
+| `(globalThis as any)` | TypeScript : on force le type pour pouvoir modifier fetch |
+
+**Ce qu'on fait :** On remplace la vraie `fetch()` par une fausse version qu'on contrôle !
+
+**Ligne 2 : Simuler une Promesse réussie**
+
+```typescript
+Promise.resolve({...})
+```
+
+- `fetch()` retourne toujours une **Promise** (asynchrone)
+- `Promise.resolve()` simule une promesse qui **réussit immédiatement**
+- On pourrait utiliser `Promise.reject()` pour simuler une erreur réseau
+
+**Ligne 3-7 : Simuler la réponse HTTP**
+
+```typescript
+{
+  ok: true,                    // ✅ Statut de la réponse
+  json: () => Promise.resolve([...])  // 📦 Les données JSON
+}
+```
+
+| Propriété | Valeur | Signification |
+|-----------|--------|---------------|
+| `ok` | `true` | La requête HTTP a réussi (status 200-299) |
+| `ok` | `false` | La requête a échoué (status 400-599) |
+| `json()` | Une fonction qui retourne une Promise | Simule `response.json()` |
+
+**Pourquoi `json()` est une fonction ?**
+
+Le vrai `fetch()` fonctionne comme ça :
+
+```typescript
+const response = await fetch('/tasks');  // Étape 1 : Obtenir la réponse
+const data = await response.json();      // Étape 2 : Parser le JSON
+```
+
+Notre mock doit **imiter exactement ce comportement** !
+
+**Ligne 4-6 : Les données retournées**
+
+```typescript
+[
+  { id: 1, title: 'Test Task', status: 'todo' }
+]
+```
+
+C'est le **tableau de tâches fictif** que notre mock va retourner. On peut mettre ce qu'on veut !
+
+#### 🎨 Exemples de Mocks pour Différents Cas
+
+**1️⃣ Mock pour un Succès (200 OK)**
+
+```typescript
+(globalThis as any).fetch = vi.fn(() =>
+  Promise.resolve({
+    ok: true,
+    status: 200,
+    json: () => Promise.resolve({ id: 1, title: 'Ma tâche' })
+  })
+);
+```
+
+**2️⃣ Mock pour une Erreur 404 (Not Found)**
+
+```typescript
+(globalThis as any).fetch = vi.fn(() =>
+  Promise.resolve({
+    ok: false,
+    status: 404,
+    statusText: 'Not Found'
+  })
+);
+```
+
+**3️⃣ Mock pour une Erreur 500 (Server Error)**
+
+```typescript
+(globalThis as any).fetch = vi.fn(() =>
+  Promise.resolve({
+    ok: false,
+    status: 500,
+    statusText: 'Server Error'
+  })
+);
+```
+
+**4️⃣ Mock pour une Erreur Réseau (pas de connexion)**
+
+```typescript
+(globalThis as any).fetch = vi.fn(() =>
+  Promise.reject(new Error('Network error'))
+);
+```
+
+#### ❓ Questions Fréquentes sur le Mocking
+
+**Q : Pourquoi `(globalThis as any)` ?**
+
+**R :** TypeScript protège `globalThis.fetch` contre les modifications. `as any` dit à TypeScript "Fais-moi confiance, je sais ce que je fais !" C'est normal dans les tests.
+
+**Q : Pourquoi `vi.fn()` au lieu d'une fonction normale ?**
+
+**R :** `vi.fn()` crée un **spy** (espion). On peut ensuite vérifier :
+
+```typescript
+expect(mockFetch).toHaveBeenCalledWith('/tasks/1', { method: 'DELETE' });
+```
+
+Avec une fonction normale, on ne pourrait pas faire ça !
+
+**Q : Dois-je mocker `fetch()` dans chaque test ?**
+
+**R :** **OUI !** Chaque test est isolé. Si vous ne mocker pas `fetch()`, le test essaiera d'appeler le vrai backend et échouera.
+
+**Q : Le mock persiste-t-il entre les tests ?**
+
+**R :** Non, Vitest réinitialise les mocks automatiquement entre chaque test. C'est pour garantir l'**isolation** des tests.
+
+#### 🎯 Récapitulatif
+
+| Concept | Signification |
+|---------|---------------|
+| **Mock** | Fausse version d'une fonction qu'on contrôle |
+| `globalThis.fetch` | La vraie fonction HTTP qu'on remplace |
+| `vi.fn()` | Crée un mock espion (peut être vérifié) |
+| `Promise.resolve()` | Simule une promesse qui réussit |
+| `ok: true` | Simule un succès HTTP (200-299) |
+| `json()` | Fonction qui retourne les données JSON |
 
 **Important :** On teste **uniquement l'API** (pas les composants React) pour rester simple.
 
@@ -461,14 +690,14 @@ Test Files  1 passed (1)
      Tests  3 passed (3)
 ```
 
-### Étape 6.4 : Analyser les Tests
+### Étape 6.4 : Analyser les Tests en Détail
 
-Ouvrez `frontend/src/api/api.test.ts` :
+Ouvrez `frontend/src/api/api.test.ts` et analysons **ligne par ligne** comment fonctionne un test :
 
 ```typescript
 describe('API Module', () => {
   it('fetches tasks from the backend', async () => {
-    // Mock fetch pour simuler la réponse
+    // ÉTAPE 1 : Mock fetch pour simuler la réponse du backend
     (globalThis as any).fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
@@ -478,18 +707,84 @@ describe('API Module', () => {
       })
     );
 
+    // ÉTAPE 2 : Appeler la fonction à tester
     const tasks = await api.getTasks();
+
+    // ÉTAPE 3 : Vérifier les résultats
     expect(tasks).toHaveLength(1);
     expect(tasks[0].title).toBe('Test Task');
   });
 });
 ```
 
-**Concepts clés :**
+#### 🔍 Explication Détaillée
 
-- **Mocking** : On simule `fetch()` pour ne pas appeler le vrai backend
-- **async/await** : Tests asynchrones
-- **expect()** : Assertions Vitest (similaire à pytest)
+**ÉTAPE 1 : Pourquoi mocker `fetch()` ?**
+
+```typescript
+(globalThis as any).fetch = vi.fn(() => ...)
+```
+
+- `globalThis.fetch` = la fonction JavaScript qui fait les requêtes HTTP
+- `vi.fn()` = remplace fetch par une fausse version (mock) de Vitest
+- On contrôle ce qu'elle retourne → **pas d'appel réseau réel**
+
+**Ce que le mock retourne :**
+
+```typescript
+Promise.resolve({
+  ok: true,                    // ✅ Requête réussie (pas d'erreur)
+  json: () => Promise.resolve([...])  // Les données JSON à retourner
+})
+```
+
+C'est exactement ce que le **vrai** `fetch()` retournerait, mais **sans réseau** !
+
+**ÉTAPE 2 : Appeler la fonction**
+
+```typescript
+const tasks = await api.getTasks();
+```
+
+- Appelle la vraie fonction `getTasks()` de notre API
+- Cette fonction utilise `fetch()` en interne
+- Mais `fetch()` est maintenant notre **mock** → retourne instantanément les données fictives
+
+**ÉTAPE 3 : Vérifier les résultats**
+
+```typescript
+expect(tasks).toHaveLength(1);       // ✅ On a bien reçu 1 tâche
+expect(tasks[0].title).toBe('Test Task');  // ✅ Le titre est correct
+```
+
+#### 📊 Comparaison Backend vs Frontend
+
+| Aspect | Tests Backend (pytest) | Tests Frontend (Vitest) |
+|--------|------------------------|-------------------------|
+| **Framework** | pytest | Vitest |
+| **Langage** | Python | TypeScript |
+| **Assertions** | `assert response.status_code == 200` | `expect(response.ok).toBe(true)` |
+| **Mocking** | Fixtures (`client`) | `vi.fn()` |
+| **Asynchrone** | Pas nécessaire (FastAPI le gère) | `async/await` obligatoire |
+| **Pattern** | Arrange-Act-Assert | Arrange-Act-Assert (identique!) |
+
+**La bonne nouvelle :** Les concepts sont **identiques** entre backend et frontend !
+
+#### 🎯 Les 5 Tests Expliqués
+
+| Test | Objectif | Ce qu'on vérifie |
+|------|----------|------------------|
+| **Test 1** : `fetches tasks` | Récupérer des tâches | ✅ Reçoit un tableau avec les bonnes données |
+| **Test 2** : `creates a new task` | Créer une tâche | ✅ Envoie POST avec les bonnes données |
+| **Test 3** : `throws error when API fails` | Gestion d'erreur | ✅ Lève une exception si le backend répond 500 |
+| **Test 4** : `deletes a task` | Supprimer une tâche | ✅ Appelle DELETE avec le bon ID |
+| **Test 5** : `updates a task` | Mettre à jour une tâche | ✅ Envoie PUT avec les modifications |
+
+**Pourquoi ces tests sont importants ?**
+
+- 🐛 **Détecter les bugs** : Si on change l'URL de l'API, les tests échouent
+- 🔒 **Garantir la qualité** : Les nouvelles fonctionnalités ne cassent pas l'existant
+- 📖 **Documentation vivante** : Les tests montrent comment utiliser l'API
 
 ### Étape 6.5 : Couverture Frontend
 

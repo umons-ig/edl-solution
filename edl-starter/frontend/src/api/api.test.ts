@@ -2,19 +2,19 @@ import { describe, it, expect, vi } from 'vitest';
 import { api } from './api';
 
 /**
- * Simple Frontend API Tests
+ * Tests Frontend API Simples
  *
- * These tests demonstrate basic testing concepts without overwhelming complexity.
- * For Atelier 1, focus on backend tests. These are here as examples.
+ * Ces tests démontrent les concepts de base sans complexité excessive.
+ * Pour l'Atelier 1, concentrez-vous sur les tests backend. Ceux-ci sont des exemples.
  */
 
 describe('API Module', () => {
   /**
-   * Test 1: Verify API can fetch tasks
-   * This is the most basic test - does the API call work?
+   * Test 1 : Vérifier que l'API peut récupérer les tâches
+   * C'est le test le plus basique - est-ce que l'appel API fonctionne ?
    */
   it('fetches tasks from the backend', async () => {
-    // Mock fetch to return fake data
+    // Mocker fetch pour retourner des données fictives
     (globalThis as any).fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
@@ -31,8 +31,8 @@ describe('API Module', () => {
   });
 
   /**
-   * Test 2: Verify API can create tasks
-   * Shows how to test POST requests
+   * Test 2 : Vérifier que l'API peut créer des tâches
+   * Montre comment tester les requêtes POST
    */
   it('creates a new task', async () => {
     const newTask = { title: 'New Task', status: 'todo' as const };
@@ -51,8 +51,8 @@ describe('API Module', () => {
   });
 
   /**
-   * Test 3: Verify API handles errors
-   * Important to test error cases!
+   * Test 3 : Vérifier que l'API gère les erreurs
+   * Important de tester les cas d'erreur !
    */
   it('throws error when API fails', async () => {
     (globalThis as any).fetch = vi.fn(() =>
@@ -67,9 +67,9 @@ describe('API Module', () => {
   });
 
   /**
-   * TODO (Atelier 1 - Exercice 1): Implémenter ce test
+   * TODO (Atelier 1 - Exercice 6): Implémenter ce test
    *
-   * Test 4: Verify API can delete tasks
+   * Test 4 : Vérifier que l'API peut supprimer des tâches
    *
    * Objectif: Tester que la fonction deleteTask() appelle l'API correctement
    *
@@ -88,9 +88,9 @@ describe('API Module', () => {
   });
 
   /**
-   * TODO (Atelier 1 - Exercice 2): Implémenter ce test
+   * TODO (Atelier 1 - Exercice 7): Implémenter ce test
    *
-   * Test 5: Verify API can update tasks
+   * Test 5 : Vérifier que l'API peut mettre à jour des tâches
    *
    * Objectif: Tester que la fonction updateTask() appelle l'API correctement
    *
