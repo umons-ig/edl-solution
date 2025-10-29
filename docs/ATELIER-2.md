@@ -1,20 +1,6 @@
 # 🚀 Atelier 2 : CI/CD avec GitHub Actions
 
-**Durée estimée :** 2h30
 **Prérequis :** Atelier 1 terminé (backend et frontend avec tests)
-
-## 🎯 Objectifs de l'Atelier
-
-**Objectif principal :** Automatiser les tests avec GitHub Actions
-
-À la fin de cet atelier, vous aurez **construit** :
-
-1. ✅ Un **workflow backend** qui teste automatiquement votre code Python
-2. ✅ Un **workflow frontend** qui teste et build votre code TypeScript
-3. ✅ Compris comment **déboguer** un workflow qui échoue
-4. ✅ Créé votre premier **pipeline CI/CD** complet
-
----
 
 ## 📦 Qu'est-ce que CI/CD ?
 
