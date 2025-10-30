@@ -1,0 +1,54 @@
+site_name: EDL - Ateliers de Développement Logiciel
+site_description: Ateliers pratiques sur les tests unitaires, CI/CD et déploiement
+site_author: UMONS - Faculté des Sciences
+repo_url: https://github.com/umons-ig/edl-starter
+repo_name: umons-ig/edl-starter
+
+theme:
+  name: material
+  language: fr
+  palette:
+    # Mode clair
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Passer en mode sombre
+    # Mode sombre
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Passer en mode clair
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search:
+      lang: fr
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Accueil: index.md
+  - Atelier 1: ATELIER-1.md
+  - Atelier 2: ATELIER-2.md
+  - Atelier 3: ATELIER-3.md
