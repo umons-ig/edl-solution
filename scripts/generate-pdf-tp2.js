@@ -4,10 +4,10 @@ const fs = require('fs');
 const path = require('path');
 
 (async () => {
-    console.log('📄 Génération du PDF pour ATELIER-3.md...');
+    console.log('📄 Génération du PDF pour TP-2.md...');
 
     // Lire le fichier Markdown
-    const markdownPath = path.join(__dirname, '../docs/ATELIER-3.md');
+    const markdownPath = path.join(__dirname, '../docs/TP-2.md');
     const markdown = fs.readFileSync(markdownPath, 'utf-8');
 
     // Convertir Markdown en HTML
@@ -20,7 +20,7 @@ const path = require('path');
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Atelier 3 - Déploiement en Production</title>
+        <title>TP 2 - CI/CD avec GitHub Actions</title>
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
@@ -127,7 +127,7 @@ const path = require('path');
     await page.setContent(html, { waitUntil: 'networkidle0' });
 
     // Générer le PDF
-    const outputPath = path.join(__dirname, '../docs/ATELIER-3.pdf');
+    const outputPath = path.join(__dirname, '../docs/TP-2.pdf');
     await page.pdf({
         path: outputPath,
         format: 'A4',

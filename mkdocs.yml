@@ -50,6 +50,6 @@ markdown_extensions:
 
 nav:
   - Accueil: index.md
-  - Atelier 1: ATELIER-1.md
-  - Atelier 2: ATELIER-2.md
-  - Atelier 3: ATELIER-3.md
+  - TP 1: TP-1.md
+  - TP 2: TP-2.md
+  - TP 3: TP-3.md

@@ -1,17 +1,17 @@
-# 🎓 Atelier 1 : Tests Unitaires Backend & Frontend
+# 🎓 TP 1 : Tests Unitaires Backend & Frontend
 
 **Objectif :** Apprendre les tests unitaires avec Python (pytest) et TypeScript (Vitest)
 
 ---
 
-## Phase 1 : Installation & Configuration (30 min)
+## Phase 1 : Installation & Configuration
 
 ### Étape 1.1 : Forker le Dépôt
 
 1. Allez sur `https://github.com/umons-ig/edl-starter`
 2. Cliquez sur **"Fork"**
 
-   ![Fork Button](../img/fork.png)
+   ![Fork Button](img/fork.png)
 
 3. Clonez votre fork :
 
@@ -114,7 +114,7 @@ Ouvrez `backend/src/app.py` dans votre éditeur :
 - **Lignes 180-205 :** Endpoint pour créer une tâche
 - **Lignes 144-160 :** Endpoint pour lister les tâches
 
-**Important :** Ce backend utilise un **stockage en mémoire** (un simple dictionnaire Python) pour Atelier 1 & 2. Vous apprendrez à utiliser PostgreSQL dans l'Atelier 3.
+**Important :** Ce backend utilise un **stockage en mémoire** (un simple dictionnaire Python) pour TP 1 & 2. Vous apprendrez à utiliser PostgreSQL dans l'TP 3.
 
 ---
 
@@ -268,7 +268,7 @@ uv run pytest tests/test_api.py::test_update_task -v
 
 ---
 
-### ✍️ Exercice 3 : Écrire un Test de Suppression Inexistante (10 min)
+### ✍️ Exercice 3 : Écrire un Test de Suppression Inexistante
 
 **🎯 Objectif :** Tester qu'on ne peut pas supprimer une tâche qui n'existe pas
 
@@ -295,7 +295,7 @@ uv run pytest tests/test_api.py::test_delete_nonexistent_task_returns_404 -v
 
 ---
 
-### ✍️ Exercice 4 : Écrire un Test de Validation (10 min)
+### ✍️ Exercice 4 : Écrire un Test de Validation
 
 **🎯 Objectif :** Tester qu'on ne peut pas mettre à jour une tâche avec une priorité invalide
 
@@ -324,7 +324,7 @@ uv run pytest tests/test_api.py::test_update_task_with_invalid_priority -v
 
 ---
 
-### ✍️ Exercice 5 : Écrire un Test de Filtrage (10 min)
+### ✍️ Exercice 5 : Écrire un Test de Filtrage
 
 **🎯 Objectif :** Tester le filtrage avec plusieurs critères
 
@@ -347,7 +347,7 @@ uv run pytest tests/test_api.py::test_filter_by_multiple_criteria -v
 
 ---
 
-### Étape 4.6 : Lancer TOUS les Tests (5 min)
+### Étape 4.6 : Lancer TOUS les Tests
 
 Une fois que vous avez terminé les 5 exercices, lancez tous les tests :
 
@@ -394,7 +394,9 @@ src/app.py            156      6    96%
 TOTAL                 156      6    96%
 ```
 
-**Note :** La couverture est très élevée (96%) car le backend est simple avec stockage en mémoire. Dans l'Atelier 3, vous ajouterez une base de données PostgreSQL.
+**Note :** La couverture est très élevée (96%) car le backend est simple avec stockage en mémoire. Dans l'TP 3, vous ajouterez une base de données PostgreSQL.
+
+![Backend Coverage Report](img/backend-coverage.png)
 
 ### Étape 5.2 : Générer un Rapport HTML
 
@@ -469,7 +471,7 @@ Dans cet atelier, on teste **uniquement le module API** (`api.ts`), pas les comp
 
 - Les tests de composants React nécessitent des outils supplémentaires (React Testing Library)
 - C'est plus complexe (gestion du DOM, événements, état)
-- Pour l'Atelier 1, on se concentre sur les **concepts de base des tests**
+- Pour l'TP 1, on se concentre sur les **concepts de base des tests**
 
 **Ce qu'on teste dans `api.ts` :**
 
@@ -938,6 +940,12 @@ cd frontend
 npm install  # Si pas déjà fait
 npm run dev
 ```
+
+**Ouvrir dans le navigateur :** <http://localhost:5173>
+
+Vous devriez voir l'application TaskFlow fonctionner :
+
+![TaskFlow Application](img/working-app.png)
 
 ---
 

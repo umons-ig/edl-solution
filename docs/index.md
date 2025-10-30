@@ -16,7 +16,7 @@ Ces ateliers vous apprendront les **pratiques professionnelles** du développeme
 
 ## 📚 Les 3 Ateliers
 
-### [Atelier 1 : Tests Unitaires Backend & Frontend](ATELIER-1.md)
+### [TP 1 : Tests Unitaires Backend & Frontend](TP-1.md)
 
 **Durée :** 4-5 heures
 **Objectif :** Maîtriser les tests unitaires avec pytest (Python) et Vitest (TypeScript)
@@ -33,7 +33,7 @@ Ces ateliers vous apprendront les **pratiques professionnelles** du développeme
 
 ---
 
-### [Atelier 2 : CI/CD avec GitHub Actions](ATELIER-2.md)
+### [TP 2 : CI/CD avec GitHub Actions](TP-2.md)
 
 **Durée :** 4-5 heures
 **Objectif :** Automatiser les tests et le déploiement avec GitHub Actions
@@ -51,7 +51,7 @@ Ces ateliers vous apprendront les **pratiques professionnelles** du développeme
 
 ---
 
-### [Atelier 3 : Déploiement en Production](ATELIER-3.md)
+### [TP 3 : Déploiement en Production](TP-3.md)
 
 **Durée :** 3-4 heures
 **Objectif :** Déployer l'application sur Render avec PostgreSQL
@@ -155,4 +155,4 @@ Atelier 1 (Tests) → Atelier 2 (CI/CD) → Atelier 3 (Déploiement)
 
 ---
 
-**Prêt à commencer ?** 👉 [Atelier 1 : Tests Unitaires](ATELIER-1.md)
+**Prêt à commencer ?** 👉 [TP 1 : Tests Unitaires](TP-1.md)
